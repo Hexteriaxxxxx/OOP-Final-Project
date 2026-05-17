@@ -7,8 +7,7 @@
 
 ### Before the meeting:
 - [ ] I-verify na naka-accept na lahat ng GitHub invites
-- [ ] I-push ang latest files sa GitHub (current project structure)
-- [ ] I-print o i-share ang instructions per role sa bawat member
+- [ ] I-share ang instructions per role sa bawat member
 - [ ] I-update ang Trello — lahat ng W2 cards sa To-do
 
 ---
@@ -23,7 +22,7 @@
 
 ### 12:00 PM — Development Phase
 - I-monitor ang progress ng bawat member
-- Mag-coordinate sa pagitan ng UI (JM/Ryken) at Devs (Emil/Evasco/Nico/Josiah/Yuan)
+- Mag-coordinate sa pagitan ng UI (JM/Ryken) at Devs
 - I-update ang Trello board habang may natapos
 
 ### 2:00 PM — Integration Phase
@@ -33,7 +32,7 @@
 
 ### 3:30 PM — Git Push Phase
 - I-verify na naka-push lahat ng members
-- I-check ang GitHub repo kung kumpleto ang files
+- I-check ang GitHub repo
 
 ### 4:00 PM — QA Phase
 - I-review ang bug reports ni Josiah/Evasco
@@ -41,7 +40,7 @@
 - I-update ang Trello (move to Done)
 
 ### 5:00 PM — Wrap Up
-- I-summarize ang nagawa ngayong araw
+- I-summarize ang nagawa
 - I-set ang next tasks para Week 3
 - I-send sa GC ang recap message
 
@@ -49,82 +48,56 @@
 
 ## 💻 YOUR TASK (Code)
 
-### Main.java — Entry point ng application:
-```java
-package main;
-
-import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
-
-public class Main extends Application {
-
-    @Override
-    public void start(Stage primaryStage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("/fxml/Login.fxml"));
-        primaryStage.setTitle("Pass Slip Issuance System");
-        primaryStage.setScene(new Scene(root, 1280, 720));
-        primaryStage.setResizable(false);
-        primaryStage.show();
-    }
-
-    public static void main(String[] args) {
-        launch(args);
-    }
-}
-```
+Gumawa ng `Main.java` — entry point ng application.
 
 I-save sa: `src/main/Main.java`
 
----
-
-## 🤖 CLAUDE PROMPT (Para sa PM tasks)
+### 🤖 CLAUDE PROMPT (I-paste mo ito sa Claude):
 
 ```
-Ikaw ay isang expert project manager at Java developer na tumutulong sa akin.
+Ikaw ay isang expert Java developer na tumutulong sa akin.
 
 Ang project namin ay: Employee Pass Slip Request, Issuance and Monitoring System
 
-Ako ang Project Manager. Kailangan ko ng tulong sa:
-[Ilagay mo dito ang specific na tanong — hal. may bug report, may conflict sa GitHub, etc.]
+Kailangan ko ng Main.java na may:
+- Package: main
+- Extends Application (JavaFX)
+- start() method na naglo-load ng Login.fxml
+- Window title: "Pass Slip Issuance System"
+- Window size: 1280x720
+- setResizable(false)
 
-Project context:
-- JavaFX + MySQL + JDBC
-- GitHub repo: https://github.com/Hexteriaxxxxx/OOP-Final-Project
-- Database: pass_slip_db (localhost:3306, root, Projectgian27)
-- 11 members, presentation: June 17, 2026
+FXML path: /fxml/Login.fxml
 ```
 
 ---
 
 ## 📤 GIT PUSH
-1. **Git → Pull** muna
+1. **Git → Pull** muna (Ctrl+T)
 2. **Git → Commit** (Ctrl+K)
-3. I-check: ✅ src/main/Main.java + lahat ng updated files
-4. Commit message: `"Add Main entry point and project setup - Gian"`
+3. I-check: ✅ src/main/Main.java
+4. Commit message: `"Add Main entry point - Gian"`
 5. **Commit and Push → Push**
 
 ---
 
-## GC RECAP MESSAGE TEMPLATE (I-send sa 5PM):
+## GC RECAP MESSAGE (I-send sa 5PM):
 
 ```
 ✅ Day 1 Coding Session — DONE!
 
 Nagawa natin ngayon:
-- [i-list mo dito ang mga nagawa]
+- [i-list mo dito]
 
 In progress:
-- [i-list mo dito ang hindi pa tapos]
+- [i-list mo dito]
 
 Bugs found:
-- [i-list mo dito ang bugs]
+- [i-list mo dito]
 
 Next session:
-- [kailan ang susunod]
-- [ano ang target]
+- [kailan]
+- [target]
 
 Salamat sa lahat! 💪 June 17 kaya natin! 🎯
 ```
