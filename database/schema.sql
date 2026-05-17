@@ -1,6 +1,6 @@
 -- ============================================
 -- Employee Pass Slip Request, Issuance and Monitoring System
--- Database Schema - Updated
+-- Database Schema - Final Version
 -- ============================================
 
 CREATE DATABASE IF NOT EXISTS pass_slip_db;
@@ -62,16 +62,19 @@ CREATE TABLE IF NOT EXISTS Activity_logs (
 
 -- ============================================
 -- Default Admin Account
+-- Username: admin | Password: admin123
 -- ============================================
 INSERT INTO User (full_name, email, username, password, role)
 VALUES ('Administrator', 'admin@passlip.com', 'admin', 'admin123', 'admin');
 
 -- ============================================
--- Sample Employees
+-- Sample Employees for Testing
 -- ============================================
 INSERT INTO Employee (name, department, position) VALUES
 ('Kevin Brian', 'IT Department', 'IT Staff'),
 ('Justin Gian', 'HR Department', 'HR Officer'),
 ('Nico Ancheta', 'Finance', 'Finance Staff'),
-('Josiah', 'Marketing', 'Marketing Staff'),
-('LJ Catindig', 'Operations', 'Operations Staff');
+('Josiah David', 'Marketing', 'Marketing Staff'),
+('LJ Catindig', 'Operations', 'Operations Staff'),
+('Emil Fernandez', 'IT Department', 'IT Staff'),
+('Ryken Gabriel', 'Admin', 'Administrative Staff');

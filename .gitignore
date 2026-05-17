@@ -2,21 +2,27 @@
 .idea/
 *.iml
 *.iws
+*.ipr
 out/
 
 # Compiled Java
 *.class
 *.jar
 
-# JavaFX SDK (download separately)
-lib/javafx-sdk/
+# Libraries - download separately, do not push
+lib/
+libs/
 
 # OS Files
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Logs
 *.log
 
-# MySQL Connector (add manually to lib/)
-# Download from: https://dev.mysql.com/downloads/connector/j/
+# MySQL Connector - download from dev.mysql.com
+mysql-connector*/
+
+# JavaFX SDK - download from gluonhq.com
+javafx-sdk*/
