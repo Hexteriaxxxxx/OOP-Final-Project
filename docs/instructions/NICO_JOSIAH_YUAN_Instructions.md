@@ -4,10 +4,9 @@
 ---
 
 ## 🛠️ SETUP (Do this first — 11:00 AM)
-(Same setup steps as Emil/Evasco — clone repo, install IntelliJ, download JavaFX + MySQL Connector, setup Project SDK)
 
 ### Step 1 — Accept GitHub Invite
-- Buksan yung email/GitHub notifications
+- Buksan email/GitHub notifications
 - Click **Accept Invitation** mula kay Hexteriaxxxxx
 
 ### Step 2 — I-clone ang Repo
@@ -21,7 +20,7 @@
 
 ### Step 4 — I-download ang MySQL Connector
 - https://dev.mysql.com/downloads/connector/j → Platform Independent → .zip
-- I-extract, kunin ang `.jar` → i-paste sa `lib/mysql-connector-j-9.7.0/`
+- Kunin ang `.jar` → i-paste sa `lib/mysql-connector-j-9.7.0/`
 
 ### Step 5 — I-setup Project sa IntelliJ
 1. **File → Project Structure → Libraries → +**
@@ -31,82 +30,135 @@
 
 ---
 
-## 💻 YOUR TASK
-1. `Dashboard.fxml` — Staff Dashboard UI
-2. `DashboardController.java` — logic ng Dashboard
-3. `PassSlipForm.fxml` — Pass Slip Issuance Form
-4. `PassSlipController.java` — logic ng Pass Slip issuance
-5. `TimeInController.java` — logic ng Time-In recording
+## 🎨 KUHANIN ANG UI DESIGN (Bago mag-code)
+
+1. Lapitan si **JM o Ryken**
+2. Hinging i-screenshot o i-export ang:
+   - ✅ Dashboard Screen (Staff view)
+   - ✅ Pass Slip Issuance Form
+3. I-save ang mga screenshots sa laptop mo
 
 ---
 
-## 🤖 CLAUDE PROMPT (I-paste mo ito sa Claude)
+## 💻 YOUR TASK
+
+### Gagawin mo (gamit ang Claude):
+1. `Dashboard.fxml` — Dashboard UI
+2. `DashboardController.java` — logic ng Dashboard
+3. `PassSlipForm.fxml` — Pass Slip Issuance Form
+4. `PassSlipController.java` — logic ng Pass Slip issuance
+
+---
+
+## 🤖 CLAUDE PROMPT
+
+**Step 1 — Buksan ang Claude (claude.ai)**
+
+**Step 2 — I-paste mo ito sa simula ng chat, KASAMA ang screenshot ng Dashboard:**
 
 ```
 Ikaw ay isang expert Java developer na tumutulong sa akin na gumawa ng JavaFX application.
 
 Ang project namin ay: Employee Pass Slip Request, Issuance and Monitoring System
 
-Ang kailangan ko:
+[I-attach mo ang screenshot ng Dashboard dito]
 
-1. Dashboard.fxml - JavaFX dashboard na may:
-   - Left sidebar (dark red #8B0000) na may:
-     * Logo/System name sa taas
-     * Navigation: Dashboard, Pass Slip Requests, Approved Slips, Rejected Slips, Reports, User Management, Settings
+Base sa screenshot na ito, gumawa ka ng:
+
+1. Dashboard.fxml - JavaFX FXML file na kapareho ng design sa screenshot
+   - May left sidebar (dark red #8B0000) na may:
+     * System logo/name sa taas
+     * Navigation items: Dashboard, Pass Slip Requests, Approved Slips, Rejected Slips, Reports, User Management, Settings
      * Logout button sa baba
-   - Main content area na may:
+   - May main content area na may:
      * Header: "Dashboard" + "Welcome back, Staff"
      * 4 stat cards: Pending Requests, Approved Requests, Rejected Requests, Active Pass Slips Today
-     * Table ng Pass Slip Requests (Request ID, Name, Department, Purpose, Time Out, Time In, Status, Actions)
+     * TableView ng Pass Slip Requests (columns: Request ID, Name, Department, Purpose, Time Out, Time In, Status, Actions)
      * Search bar
      * "+ Create Pass Slip" button
-     * Notifications panel (right side)
+     * Notifications panel sa kanan
      * Recent Activity panel
      * Today's Summary panel
 
 2. DashboardController.java na may:
    - Package: controllers
    - initialize() method na naglo-load ng data mula sa database
-   - loadPassSlips() method gamit ang PassSlipDAO
-   - handleCreatePassSlip() method na nagbubukas ng PassSlipForm
-   - handleLogout() method
+   - loadPassSlips() method gamit ang PassSlipDAO.getTodayPassSlips()
+   - handleCreatePassSlip() method na nagbubukas ng PassSlipForm.fxml
+   - handleLogout() method na nagbabalik sa Login.fxml
    - refreshData() method
+   - updateStatCards() — i-update ang 4 stat cards
 
-3. PassSlipForm.fxml - Form para mag-issue ng pass slip na may:
-   - Employee selector (dropdown)
-   - Purpose/Reason field
-   - Date field (auto-filled sa current date)
-   - Time Out field (auto-filled sa current time)
-   - Submit button
+Existing files sa project:
+- models/PassSlip.java (slipId, empId, empName, department, reason, timeOut, timeIn, duration, status)
+- dao/PassSlipDAO.java (getTodayPassSlips(), countTodaySlips(), countActiveSlips())
+- dao/EmployeeDAO.java (getAllEmployees())
+- utils/DBConnection.java
+- Database: pass_slip_db, host: localhost, port: 3306, user: root, password: Projectgian27
+
+I-save ang FXML sa: resources/fxml/Dashboard.fxml
+I-save ang Java sa: src/controllers/DashboardController.java
+
+Gawin mo ang bawat file nang kumpleto at handa nang i-run.
+```
+
+**Step 3 — Pagkatapos makuha ang Dashboard files, bagong prompt para sa Pass Slip Form:**
+
+```
+Ikaw ay isang expert Java developer na tumutulong sa akin na gumawa ng JavaFX application.
+
+Ang project namin ay: Employee Pass Slip Request, Issuance and Monitoring System
+
+Gumawa ka ng:
+
+1. PassSlipForm.fxml - Form para mag-issue ng pass slip na may:
+   - Employee dropdown selector (ComboBox)
+   - Purpose/Reason text field
+   - Date field (auto-filled sa current date, hindi pwedeng baguhin)
+   - Time Out field (auto-filled sa current time, hindi pwedeng baguhin)
+   - Submit/Issue button (dark red #8B0000)
    - Cancel button
    - Same dark red theme
 
-4. PassSlipController.java na may:
+2. PassSlipController.java na may:
    - Package: controllers
-   - handleSubmit() method na nag-save ng pass slip sa database
-   - handleTimeIn() method na nag-record ng time-in
-   - calculateDuration() method
+   - initialize() — i-load ang employees sa ComboBox
+   - handleIssue() — nag-save ng pass slip sa database at nag-close ng form
+   - handleCancel() — nag-close ng form nang walang save
    - Validation ng empty fields
+   - Auto-set ng current date at time sa timeOut
+
+3. TimeInController.java na may:
+   - Package: controllers
+   - handleRecordTimeIn(int slipId) — nag-record ng time-in
+   - calculateDuration() — kinukwenta ang oras sa labas
+   - i-update ang Pass_slip table sa database
 
 Existing files:
 - models/PassSlip.java
-- dao/PassSlipDAO.java (may issuePassSlip(), recordTimeIn(), getTodayPassSlips() methods)
-- dao/EmployeeDAO.java (may getAllEmployees() method)
-- utils/DBConnection.java
+- models/Employee.java
+- dao/PassSlipDAO.java (issuePassSlip(), recordTimeIn())
+- dao/EmployeeDAO.java (getAllEmployees())
 
-Database: pass_slip_db, MySQL port: 3306, user: root, password: Projectgian27
-
-I-save ang fxml sa: resources/fxml/
-I-save ang java sa: src/controllers/
-
-Gawin mo ang bawat file nang kumpleto at ready to run.
+I-save ang FXML sa: resources/fxml/PassSlipForm.fxml
+I-save ang Java sa: src/controllers/PassSlipController.java at src/controllers/TimeInController.java
 ```
 
 ---
 
-## 📤 GIT PUSH
+## 📋 KUNG SAAN ILALAGAY ANG MGA FILES
 
-1. **Git → Pull** muna (para updated)
+- `Dashboard.fxml` → `resources/fxml/Dashboard.fxml`
+- `PassSlipForm.fxml` → `resources/fxml/PassSlipForm.fxml`
+- `DashboardController.java` → `src/controllers/DashboardController.java`
+- `PassSlipController.java` → `src/controllers/PassSlipController.java`
+- `TimeInController.java` → `src/controllers/TimeInController.java`
+
+---
+
+## 📤 GIT PUSH (Gawin pagkatapos mag-code)
+
+1. **Git → Pull** muna (Ctrl+T)
 2. **Git → Commit** (Ctrl+K)
 3. I-check lang:
    - ✅ src/controllers/DashboardController.java
@@ -114,10 +166,11 @@ Gawin mo ang bawat file nang kumpleto at ready to run.
    - ✅ src/controllers/TimeInController.java
    - ✅ resources/fxml/Dashboard.fxml
    - ✅ resources/fxml/PassSlipForm.fxml
-4. Commit message: `"Add Dashboard and PassSlip controllers - Nico/Josiah/Yuan"`
-5. **Commit and Push → Push**
+4. Commit message: `"Add Dashboard and PassSlip screens - Nico/Josiah/Yuan"`
+5. Click **Commit and Push → Push**
 
 ## ⚠️ REMINDERS
 - Huwag i-push ang `lib/` folder
-- `Git → Pull` muna bago mag-code
-- Kung may conflict — ipasabi agay kay Gian
+- Palaging `Git → Pull` muna bago mag-code
+- Kung may error — screenshot at ipakita kay Gian
+- Koordinate kay Emil/Evasco — kailangan nila matapos ang Login bago kayo mag-integrate

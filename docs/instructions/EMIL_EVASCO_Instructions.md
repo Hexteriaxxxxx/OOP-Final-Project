@@ -44,91 +44,136 @@
 
 ---
 
-## 💻 YOUR TASK
-1. Gumawa ng `Login.fxml` — Login Screen
-2. Gumawa ng `Register.fxml` — Register Screen
-3. Gumawa ng `LoginController.java` — logic ng Login
-4. Gumawa ng `RegisterController.java` — logic ng Register
-5. Gumawa ng `Main.java` — entry point ng application
+## 🎨 KUHANIN ANG UI DESIGN (Bago mag-code)
+
+1. Lapitan si **JM o Ryken**
+2. Hinging i-screenshot o i-export ang:
+   - ✅ Login Screen (Staff view)
+   - ✅ Login Screen (Admin view)
+   - ✅ Register Screen (Staff view)
+   - ✅ Register Screen (Admin view)
+3. I-save ang mga screenshots sa laptop mo
 
 ---
 
-## 🤖 CLAUDE PROMPT (I-paste mo ito sa Claude)
+## 💻 YOUR TASK
+
+### Gagawin mo (gamit ang Claude):
+1. `Login.fxml` — Login Screen
+2. `Register.fxml` — Register Screen
+3. `LoginController.java` — logic ng Login
+4. `RegisterController.java` — logic ng Register
+
+---
+
+## 🤖 CLAUDE PROMPT
+
+**Step 1 — Buksan ang Claude (claude.ai)**
+
+**Step 2 — I-paste mo ito sa simula ng chat, KASAMA ang screenshot ng Login Screen:**
 
 ```
 Ikaw ay isang expert Java developer na tumutulong sa akin na gumawa ng JavaFX application.
 
 Ang project namin ay: Employee Pass Slip Request, Issuance and Monitoring System
 
-Ang kailangan ko:
-1. Login.fxml - JavaFX login screen na may:
-   - Staff/Admin toggle buttons
-   - Username field
-   - Password field
-   - Remember me checkbox
-   - Forgot Password link
-   - Sign In button
-   - Sign Up link
-   - Copyright footer "© 2026 Pass Slip Issuance System"
-   - Dark red (#8B0000) color theme
-   - White card in center
+[I-attach mo ang screenshot ng Login Screen dito]
+
+Base sa screenshot na ito, gumawa ka ng:
+
+1. Login.fxml - JavaFX FXML file na kapareho ng design sa screenshot
+   - Gamitin ang dark red (#8B0000) color theme
+   - May Staff/Admin toggle buttons
+   - May Username field
+   - May Password field
+   - May Remember me checkbox
+   - May Forgot Password link
+   - May Sign In button
+   - May Sign Up link sa baba
+   - May copyright footer: "© 2026 Pass Slip Issuance System"
 
 2. LoginController.java na may:
    - Package: controllers
-   - Import: models.User, dao.UserDAO
    - handleLogin() method na nag-check ng username/password sa database
-   - handleRegister() method na nagbubukas ng Register screen
-   - Role-based redirect: admin → DashboardAdmin.fxml, staff → DashboardStaff.fxml
-   - Error handling kung mali ang credentials
-
-3. Register.fxml - JavaFX register screen na may:
-   - Staff/Admin toggle buttons
-   - Full Name field
-   - Email field
-   - Username field
-   - Password field
-   - Confirm Password field
-   - Terms and Conditions checkbox
-   - Create Account button
-   - Back to Login link
-   - Same dark red theme
-
-4. RegisterController.java na may:
-   - Package: controllers
-   - handleRegister() method na nag-save ng bagong user sa database
-   - Validation: password match, empty fields, username exists
-   - handleBack() method para bumalik sa Login
-
-5. Main.java na may:
-   - Naglo-load ng Login.fxml as primary stage
-   - Window title: "Pass Slip Issuance System"
-   - Window size: 1280x720
+   - handleStaffTab() at handleAdminTab() para sa toggle
+   - handleSignUp() method na nagbubukas ng Register.fxml
+   - Role-based redirect: admin → Dashboard.fxml, staff → Dashboard.fxml
+   - Alert dialog kung mali ang credentials
 
 Existing files sa project:
-- models/User.java (may userId, username, password, role)
-- dao/UserDAO.java (may login() at register() methods)
-- utils/DBConnection.java (may getConnection() method)
-- Database: pass_slip_db, MySQL port: 3306, user: root, password: Projectgian27
+- models/User.java (userId, username, password, role)
+- dao/UserDAO.java (login(username, password, role) → User)
+- utils/DBConnection.java (getConnection() → Connection)
+- Database: pass_slip_db, host: localhost, port: 3306, user: root, password: Projectgian27
 
-I-save ang fxml files sa: resources/fxml/
-I-save ang java files sa: src/controllers/ at src/main/
+I-save ang FXML sa: resources/fxml/Login.fxml
+I-save ang Java sa: src/controllers/LoginController.java
 
-Gawin mo ang bawat file nang kumpleto at ready to run.
+Gawin mo ang bawat file nang kumpleto at handa nang i-run.
 ```
+
+**Step 3 — Pagkatapos makuha ang Login files, bagong prompt para sa Register:**
+
+```
+Ikaw ay isang expert Java developer na tumutulong sa akin na gumawa ng JavaFX application.
+
+Ang project namin ay: Employee Pass Slip Request, Issuance and Monitoring System
+
+[I-attach mo ang screenshot ng Register Screen dito]
+
+Base sa screenshot, gumawa ka ng:
+
+1. Register.fxml - JavaFX FXML file na kapareho ng design sa screenshot
+   - Same dark red (#8B0000) theme
+   - May Staff/Admin toggle buttons
+   - May Full Name field
+   - May Email Address field
+   - May Username field
+   - May Password field
+   - May Confirm Password field
+   - May Terms and Conditions checkbox
+   - May Create Account button
+   - May Back to Login link
+
+2. RegisterController.java na may:
+   - Package: controllers
+   - handleRegister() — nag-save ng bagong user sa database
+   - Validation: empty fields, password match, username exists
+   - handleBack() — bumalik sa Login.fxml
+   - Success alert pagkatapos mag-register
+
+Existing files:
+- dao/UserDAO.java (register(fullName, email, username, password, role) → boolean)
+- dao/UserDAO.java (usernameExists(username) → boolean)
+
+I-save ang FXML sa: resources/fxml/Register.fxml
+I-save ang Java sa: src/controllers/RegisterController.java
+```
+
+---
+
+## 📋 KUNG SAAN ILALAGAY ANG MGA FILES
+
+Pagkatapos makuha ang code mula kay Claude:
+
+- `Login.fxml` → i-save sa `resources/fxml/Login.fxml`
+- `Register.fxml` → i-save sa `resources/fxml/Register.fxml`
+- `LoginController.java` → i-save sa `src/controllers/LoginController.java`
+- `RegisterController.java` → i-save sa `src/controllers/RegisterController.java`
 
 ---
 
 ## 📤 GIT PUSH (Gawin pagkatapos mag-code)
 
-1. Click **Git → Commit** (Ctrl+K)
-2. I-check lang:
+1. **Git → Pull** muna (Ctrl+T) — para updated
+2. **Git → Commit** (Ctrl+K)
+3. I-check lang:
    - ✅ src/controllers/LoginController.java
    - ✅ src/controllers/RegisterController.java
-   - ✅ src/main/Main.java
    - ✅ resources/fxml/Login.fxml
    - ✅ resources/fxml/Register.fxml
-3. Commit message: `"Add Login and Register screens - Emil/Evasco"`
-4. Click **Commit and Push → Push**
+4. Commit message: `"Add Login and Register screens - Emil/Evasco"`
+5. Click **Commit and Push → Push**
 
 ## ⚠️ REMINDERS
 - Huwag i-push ang `lib/` folder
