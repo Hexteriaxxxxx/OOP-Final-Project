@@ -1,4 +1,4 @@
-package utils;
+package main.utils;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -15,28 +15,22 @@ public class DBConnection {
     private static final String URL = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DATABASE
             + "?useSSL=false&serverTimezone=Asia/Manila&allowPublicKeyRetrieval=true";
 
-    private static Connection connection = null;
-
     public static Connection getConnection() {
         try {
-            if (connection == null || connection.isClosed()) {
-                Class.forName("com.mysql.cj.jdbc.Driver");
-                connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-                System.out.println("Database connected successfully!");
-            }
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            return DriverManager.getConnection(URL, USERNAME, PASSWORD);
         } catch (ClassNotFoundException e) {
             System.out.println("MySQL Driver not found: " + e.getMessage());
         } catch (SQLException e) {
             System.out.println("Database connection failed: " + e.getMessage());
         }
-        return connection;
+        return null;
     }
 
-    public static void closeConnection() {
+    public static void closeConnection(Connection conn) {
         try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
-                System.out.println("Database connection closed.");
+            if (conn != null && !conn.isClosed()) {
+                conn.close();
             }
         } catch (SQLException e) {
             System.out.println("Error closing connection: " + e.getMessage());

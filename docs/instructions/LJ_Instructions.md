@@ -36,8 +36,9 @@
 3. I-verify ang lahat ng DAO queries (UserDAO, EmployeeDAO, PassSlipDAO)
 
 ### DBTest.java:
+
 ```java
-package utils;
+package main.utils;
 
 import java.sql.Connection;
 
@@ -91,8 +92,8 @@ Kailangan ko:
 1. **Git → Pull** muna
 2. **Git → Commit** (Ctrl+K)
 3. I-check lang:
-   - ✅ src/utils/DBTest.java
-   - ✅ src/dao/ActivityLogDAO.java
+   - ✅ src/main.utils/DBTest.java
+   - ✅ src/main.dao/ActivityLogDAO.java
 4. Commit message: `"Add JDBC connection test and ActivityLogDAO - LJ"`
 5. **Commit and Push → Push**
 

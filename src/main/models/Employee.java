@@ -1,4 +1,4 @@
-package models;
+package main.models;
 
 public class Employee {
     private int empId;
@@ -29,6 +29,7 @@ public class Employee {
 
     @Override
     public String toString() {
-        return "Employee{empId=" + empId + ", name='" + name + "', department='" + department + "', position='" + position + "'}";
+        return "Employee{empId=" + empId + ", name='" + name +
+                "', department='" + department + "', position='" + position + "'}";
     }
 }

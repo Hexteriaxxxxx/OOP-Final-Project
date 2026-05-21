@@ -1,13 +1,13 @@
-package utils;
+package main.utils;
 
-import dao.ActivityLogDAO;
-import dao.EmployeeDAO;
-import dao.PassSlipDAO;
-import dao.UserDAO;
-import models.ActivityLog;
-import models.Employee;
-import models.PassSlip;
-import models.User;
+import main.dao.ActivityLogDAO;
+import main.dao.EmployeeDAO;
+import main.dao.PassSlipDAO;
+import main.dao.UserDAO;
+import main.models.ActivityLog;
+import main.models.Employee;
+import main.models.PassSlip;
+import main.models.User;
 
 import java.sql.Connection;
 import java.util.List;
@@ -79,14 +79,11 @@ public class DBTest {
         System.out.println("\n--- ActivityLogDAO Tests ---");
         ActivityLogDAO logDAO = new ActivityLogDAO();
 
-        boolean logged = logDAO.logAction(1, "TEST_ACTION", 1);
-        System.out.println("logAction(): " + (logged ? "✅ Saved!" : "❌ Failed!"));
+        boolean logged = logDAO.logActivity(1, "TEST_ACTION", "admin");
+        System.out.println("logActivity(): " + (logged ? "✅ Saved!" : "❌ Failed!"));
 
         List<ActivityLog> recentLogs = logDAO.getRecentLogs(5);
         System.out.println("getRecentLogs(5): " + recentLogs.size() + " records");
-
-        List<ActivityLog> empLogs = logDAO.getLogsByEmployee(1);
-        System.out.println("getLogsByEmployee(1): " + empLogs.size() + " records");
 
         System.out.println("\n=============================");
         System.out.println("      ALL TESTS DONE!        ");

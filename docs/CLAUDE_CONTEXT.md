@@ -84,10 +84,10 @@ Ang sistema ay isang desktop application para sa pag-issue ng employee pass slip
 OOP-Final-Project/
 ├── src/
 │   ├── controllers/     # JavaFX Controllers
-│   ├── models/          # Java Model Classes
+│   ├── main.models/          # Java Model Classes
 │   ├── views/           # UI Logic
-│   ├── dao/             # Database Access Objects
-│   └── utils/           # Helper Classes
+│   ├── main.dao/             # Database Access Objects
+│   └── main.utils/           # Helper Classes
 ├── resources/
 │   ├── fxml/            # JavaFX FXML files
 │   └── css/             # Stylesheets
@@ -99,32 +99,32 @@ OOP-Final-Project/
 
 ## EXISTING FILES (Already in GitHub)
 
-### models/User.java
+### main.models/User.java
 - Fields: userId, username, password, role
 - Methods: getters/setters
 
-### models/Employee.java  
+### main.models/Employee.java  
 - Fields: empId, name, department, position
 - Methods: getters/setters
 
-### models/PassSlip.java
+### main.models/PassSlip.java
 - Fields: slipId, empId, empName, department, reason, timeOut, timeIn, duration, issuedBy, status
 - Methods: getters/setters, calculateDuration(), getFormattedTimeOut(), getFormattedTimeIn()
 
-### models/ActivityLog.java
+### main.models/ActivityLog.java
 - Fields: logId, empId, action, timestamp, performedBy
 - Methods: getters/setters, getFormattedTimestamp()
 
-### utils/DBConnection.java
+### main.utils/DBConnection.java
 - Method: getConnection() → returns Connection
 - Method: closeConnection()
 
-### dao/UserDAO.java
+### main.dao/UserDAO.java
 - Method: login(username, password, role) → returns User or null
 - Method: register(fullName, email, username, password, role) → returns boolean
 - Method: usernameExists(username) → returns boolean
 
-### dao/EmployeeDAO.java
+### main.dao/EmployeeDAO.java
 - Method: getAllEmployees() → List<Employee>
 - Method: getEmployeeById(empId) → Employee
 - Method: addEmployee(employee) → boolean
@@ -132,7 +132,7 @@ OOP-Final-Project/
 - Method: deleteEmployee(empId) → boolean
 - Method: searchEmployees(keyword) → List<Employee>
 
-### dao/PassSlipDAO.java
+### main.dao/PassSlipDAO.java
 - Method: issuePassSlip(passSlip) → boolean
 - Method: recordTimeIn(slipId, timeIn, duration) → boolean
 - Method: getAllPassSlips() → List<PassSlip>

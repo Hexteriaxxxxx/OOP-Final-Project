@@ -1,6 +1,6 @@
-package controllers;
+package main.controllers;
 
-import dao.UserDAO;
+import main.dao.UserDAO;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -141,8 +141,9 @@ public class RegisterController implements Initializable {
 
     private void navigateToLogin(ActionEvent event) {
         try {
-            URL loginUrl = getClass().getClassLoader().getResource("fxml/Login.fxml");
-            Parent root = FXMLLoader.load(loginUrl);
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/fxml/Login.fxml"));
+            Parent root = loader.load();
             Stage stage = (Stage) fullNameField.getScene().getWindow();
             stage.setScene(new Scene(root, 1280, 720));
             stage.setTitle("Pass Slip Issuance System");

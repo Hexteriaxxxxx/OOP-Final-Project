@@ -133,7 +133,7 @@ Before starting, make sure you have the following installed:
 
 ## STEP 6 — Verify DBConnection.java
 
-Make sure the database credentials in `utils/DBConnection.java` match:
+Make sure the database credentials in `main.utils/DBConnection.java` match:
 
 ```java
 private static final String URL = "jdbc:mysql://localhost:3306/pass_slip_db";
@@ -172,10 +172,10 @@ private static final String PASSWORD = "Projectgian27";
 OOP-Final-Project/
 ├── src/
 │   ├── controllers/     # JavaFX Controllers
-│   ├── models/          # Java Model Classes
+│   ├── main.models/          # Java Model Classes
 │   ├── views/           # UI Logic
-│   ├── dao/             # Database Access Objects
-│   └── utils/           # Helper Classes
+│   ├── main.dao/             # Database Access Objects
+│   └── main.utils/           # Helper Classes
 ├── resources/
 │   ├── fxml/            # JavaFX FXML files
 │   └── css/             # Stylesheets

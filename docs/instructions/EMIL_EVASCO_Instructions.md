@@ -101,9 +101,9 @@ Base sa screenshot na ito, gumawa ka ng:
    - Alert dialog kung mali ang credentials
 
 Existing files sa project:
-- models/User.java (userId, username, password, role)
-- dao/UserDAO.java (login(username, password, role) → User)
-- utils/DBConnection.java (getConnection() → Connection)
+- main.models/User.java (userId, username, password, role)
+- main.dao/UserDAO.java (login(username, password, role) → User)
+- main.utils/DBConnection.java (getConnection() → Connection)
 - Database: pass_slip_db, host: localhost, port: 3306, user: root, password: Projectgian27
 
 I-save ang FXML sa: resources/fxml/Login.fxml
@@ -143,8 +143,8 @@ Base sa screenshot, gumawa ka ng:
    - Success alert pagkatapos mag-register
 
 Existing files:
-- dao/UserDAO.java (register(fullName, email, username, password, role) → boolean)
-- dao/UserDAO.java (usernameExists(username) → boolean)
+- main.dao/UserDAO.java (register(fullName, email, username, password, role) → boolean)
+- main.dao/UserDAO.java (usernameExists(username) → boolean)
 
 I-save ang FXML sa: resources/fxml/Register.fxml
 I-save ang Java sa: src/controllers/RegisterController.java

@@ -47,7 +47,7 @@ Ang project namin ay: Employee Pass Slip Request, Issuance and Monitoring System
 Kailangan ko ng dalawa:
 
 1. ReportDAO.java na may:
-   - Package: dao
+   - Package: main.dao
    - getDailyReport(LocalDate date) — lahat ng pass slips sa isang araw
    - getMonthlyReport(int month, int year) — lahat ng pass slips sa isang buwan
    - getTotalByDepartment() — count ng pass slips per department
@@ -63,9 +63,9 @@ Kailangan ko ng dalawa:
    - Paano i-run ang application
 
 Existing files:
-- models/PassSlip.java
-- dao/PassSlipDAO.java
-- utils/DBConnection.java
+- main.models/PassSlip.java
+- main.dao/PassSlipDAO.java
+- main.utils/DBConnection.java
 - Database: pass_slip_db
 
 [Ilagay mo dito ang specific na tanong]
@@ -77,7 +77,7 @@ Existing files:
 1. **Git → Pull** muna
 2. **Git → Commit** (Ctrl+K)
 3. I-check lang:
-   - ✅ src/dao/ReportDAO.java
+   - ✅ src/main.dao/ReportDAO.java
    - ✅ docs/SETUP_GUIDE.md
 4. Commit message: `"Add ReportDAO and setup guide - Karl"`
 5. **Commit and Push → Push**

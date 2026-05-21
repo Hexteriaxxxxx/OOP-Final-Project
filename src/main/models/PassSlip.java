@@ -1,4 +1,4 @@
-package models;
+package main.models;
 
 import java.time.LocalDateTime;
 import java.time.Duration;
@@ -14,7 +14,7 @@ public class PassSlip {
     private LocalDateTime timeIn;
     private String duration;
     private int issuedBy;
-    private String status; // "active", "returned"
+    private String status; // "Pending", "Approved", "Rejected", "Returned"
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm a");
 
@@ -25,7 +25,7 @@ public class PassSlip {
         this.reason = reason;
         this.timeOut = timeOut;
         this.issuedBy = issuedBy;
-        this.status = "active";
+        this.status = "Pending";
     }
 
     // Calculate duration when time-in is recorded

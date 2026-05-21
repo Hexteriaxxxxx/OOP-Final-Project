@@ -1,6 +1,6 @@
-package controllers;
+package main.controllers;
 
-import dao.UserDAO;
+import main.dao.UserDAO;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -9,7 +9,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
-import models.User;
+import main.models.User;
 
 import java.io.IOException;
 import java.net.URL;

@@ -1,7 +1,7 @@
-package dao;
+package main.dao;
 
-import models.PassSlip;
-import utils.DBConnection;
+import main.models.PassSlip;
+import main.utils.DBConnection;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -12,7 +12,7 @@ public class PassSlipDAO {
 
     // Issue new pass slip
     public boolean issuePassSlip(PassSlip passSlip) {
-        String sql = "INSERT INTO Pass_slip (emp_id, reason, time_out, issued_by, status) VALUES (?, ?, ?, ?, 'active')";
+        String sql = "INSERT INTO Pass_slip (emp_id, reason, time_out, issued_by, status) VALUES (?, ?, ?, ?, 'Pending')";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -30,7 +30,7 @@ public class PassSlipDAO {
 
     // Record time-in
     public boolean recordTimeIn(int slipId, LocalDateTime timeIn, String duration) {
-        String sql = "UPDATE Pass_slip SET time_in = ?, duration = ?, status = 'returned' WHERE slip_id = ?";
+        String sql = "UPDATE Pass_slip SET time_in = ?, duration = ?, status = 'Returned' WHERE slip_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -45,20 +45,35 @@ public class PassSlipDAO {
         }
     }
 
+    // Update pass slip status (Approve / Reject)
+    public boolean updatePassSlipStatus(int slipId, String status) {
+        String sql = "UPDATE Pass_slip SET status = ? WHERE slip_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, status);
+            stmt.setInt(2, slipId);
+
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.out.println("Update status error: " + e.getMessage());
+            return false;
+        }
+    }
+
     // Get all pass slips with employee info
     public List<PassSlip> getAllPassSlips() {
         List<PassSlip> slips = new ArrayList<>();
-        String sql = "SELECT ps.*, e.name as emp_name, e.department " +
-                     "FROM Pass_slip ps " +
-                     "JOIN Employee e ON ps.emp_id = e.emp_id " +
-                     "ORDER BY ps.time_out DESC";
+        String sql = "SELECT ps.*, e.name AS emp_name, e.department " +
+                "FROM Pass_slip ps " +
+                "JOIN Employee e ON ps.emp_id = e.emp_id " +
+                "ORDER BY ps.time_out DESC";
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                PassSlip slip = mapResultSet(rs);
-                slips.add(slip);
+                slips.add(mapResultSet(rs));
             }
         } catch (SQLException e) {
             System.out.println("Get pass slips error: " + e.getMessage());
@@ -69,18 +84,17 @@ public class PassSlipDAO {
     // Get today's pass slips
     public List<PassSlip> getTodayPassSlips() {
         List<PassSlip> slips = new ArrayList<>();
-        String sql = "SELECT ps.*, e.name as emp_name, e.department " +
-                     "FROM Pass_slip ps " +
-                     "JOIN Employee e ON ps.emp_id = e.emp_id " +
-                     "WHERE DATE(ps.time_out) = CURDATE() " +
-                     "ORDER BY ps.time_out DESC";
+        String sql = "SELECT ps.*, e.name AS emp_name, e.department " +
+                "FROM Pass_slip ps " +
+                "JOIN Employee e ON ps.emp_id = e.emp_id " +
+                "WHERE DATE(ps.time_out) = CURDATE() " +
+                "ORDER BY ps.time_out DESC";
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                PassSlip slip = mapResultSet(rs);
-                slips.add(slip);
+                slips.add(mapResultSet(rs));
             }
         } catch (SQLException e) {
             System.out.println("Get today slips error: " + e.getMessage());
@@ -88,21 +102,20 @@ public class PassSlipDAO {
         return slips;
     }
 
-    // Get active pass slips (not yet returned)
+    // Get active pass slips (Approved but not yet returned)
     public List<PassSlip> getActivePassSlips() {
         List<PassSlip> slips = new ArrayList<>();
-        String sql = "SELECT ps.*, e.name as emp_name, e.department " +
-                     "FROM Pass_slip ps " +
-                     "JOIN Employee e ON ps.emp_id = e.emp_id " +
-                     "WHERE ps.status = 'active' " +
-                     "ORDER BY ps.time_out DESC";
+        String sql = "SELECT ps.*, e.name AS emp_name, e.department " +
+                "FROM Pass_slip ps " +
+                "JOIN Employee e ON ps.emp_id = e.emp_id " +
+                "WHERE ps.status = 'Approved' " +
+                "ORDER BY ps.time_out DESC";
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                PassSlip slip = mapResultSet(rs);
-                slips.add(slip);
+                slips.add(mapResultSet(rs));
             }
         } catch (SQLException e) {
             System.out.println("Get active slips error: " + e.getMessage());
@@ -110,14 +123,14 @@ public class PassSlipDAO {
         return slips;
     }
 
-    // Count today's stats
+    // Count stats
     public int countTodaySlips() {
         String sql = "SELECT COUNT(*) FROM Pass_slip WHERE DATE(time_out) = CURDATE()";
         return countQuery(sql);
     }
 
     public int countActiveSlips() {
-        String sql = "SELECT COUNT(*) FROM Pass_slip WHERE status = 'active'";
+        String sql = "SELECT COUNT(*) FROM Pass_slip WHERE status = 'Approved'";
         return countQuery(sql);
     }
 

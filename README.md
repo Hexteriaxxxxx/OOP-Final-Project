@@ -67,9 +67,9 @@ Manual logbooks and informal procedures used by offices and campus units result 
 OOP Final Project/
 ├── src/
 │   ├── controllers/     # JavaFX Controllers
-│   ├── models/          # Java Model Classes
+│   ├── main.models/          # Java Model Classes
 │   ├── views/           # UI Logic
-│   └── utils/           # Helper Classes (DB Connection, etc.)
+│   └── main.utils/           # Helper Classes (DB Connection, etc.)
 ├── resources/
 │   ├── fxml/            # JavaFX FXML files
 │   └── css/             # Stylesheets

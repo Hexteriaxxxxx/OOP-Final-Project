@@ -90,10 +90,10 @@ Base sa screenshot na ito, gumawa ka ng:
    - updateStatCards() — i-update ang 4 stat cards
 
 Existing files sa project:
-- models/PassSlip.java (slipId, empId, empName, department, reason, timeOut, timeIn, duration, status)
-- dao/PassSlipDAO.java (getTodayPassSlips(), countTodaySlips(), countActiveSlips())
-- dao/EmployeeDAO.java (getAllEmployees())
-- utils/DBConnection.java
+- main.models/PassSlip.java (slipId, empId, empName, department, reason, timeOut, timeIn, duration, status)
+- main.dao/PassSlipDAO.java (getTodayPassSlips(), countTodaySlips(), countActiveSlips())
+- main.dao/EmployeeDAO.java (getAllEmployees())
+- main.utils/DBConnection.java
 - Database: pass_slip_db, host: localhost, port: 3306, user: root, password: Projectgian27
 
 I-save ang FXML sa: resources/fxml/Dashboard.fxml
@@ -135,10 +135,10 @@ Gumawa ka ng:
    - i-update ang Pass_slip table sa database
 
 Existing files:
-- models/PassSlip.java
-- models/Employee.java
-- dao/PassSlipDAO.java (issuePassSlip(), recordTimeIn())
-- dao/EmployeeDAO.java (getAllEmployees())
+- main.models/PassSlip.java
+- main.models/Employee.java
+- main.dao/PassSlipDAO.java (issuePassSlip(), recordTimeIn())
+- main.dao/EmployeeDAO.java (getAllEmployees())
 
 I-save ang FXML sa: resources/fxml/PassSlipForm.fxml
 I-save ang Java sa: src/controllers/PassSlipController.java at src/controllers/TimeInController.java
