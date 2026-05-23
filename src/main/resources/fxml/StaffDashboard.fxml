@@ -6,13 +6,13 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="main.controllers.AdminDashboardController"
-            prefWidth="1100" prefHeight="780"
+            fx:controller="main.controllers.StaffDashboardController"
+            prefWidth="1060" prefHeight="750"
             style="-fx-font-family: 'Segoe UI', Arial, sans-serif; -fx-background-color: #F4F6F9;">
 
-    <!-- ===== LEFT SIDEBAR ===== -->
+    <!-- LEFT SIDEBAR -->
     <left>
-        <VBox prefWidth="200" spacing="0"
+        <VBox prefWidth="185" spacing="0"
               style="-fx-background-color: linear-gradient(to bottom, #8B0000, #5A0000);
                      -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 12, 0, 3, 0);">
 
@@ -35,23 +35,19 @@
             <!-- Nav Buttons -->
             <VBox spacing="4" VBox.vgrow="ALWAYS">
                 <padding><Insets top="15" right="10" bottom="15" left="10"/></padding>
-                <Button fx:id="btnDashboard" text="  Dashboard" maxWidth="Infinity" onAction="#handleNavDashboard"
+                <Button fx:id="btnDashboard" text="  Dashboard" maxWidth="Infinity" onAction="#handleDashboard"
                         style="-fx-background-color: rgba(255,255,255,0.22); -fx-text-fill: white;
                                -fx-font-size: 13px; -fx-font-weight: bold; -fx-alignment: CENTER_LEFT;
                                -fx-padding: 10 14 10 14; -fx-background-radius: 8; -fx-cursor: hand; -fx-border-color: transparent;"/>
-                <Button fx:id="btnPassSlip" text="  Pass Slip Issuance" maxWidth="Infinity" onAction="#handleNavPassSlip"
+                <Button fx:id="btnPassSlip" text="  Pass Slip Issuance" maxWidth="Infinity" onAction="#handlePassSlipIssuance"
                         style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.80);
                                -fx-font-size: 13px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 14 10 14;
                                -fx-background-radius: 8; -fx-cursor: hand; -fx-border-color: transparent;"/>
-                <Button fx:id="btnVisitor" text="  Visitor Module" maxWidth="Infinity" onAction="#handleNavVisitor"
+                <Button fx:id="btnVisitor" text="  Visitor Module" maxWidth="Infinity" onAction="#handleVisitorModule"
                         style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.80);
                                -fx-font-size: 13px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 14 10 14;
                                -fx-background-radius: 8; -fx-cursor: hand; -fx-border-color: transparent;"/>
-                <Button fx:id="btnReports" text="  Reports" maxWidth="Infinity" onAction="#handleNavReports"
-                        style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.80);
-                               -fx-font-size: 13px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 14 10 14;
-                               -fx-background-radius: 8; -fx-cursor: hand; -fx-border-color: transparent;"/>
-                <Button fx:id="btnUserMgmt" text="  User Management" maxWidth="Infinity" onAction="#handleNavUserManagement"
+                <Button fx:id="btnReports" text="  Reports" maxWidth="Infinity" onAction="#handleReports"
                         style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.80);
                                -fx-font-size: 13px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 14 10 14;
                                -fx-background-radius: 8; -fx-cursor: hand; -fx-border-color: transparent;"/>
@@ -65,16 +61,16 @@
                     <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
                     <VBox alignment="CENTER" minWidth="32" minHeight="32"
                           style="-fx-background-color: rgba(255,255,255,0.25); -fx-background-radius: 16;">
-                        <Label text="A" style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                        <Label text="S" style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/>
                     </VBox>
                     <VBox spacing="2">
-                        <Label fx:id="lblSidebarUser" text="Admin"
+                        <Label fx:id="lblUserName" text="Staff"
                                style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/>
-                        <Label fx:id="lblSidebarRole" text="Administrator"
+                        <Label fx:id="lblUserRole" text="Staff"
                                style="-fx-text-fill: rgba(255,255,255,0.60); -fx-font-size: 11px;"/>
                     </VBox>
                 </HBox>
-                <Button fx:id="btnLogout" text="  Logout" maxWidth="Infinity" onAction="#handleLogout"
+                <Button text="  Logout" maxWidth="Infinity" onAction="#handleLogout"
                         style="-fx-background-color: rgba(255,255,255,0.12); -fx-text-fill: rgba(255,255,255,0.85);
                                -fx-font-size: 13px; -fx-padding: 9 14 9 14; -fx-background-radius: 8;
                                -fx-cursor: hand; -fx-border-color: rgba(255,255,255,0.20);
@@ -84,7 +80,7 @@
         </VBox>
     </left>
 
-    <!-- ===== CENTER CONTENT ===== -->
+    <!-- CENTER CONTENT -->
     <center>
         <VBox style="-fx-background-color: #F4F6F9;" spacing="0">
 
@@ -96,7 +92,7 @@
                 <VBox HBox.hgrow="ALWAYS">
                     <Label text="Dashboard"
                            style="-fx-text-fill: #1A1A2E; -fx-font-size: 22px; -fx-font-weight: bold;"/>
-                    <Label fx:id="lblWelcome" text="Welcome back, Admin"
+                    <Label fx:id="lblWelcome" text="Welcome back, Staff"
                            style="-fx-text-fill: #777777; -fx-font-size: 13px;"/>
                 </VBox>
                 <Button fx:id="btnNotification" text="Bell"
@@ -121,7 +117,7 @@
                                        style="-fx-text-fill: #6B7280; -fx-font-size: 12px;"/>
                                 <Label text="( )" style="-fx-text-fill: #E67E00; -fx-font-size: 18px; -fx-font-weight: bold;"/>
                             </HBox>
-                            <Label fx:id="lblPendingCount" text="0"
+                            <Label fx:id="lblPending" text="0"
                                    style="-fx-text-fill: #1A1A2E; -fx-font-size: 30px; -fx-font-weight: bold;"/>
                         </VBox>
                         <VBox HBox.hgrow="ALWAYS" spacing="8"
@@ -133,7 +129,7 @@
                                        style="-fx-text-fill: #6B7280; -fx-font-size: 12px;"/>
                                 <Label text="OK" style="-fx-text-fill: #27AE60; -fx-font-size: 14px; -fx-font-weight: bold;"/>
                             </HBox>
-                            <Label fx:id="lblApprovedCount" text="0"
+                            <Label fx:id="lblApproved" text="0"
                                    style="-fx-text-fill: #1A1A2E; -fx-font-size: 30px; -fx-font-weight: bold;"/>
                         </VBox>
                         <VBox HBox.hgrow="ALWAYS" spacing="8"
@@ -145,7 +141,7 @@
                                        style="-fx-text-fill: #6B7280; -fx-font-size: 12px;"/>
                                 <Label text="X" style="-fx-text-fill: #E74C3C; -fx-font-size: 16px; -fx-font-weight: bold;"/>
                             </HBox>
-                            <Label fx:id="lblRejectedCount" text="0"
+                            <Label fx:id="lblRejected" text="0"
                                    style="-fx-text-fill: #1A1A2E; -fx-font-size: 30px; -fx-font-weight: bold;"/>
                         </VBox>
                         <VBox HBox.hgrow="ALWAYS" spacing="8"
@@ -157,7 +153,7 @@
                                        style="-fx-text-fill: #6B7280; -fx-font-size: 12px;"/>
                                 <Label text="^" style="-fx-text-fill: #2980B9; -fx-font-size: 18px; -fx-font-weight: bold;"/>
                             </HBox>
-                            <Label fx:id="lblActiveCount" text="0"
+                            <Label fx:id="lblActive" text="0"
                                    style="-fx-text-fill: #1A1A2E; -fx-font-size: 30px; -fx-font-weight: bold;"/>
                         </VBox>
                     </HBox>
@@ -174,8 +170,7 @@
                             <HBox alignment="CENTER_LEFT" spacing="10">
                                 <Label text="Pass Slip Requests" HBox.hgrow="ALWAYS"
                                        style="-fx-text-fill: #1A1A2E; -fx-font-size: 15px; -fx-font-weight: bold;"/>
-                                <Button fx:id="btnCreatePassSlip" text="+ Create Pass Slip"
-                                        onAction="#handleCreatePassSlip"
+                                <Button text="+ Create Pass Slip" onAction="#handleCreatePassSlip"
                                         style="-fx-background-color: #8B0000; -fx-text-fill: white;
                                                -fx-font-size: 13px; -fx-font-weight: bold;
                                                -fx-padding: 8 16 8 16; -fx-background-radius: 8;
@@ -215,7 +210,7 @@
                         </VBox>
 
                         <!-- RIGHT PANELS -->
-                        <VBox spacing="15" prefWidth="260">
+                        <VBox spacing="15" prefWidth="250">
 
                             <!-- Notifications -->
                             <VBox spacing="10"
@@ -231,13 +226,13 @@
                             </VBox>
 
                             <!-- Recent Activity -->
-                            <VBox spacing="10" VBox.vgrow="ALWAYS"
+                            <VBox spacing="10"
                                   style="-fx-background-color: white; -fx-background-radius: 12;
                                          -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 3);">
                                 <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
                                 <Label text="Recent Activity"
                                        style="-fx-text-fill: #1A1A2E; -fx-font-size: 15px; -fx-font-weight: bold;"/>
-                                <VBox fx:id="vboxRecentActivity" spacing="8">
+                                <VBox fx:id="activityContainer" spacing="8">
                                     <Label text="No recent activity."
                                            style="-fx-text-fill: #999999; -fx-font-size: 12px;"/>
                                 </VBox>

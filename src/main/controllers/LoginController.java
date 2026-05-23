@@ -75,9 +75,7 @@ public class LoginController implements Initializable {
         User user = userDAO.login(username, password, selectedRole);
 
         if (user != null) {
-            showAlert(Alert.AlertType.INFORMATION, "Login Successful",
-                    "Welcome, " + user.getUsername() + "!");
-            redirectToDashboard(event, user);
+            redirectToDashboard(user);
         } else {
             showAlert(Alert.AlertType.ERROR, "Login Failed",
                     "Invalid username or password for " + selectedRole + " account.\nPlease try again.");
@@ -86,19 +84,23 @@ public class LoginController implements Initializable {
     }
 
     // ─── Redirect to Dashboard ────────────────────────────────────
-    private void redirectToDashboard(ActionEvent event, User user) {
+    private void redirectToDashboard(User user) {
         try {
-            // ✅ FIXED PATH — match sa iyong resources folder
-            String fxml = selectedRole.equals("Admin")
-                    ? "/main/resources/fxml/AdminDashboard.fxml"
-                    : "/main/resources/fxml/StaffDashboard.fxml";
+            String fxmlPath = user.getRole().equalsIgnoreCase("Admin")
+                    ? "/fxml/AdminDashboard.fxml"
+                    : "/fxml/StaffDashboard.fxml";
 
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Parent root = loader.load();
 
-            // Pass session to dashboard controller
-            // AdminDashboardController dc = loader.getController();
-            // dc.initSession(user.getUsername(), user.getRole());
+            // ✅ Pass the logged-in user to the correct dashboard controller
+            if (user.getRole().equalsIgnoreCase("Admin")) {
+                AdminDashboardController controller = loader.getController();
+                controller.setCurrentUser(user);
+            } else {
+                StaffDashboardController controller = loader.getController();
+                controller.setCurrentUser(user);
+            }
 
             Stage stage = (Stage) usernameField.getScene().getWindow();
             stage.setScene(new Scene(root));
@@ -107,30 +109,8 @@ public class LoginController implements Initializable {
 
         } catch (IOException e) {
             e.printStackTrace();
-            // Try alternate path kung mag-error
-            tryAlternatePath(event, user);
-        }
-    }
-
-    // Fallback kung mali ang path
-    private void tryAlternatePath(ActionEvent event, User user) {
-        try {
-            String fxml = selectedRole.equals("Admin")
-                    ? "/resources/fxml/AdminDashboard.fxml"
-                    : "/resources/fxml/StaffDashboard.fxml";
-
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
-            Parent root = loader.load();
-
-            Stage stage = (Stage) usernameField.getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Employee Pass Slip System - Dashboard");
-            stage.show();
-
-        } catch (IOException ex) {
-            ex.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Navigation Error",
-                    "Could not load Dashboard.\nPath not found. Please check FXML location.");
+                    "Could not load Dashboard.\nError: " + e.getMessage());
         }
     }
 
@@ -138,34 +118,16 @@ public class LoginController implements Initializable {
     @FXML
     public void handleSignUp(ActionEvent event) {
         try {
-            // ✅ FIXED PATH — match sa iyong resources folder
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/main/resources/fxml/Register.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Register.fxml"));
             Parent root = loader.load();
-
             Stage stage = (Stage) usernameField.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("Register - Pass Slip System");
             stage.show();
-
         } catch (IOException e) {
             e.printStackTrace();
-            // Try alternate path
-            try {
-                FXMLLoader loader = new FXMLLoader(
-                        getClass().getResource("/resources/fxml/Register.fxml"));
-                Parent root = loader.load();
-
-                Stage stage = (Stage) usernameField.getScene().getWindow();
-                stage.setScene(new Scene(root));
-                stage.setTitle("Register - Pass Slip System");
-                stage.show();
-
-            } catch (IOException ex) {
-                ex.printStackTrace();
-                showAlert(Alert.AlertType.ERROR, "Navigation Error",
-                        "Could not load Registration page.\nPath not found.");
-            }
+            showAlert(Alert.AlertType.ERROR, "Navigation Error",
+                    "Could not load Registration page.\nError: " + e.getMessage());
         }
     }
 

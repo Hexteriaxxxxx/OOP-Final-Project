@@ -59,18 +59,19 @@ public class AdminDashboardController implements Initializable {
 
     // ===== RIGHT PANEL =====
     @FXML private VBox vboxRecentActivity;
+    @FXML private VBox notifContainer;
 
     // ===== SUMMARY =====
     @FXML private Label lblTotalRequests;
     @FXML private Label lblApprovalRate;
     @FXML private Label lblActiveNow;
 
-    // ===== NAV BUTTONS =====
-    @FXML private HBox navDashboard;
-    @FXML private HBox navPassSlip;
-    @FXML private HBox navVisitor;
-    @FXML private HBox navReports;
-    @FXML private HBox navUserMgmt;
+    // ===== NAV BUTTONS (Button na, hindi HBox) =====
+    @FXML private Button btnDashboard;
+    @FXML private Button btnPassSlip;
+    @FXML private Button btnVisitor;
+    @FXML private Button btnReports;
+    @FXML private Button btnUserMgmt;
 
     // ===== DATA =====
     private PassSlipDAO passSlipDAO = new PassSlipDAO();
@@ -149,9 +150,9 @@ public class AdminDashboardController implements Initializable {
 
         // Actions column
         colActions.setCellFactory(col -> new TableCell<>() {
-            private final Button btnView = new Button("👁");
+            private final Button btnView    = new Button("👁");
             private final Button btnApprove = new Button("✓");
-            private final Button btnReject = new Button("✗");
+            private final Button btnReject  = new Button("✗");
             private final HBox box = new HBox(4, btnView, btnApprove, btnReject);
 
             {
@@ -159,18 +160,9 @@ public class AdminDashboardController implements Initializable {
                 btnApprove.setStyle("-fx-background-color: transparent; -fx-text-fill: #28a745; -fx-font-size: 13px; -fx-cursor: hand; -fx-font-weight: bold;");
                 btnReject.setStyle("-fx-background-color: transparent; -fx-text-fill: #dc3545; -fx-font-size: 13px; -fx-cursor: hand; -fx-font-weight: bold;");
 
-                btnView.setOnAction(e -> {
-                    PassSlip ps = getTableView().getItems().get(getIndex());
-                    handleViewPassSlip(ps);
-                });
-                btnApprove.setOnAction(e -> {
-                    PassSlip ps = getTableView().getItems().get(getIndex());
-                    handleApprovePassSlip(ps);
-                });
-                btnReject.setOnAction(e -> {
-                    PassSlip ps = getTableView().getItems().get(getIndex());
-                    handleRejectPassSlip(ps);
-                });
+                btnView.setOnAction(e -> handleViewPassSlip(getTableView().getItems().get(getIndex())));
+                btnApprove.setOnAction(e -> handleApprovePassSlip(getTableView().getItems().get(getIndex())));
+                btnReject.setOnAction(e -> handleRejectPassSlip(getTableView().getItems().get(getIndex())));
             }
 
             @Override
@@ -206,22 +198,21 @@ public class AdminDashboardController implements Initializable {
             filteredList = new FilteredList<>(masterList, p -> true);
             tblPassSlips.setItems(filteredList);
 
-            // Count stats
             long pending  = all.stream().filter(p -> "Pending".equalsIgnoreCase(p.getStatus())).count();
             long approved = all.stream().filter(p -> "Approved".equalsIgnoreCase(p.getStatus())).count();
             long rejected = all.stream().filter(p -> "Rejected".equalsIgnoreCase(p.getStatus())).count();
-            long returned = all.stream().filter(p -> "Returned".equalsIgnoreCase(p.getStatus())).count();
 
             lblPendingCount.setText(String.valueOf(pending));
             lblApprovedCount.setText(String.valueOf(approved));
             lblRejectedCount.setText(String.valueOf(rejected));
-            lblActiveCount.setText(String.valueOf(approved)); // Active = Approved (out)
+            lblActiveCount.setText(String.valueOf(approved));
 
-            // Today's summary
             List<PassSlip> today = passSlipDAO.getTodayPassSlips();
             lblTotalRequests.setText(String.valueOf(today.size()));
 
-            long todayApproved = today.stream().filter(p -> "Approved".equalsIgnoreCase(p.getStatus()) || "Returned".equalsIgnoreCase(p.getStatus())).count();
+            long todayApproved = today.stream()
+                    .filter(p -> "Approved".equalsIgnoreCase(p.getStatus()) || "Returned".equalsIgnoreCase(p.getStatus()))
+                    .count();
             int approvalRate = today.isEmpty() ? 0 : (int) ((todayApproved * 100) / today.size());
             lblApprovalRate.setText(approvalRate + "%");
             lblActiveNow.setText(String.valueOf(approved));
@@ -266,31 +257,24 @@ public class AdminDashboardController implements Initializable {
         }
     }
 
-    // ===== SEARCH =====
+    // ===== SEARCH & FILTER =====
     @FXML
-    private void handleSearch() {
-        applyFilter();
-    }
+    private void handleSearch() { applyFilter(); }
 
-    // ===== FILTER =====
     @FXML
-    private void handleFilter() {
-        applyFilter();
-    }
+    private void handleFilter() { applyFilter(); }
 
     private void applyFilter() {
         if (filteredList == null) return;
-
         String keyword = txtSearch.getText().toLowerCase().trim();
         String statusFilter = cmbFilter.getValue();
 
         filteredList.setPredicate(ps -> {
-            // FIX: slipId is int, use String.valueOf()
             boolean matchesSearch = keyword.isEmpty()
                     || String.valueOf(ps.getSlipId()).contains(keyword)
-                    || (ps.getEmpName() != null && ps.getEmpName().toLowerCase().contains(keyword))
+                    || (ps.getEmpName()    != null && ps.getEmpName().toLowerCase().contains(keyword))
                     || (ps.getDepartment() != null && ps.getDepartment().toLowerCase().contains(keyword))
-                    || (ps.getReason() != null && ps.getReason().toLowerCase().contains(keyword));
+                    || (ps.getReason()     != null && ps.getReason().toLowerCase().contains(keyword));
 
             boolean matchesStatus = "All".equals(statusFilter)
                     || (ps.getStatus() != null && ps.getStatus().equalsIgnoreCase(statusFilter));
@@ -299,7 +283,7 @@ public class AdminDashboardController implements Initializable {
         });
     }
 
-    // ===== ACTION HANDLERS =====
+    // ===== PASS SLIP ACTIONS =====
     @FXML
     private void handleCreatePassSlip() {
         try {
@@ -321,12 +305,12 @@ public class AdminDashboardController implements Initializable {
         alert.setTitle("Pass Slip Details");
         alert.setHeaderText("Request ID: " + ps.getSlipId());
         alert.setContentText(
-                "Employee: " + ps.getEmpName() + "\n" +
-                        "Department: " + ps.getDepartment() + "\n" +
-                        "Purpose: " + ps.getReason() + "\n" +
-                        "Time Out: " + ps.getFormattedTimeOut() + "\n" +
-                        "Time In: " + ps.getFormattedTimeIn() + "\n" +
-                        "Status: " + ps.getStatus() + "\n" +
+                "Employee: "   + ps.getEmpName()         + "\n" +
+                        "Department: " + ps.getDepartment()       + "\n" +
+                        "Purpose: "    + ps.getReason()           + "\n" +
+                        "Time Out: "   + ps.getFormattedTimeOut() + "\n" +
+                        "Time In: "    + ps.getFormattedTimeIn()  + "\n" +
+                        "Status: "     + ps.getStatus()           + "\n" +
                         "Issued By (ID): " + ps.getIssuedBy()
         );
         alert.showAndWait();
@@ -337,15 +321,12 @@ public class AdminDashboardController implements Initializable {
         confirm.setTitle("Approve Pass Slip");
         confirm.setHeaderText("Approve request #" + ps.getSlipId() + "?");
         confirm.setContentText("Employee: " + ps.getEmpName());
-
         confirm.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
-                // FIX: pass int slipId, not String
                 boolean success = passSlipDAO.updatePassSlipStatus(ps.getSlipId(), "Approved");
                 if (success) {
                     showAlert(Alert.AlertType.INFORMATION, "Success", "Pass slip approved.");
-                    loadDashboardData();
-                    loadRecentActivity();
+                    loadDashboardData(); loadRecentActivity();
                 } else {
                     showAlert(Alert.AlertType.ERROR, "Error", "Failed to approve pass slip.");
                 }
@@ -358,15 +339,12 @@ public class AdminDashboardController implements Initializable {
         confirm.setTitle("Reject Pass Slip");
         confirm.setHeaderText("Reject request #" + ps.getSlipId() + "?");
         confirm.setContentText("Employee: " + ps.getEmpName());
-
         confirm.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
-                // FIX: pass int slipId, not String
                 boolean success = passSlipDAO.updatePassSlipStatus(ps.getSlipId(), "Rejected");
                 if (success) {
                     showAlert(Alert.AlertType.INFORMATION, "Done", "Pass slip rejected.");
-                    loadDashboardData();
-                    loadRecentActivity();
+                    loadDashboardData(); loadRecentActivity();
                 } else {
                     showAlert(Alert.AlertType.ERROR, "Error", "Failed to reject pass slip.");
                 }
@@ -375,38 +353,45 @@ public class AdminDashboardController implements Initializable {
     }
 
     // ===== NAV HANDLERS =====
-    @FXML private void handleNavDashboard() { /* Already on dashboard */ }
+    @FXML private void handleNavDashboard() { setActiveNav(btnDashboard); }
 
     @FXML
     private void handleNavPassSlip() {
+        setActiveNav(btnPassSlip);
         navigateTo("/fxml/PassSlipIssuance.fxml", "Pass Slip Issuance");
     }
 
     @FXML
     private void handleNavVisitor() {
+        setActiveNav(btnVisitor);
         navigateTo("/fxml/Visitor.fxml", "Visitor Module");
     }
 
     @FXML
     private void handleNavReports() {
+        setActiveNav(btnReports);
         navigateTo("/fxml/Reports.fxml", "Reports");
     }
 
     @FXML
     private void handleNavUserManagement() {
+        setActiveNav(btnUserMgmt);
         navigateTo("/fxml/UserManagement.fxml", "User Management");
     }
 
-    @FXML
-    private void handleNavHoverEnter(javafx.scene.input.MouseEvent e) {
-        HBox nav = (HBox) e.getSource();
-        nav.setStyle("-fx-background-color: rgba(255,255,255,0.1); -fx-background-radius: 8; -fx-cursor: hand;");
-    }
+    // Highlight active nav button
+    private void setActiveNav(Button active) {
+        String inactive = "-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.80); "
+                + "-fx-font-size: 13px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 14 10 14; "
+                + "-fx-background-radius: 8; -fx-cursor: hand; -fx-border-color: transparent;";
+        String activeStyle = "-fx-background-color: rgba(255,255,255,0.22); -fx-text-fill: white; "
+                + "-fx-font-size: 13px; -fx-font-weight: bold; -fx-alignment: CENTER_LEFT; "
+                + "-fx-padding: 10 14 10 14; -fx-background-radius: 8; -fx-cursor: hand; -fx-border-color: transparent;";
 
-    @FXML
-    private void handleNavHoverExit(javafx.scene.input.MouseEvent e) {
-        HBox nav = (HBox) e.getSource();
-        nav.setStyle("-fx-background-radius: 8; -fx-cursor: hand;");
+        for (Button btn : new Button[]{btnDashboard, btnPassSlip, btnVisitor, btnReports, btnUserMgmt}) {
+            if (btn != null) btn.setStyle(inactive);
+        }
+        if (active != null) active.setStyle(activeStyle);
     }
 
     @FXML
@@ -430,7 +415,7 @@ public class AdminDashboardController implements Initializable {
         });
     }
 
-    // ===== NAVIGATION HELPER =====
+    // ===== HELPERS =====
     private void navigateTo(String fxmlPath, String title) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
@@ -444,7 +429,6 @@ public class AdminDashboardController implements Initializable {
         }
     }
 
-    // ===== ALERT HELPER =====
     private void showAlert(Alert.AlertType type, String title, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
@@ -453,7 +437,6 @@ public class AdminDashboardController implements Initializable {
         alert.showAndWait();
     }
 
-    // ===== REFRESH =====
     public void refreshDashboard() {
         loadDashboardData();
         loadRecentActivity();
