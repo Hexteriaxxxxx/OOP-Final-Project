@@ -23,19 +23,15 @@ public class LoginController implements Initializable {
     @FXML private PasswordField passwordField;
     @FXML private CheckBox rememberMe;
 
-    // Currently selected role
     private String selectedRole = "Staff";
-
     private final UserDAO userDAO = new UserDAO();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        // Staff tab active by default
         setActiveTab("Staff");
     }
 
     // ─── Tab Toggle ───────────────────────────────────────────────
-
     @FXML
     public void handleStaffTab(ActionEvent event) {
         selectedRole = "Staff";
@@ -49,12 +45,11 @@ public class LoginController implements Initializable {
     }
 
     private void setActiveTab(String role) {
-        String activeStyle = "-fx-background-color: #8B0000; -fx-text-fill: white; " +
-                "-fx-font-weight: bold; -fx-font-size: 13px; " +
-                "-fx-background-radius: 6; -fx-padding: 8 36;";
-
-        String inactiveStyle = "-fx-background-color: transparent; -fx-text-fill: #888; " +
-                "-fx-font-size: 13px; -fx-background-radius: 6; -fx-padding: 8 36;";
+        String activeStyle   = "-fx-background-color: #8B0000; -fx-text-fill: white; "
+                + "-fx-font-weight: bold; -fx-font-size: 13px; "
+                + "-fx-background-radius: 6; -fx-padding: 8 36;";
+        String inactiveStyle = "-fx-background-color: transparent; -fx-text-fill: #888; "
+                + "-fx-font-size: 13px; -fx-background-radius: 6; -fx-padding: 8 36;";
 
         if (role.equals("Staff")) {
             staffTab.setStyle(activeStyle);
@@ -66,20 +61,17 @@ public class LoginController implements Initializable {
     }
 
     // ─── Login ────────────────────────────────────────────────────
-
     @FXML
     public void handleLogin(ActionEvent event) {
         String username = usernameField.getText().trim();
         String password = passwordField.getText().trim();
 
-        // Validation
         if (username.isEmpty() || password.isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Missing Fields",
                     "Please enter your username and password.");
             return;
         }
 
-        // Attempt login via DAO
         User user = userDAO.login(username, password, selectedRole);
 
         if (user != null) {
@@ -94,54 +86,90 @@ public class LoginController implements Initializable {
     }
 
     // ─── Redirect to Dashboard ────────────────────────────────────
-
     private void redirectToDashboard(ActionEvent event, User user) {
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/fxml/Dashboard.fxml"));
+            // ✅ FIXED PATH — match sa iyong resources folder
+            String fxml = selectedRole.equals("Admin")
+                    ? "/main/resources/fxml/AdminDashboard.fxml"
+                    : "/main/resources/fxml/StaffDashboard.fxml";
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
             Parent root = loader.load();
 
-            // Pass user to DashboardController if needed
-            // DashboardController dc = loader.getController();
-            // dc.setUser(user);
+            // Pass session to dashboard controller
+            // AdminDashboardController dc = loader.getController();
+            // dc.initSession(user.getUsername(), user.getRole());
 
             Stage stage = (Stage) usernameField.getScene().getWindow();
-            Scene scene = new Scene(root);
-            stage.setScene(scene);
+            stage.setScene(new Scene(root));
             stage.setTitle("Employee Pass Slip System - Dashboard");
             stage.show();
 
         } catch (IOException e) {
             e.printStackTrace();
+            // Try alternate path kung mag-error
+            tryAlternatePath(event, user);
+        }
+    }
+
+    // Fallback kung mali ang path
+    private void tryAlternatePath(ActionEvent event, User user) {
+        try {
+            String fxml = selectedRole.equals("Admin")
+                    ? "/resources/fxml/AdminDashboard.fxml"
+                    : "/resources/fxml/StaffDashboard.fxml";
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
+            Parent root = loader.load();
+
+            Stage stage = (Stage) usernameField.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Employee Pass Slip System - Dashboard");
+            stage.show();
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Navigation Error",
-                    "Could not load Dashboard. Please contact support.");
+                    "Could not load Dashboard.\nPath not found. Please check FXML location.");
         }
     }
 
     // ─── Sign Up ──────────────────────────────────────────────────
-
     @FXML
     public void handleSignUp(ActionEvent event) {
         try {
+            // ✅ FIXED PATH — match sa iyong resources folder
             FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/fxml/Register.fxml"));
+                    getClass().getResource("/main/resources/fxml/Register.fxml"));
             Parent root = loader.load();
 
             Stage stage = (Stage) usernameField.getScene().getWindow();
-            Scene scene = new Scene(root);
-            stage.setScene(scene);
+            stage.setScene(new Scene(root));
             stage.setTitle("Register - Pass Slip System");
             stage.show();
 
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Navigation Error",
-                    "Could not load Registration page.");
+            // Try alternate path
+            try {
+                FXMLLoader loader = new FXMLLoader(
+                        getClass().getResource("/resources/fxml/Register.fxml"));
+                Parent root = loader.load();
+
+                Stage stage = (Stage) usernameField.getScene().getWindow();
+                stage.setScene(new Scene(root));
+                stage.setTitle("Register - Pass Slip System");
+                stage.show();
+
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                showAlert(Alert.AlertType.ERROR, "Navigation Error",
+                        "Could not load Registration page.\nPath not found.");
+            }
         }
     }
 
     // ─── Forgot Password ──────────────────────────────────────────
-
     @FXML
     public void handleForgotPassword(ActionEvent event) {
         showAlert(Alert.AlertType.INFORMATION, "Forgot Password",
@@ -149,7 +177,6 @@ public class LoginController implements Initializable {
     }
 
     // ─── Alert Helper ─────────────────────────────────────────────
-
     private void showAlert(Alert.AlertType type, String title, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
