@@ -26,3 +26,5 @@ mysql-connector*/
 
 # JavaFX SDK - download from gluonhq.com
 javafx-sdk*/
+# Environment variables
+.env
