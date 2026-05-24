@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="main.controllers.StaffDashboardController"
+            prefWidth="1060" prefHeight="750"
+            style="-fx-font-family: 'Segoe UI', Arial, sans-serif; -fx-background-color: #F4F6F9;">
+
+    <!-- LEFT SIDEBAR -->
+    <left>
+        <VBox prefWidth="185" spacing="0"
+              style="-fx-background-color: linear-gradient(to bottom, #8B0000, #5A0000);
+                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 12, 0, 3, 0);">
+
+            <!-- Logo -->
+            <VBox spacing="4" alignment="CENTER_LEFT"
+                  style="-fx-border-color: rgba(255,255,255,0.12); -fx-border-width: 0 0 1 0;">
+                <padding><Insets top="20" right="15" bottom="20" left="15"/></padding>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <VBox alignment="CENTER" minWidth="36" minHeight="36"
+                          style="-fx-background-color: rgba(255,255,255,0.18); -fx-background-radius: 8;">
+                        <Label text="PS" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/>
+                    </VBox>
+                    <VBox spacing="1">
+                        <Label text="Pass Slip" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/>
+                        <Label text="Issuance System" style="-fx-text-fill: rgba(255,255,255,0.65); -fx-font-size: 10px;"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+
+            <!-- Nav Buttons -->
+            <VBox spacing="4" VBox.vgrow="ALWAYS">
+                <padding><Insets top="15" right="10" bottom="15" left="10"/></padding>
+                <Button fx:id="btnDashboard" text="  Dashboard" maxWidth="Infinity" onAction="#handleDashboard"
+                        style="-fx-background-color: rgba(255,255,255,0.22); -fx-text-fill: white;
+                               -fx-font-size: 13px; -fx-font-weight: bold; -fx-alignment: CENTER_LEFT;
+                               -fx-padding: 10 14 10 14; -fx-background-radius: 8; -fx-cursor: hand; -fx-border-color: transparent;"/>
+                <Button fx:id="btnPassSlip" text="  Pass Slip Issuance" maxWidth="Infinity" onAction="#handlePassSlipIssuance"
+                        style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.80);
+                               -fx-font-size: 13px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 14 10 14;
+                               -fx-background-radius: 8; -fx-cursor: hand; -fx-border-color: transparent;"/>
+                <Button fx:id="btnVisitor" text="  Visitor Module" maxWidth="Infinity" onAction="#handleVisitorModule"
+                        style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.80);
+                               -fx-font-size: 13px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 14 10 14;
+                               -fx-background-radius: 8; -fx-cursor: hand; -fx-border-color: transparent;"/>
+                <Button fx:id="btnReports" text="  Reports" maxWidth="Infinity" onAction="#handleReports"
+                        style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.80);
+                               -fx-font-size: 13px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 14 10 14;
+                               -fx-background-radius: 8; -fx-cursor: hand; -fx-border-color: transparent;"/>
+            </VBox>
+
+            <!-- User Profile + Logout -->
+            <VBox spacing="8" style="-fx-border-color: rgba(255,255,255,0.12); -fx-border-width: 1 0 0 0;">
+                <padding><Insets top="10" right="10" bottom="15" left="10"/></padding>
+                <HBox spacing="10" alignment="CENTER_LEFT"
+                      style="-fx-background-color: rgba(255,255,255,0.10); -fx-background-radius: 8;">
+                    <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+                    <VBox alignment="CENTER" minWidth="32" minHeight="32"
+                          style="-fx-background-color: rgba(255,255,255,0.25); -fx-background-radius: 16;">
+                        <Label text="S" style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                    </VBox>
+                    <VBox spacing="2">
+                        <Label fx:id="lblUserName" text="Staff"
+                               style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/>
+                        <Label fx:id="lblUserRole" text="Staff"
+                               style="-fx-text-fill: rgba(255,255,255,0.60); -fx-font-size: 11px;"/>
+                    </VBox>
+                </HBox>
+                <Button text="  Logout" maxWidth="Infinity" onAction="#handleLogout"
+                        style="-fx-background-color: rgba(255,255,255,0.12); -fx-text-fill: rgba(255,255,255,0.85);
+                               -fx-font-size: 13px; -fx-padding: 9 14 9 14; -fx-background-radius: 8;
+                               -fx-cursor: hand; -fx-border-color: rgba(255,255,255,0.20);
+                               -fx-border-radius: 8; -fx-border-width: 1; -fx-alignment: CENTER_LEFT;"/>
+            </VBox>
+
+        </VBox>
+    </left>
+
+    <!-- CENTER CONTENT -->
+    <center>
+        <VBox style="-fx-background-color: #F4F6F9;" spacing="0">
+
+            <!-- TOP HEADER -->
+            <HBox alignment="CENTER_LEFT" spacing="10"
+                  style="-fx-background-color: white; -fx-border-color: #E8ECF0;
+                         -fx-border-width: 0 0 1 0; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 6, 0, 0, 2);">
+                <padding><Insets top="18" right="25" bottom="18" left="25"/></padding>
+                <VBox HBox.hgrow="ALWAYS">
+                    <Label text="Dashboard"
+                           style="-fx-text-fill: #1A1A2E; -fx-font-size: 22px; -fx-font-weight: bold;"/>
+                    <Label fx:id="lblWelcome" text="Welcome back, Staff"
+                           style="-fx-text-fill: #777777; -fx-font-size: 13px;"/>
+                </VBox>
+                <Button fx:id="btnNotification" text="Bell"
+                        style="-fx-background-color: transparent; -fx-font-size: 14px;
+                               -fx-cursor: hand; -fx-border-color: transparent;"/>
+            </HBox>
+
+            <!-- MAIN SCROLL -->
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                        style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
+                <VBox spacing="20">
+                    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+                    <!-- STAT CARDS -->
+                    <HBox spacing="15">
+                        <VBox HBox.hgrow="ALWAYS" spacing="8"
+                              style="-fx-background-color: white; -fx-background-radius: 12;
+                                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 3);">
+                            <padding><Insets top="18" right="18" bottom="18" left="18"/></padding>
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label text="Pending Requests" HBox.hgrow="ALWAYS"
+                                       style="-fx-text-fill: #6B7280; -fx-font-size: 12px;"/>
+                                <Label text="( )" style="-fx-text-fill: #E67E00; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                            </HBox>
+                            <Label fx:id="lblPending" text="0"
+                                   style="-fx-text-fill: #1A1A2E; -fx-font-size: 30px; -fx-font-weight: bold;"/>
+                        </VBox>
+                        <VBox HBox.hgrow="ALWAYS" spacing="8"
+                              style="-fx-background-color: white; -fx-background-radius: 12;
+                                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 3);">
+                            <padding><Insets top="18" right="18" bottom="18" left="18"/></padding>
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label text="Approved Requests" HBox.hgrow="ALWAYS"
+                                       style="-fx-text-fill: #6B7280; -fx-font-size: 12px;"/>
+                                <Label text="OK" style="-fx-text-fill: #27AE60; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                            </HBox>
+                            <Label fx:id="lblApproved" text="0"
+                                   style="-fx-text-fill: #1A1A2E; -fx-font-size: 30px; -fx-font-weight: bold;"/>
+                        </VBox>
+                        <VBox HBox.hgrow="ALWAYS" spacing="8"
+                              style="-fx-background-color: white; -fx-background-radius: 12;
+                                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 3);">
+                            <padding><Insets top="18" right="18" bottom="18" left="18"/></padding>
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label text="Rejected Requests" HBox.hgrow="ALWAYS"
+                                       style="-fx-text-fill: #6B7280; -fx-font-size: 12px;"/>
+                                <Label text="X" style="-fx-text-fill: #E74C3C; -fx-font-size: 16px; -fx-font-weight: bold;"/>
+                            </HBox>
+                            <Label fx:id="lblRejected" text="0"
+                                   style="-fx-text-fill: #1A1A2E; -fx-font-size: 30px; -fx-font-weight: bold;"/>
+                        </VBox>
+                        <VBox HBox.hgrow="ALWAYS" spacing="8"
+                              style="-fx-background-color: white; -fx-background-radius: 12;
+                                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 3);">
+                            <padding><Insets top="18" right="18" bottom="18" left="18"/></padding>
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label text="Active Pass Slips Today" HBox.hgrow="ALWAYS"
+                                       style="-fx-text-fill: #6B7280; -fx-font-size: 12px;"/>
+                                <Label text="^" style="-fx-text-fill: #2980B9; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                            </HBox>
+                            <Label fx:id="lblActive" text="0"
+                                   style="-fx-text-fill: #1A1A2E; -fx-font-size: 30px; -fx-font-weight: bold;"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- TABLE + RIGHT PANELS -->
+                    <HBox spacing="15" VBox.vgrow="ALWAYS">
+
+                        <!-- TABLE CARD -->
+                        <VBox HBox.hgrow="ALWAYS" spacing="12"
+                              style="-fx-background-color: white; -fx-background-radius: 12;
+                                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 3);">
+                            <padding><Insets top="18" right="18" bottom="18" left="18"/></padding>
+
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label text="Pass Slip Requests" HBox.hgrow="ALWAYS"
+                                       style="-fx-text-fill: #1A1A2E; -fx-font-size: 15px; -fx-font-weight: bold;"/>
+                                <Button text="+ Create Pass Slip" onAction="#handleCreatePassSlip"
+                                        style="-fx-background-color: #8B0000; -fx-text-fill: white;
+                                               -fx-font-size: 13px; -fx-font-weight: bold;
+                                               -fx-padding: 8 16 8 16; -fx-background-radius: 8;
+                                               -fx-cursor: hand; -fx-border-color: transparent;"/>
+                            </HBox>
+
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <TextField fx:id="txtSearch"
+                                           promptText="Search by name, ID, or department..."
+                                           HBox.hgrow="ALWAYS" onKeyReleased="#handleSearch"
+                                           style="-fx-background-color: #F4F6F9; -fx-border-color: #E0E4EA;
+                                                  -fx-border-radius: 8; -fx-background-radius: 8;
+                                                  -fx-padding: 8 12 8 12; -fx-font-size: 13px;"/>
+                                <ComboBox fx:id="cmbFilter" promptText="Filter"
+                                          prefWidth="130" onAction="#handleFilter"
+                                          style="-fx-background-color: #F4F6F9; -fx-border-color: #E0E4EA;
+                                                 -fx-border-radius: 8; -fx-background-radius: 8; -fx-font-size: 13px;"/>
+                            </HBox>
+
+                            <TableView fx:id="tblPassSlips" VBox.vgrow="ALWAYS" minHeight="300"
+                                       style="-fx-background-color: transparent; -fx-border-color: transparent;">
+                                <columns>
+                                    <TableColumn fx:id="colRequestId" text="Request ID" prefWidth="90"/>
+                                    <TableColumn fx:id="colName"       text="Name"       prefWidth="100"/>
+                                    <TableColumn fx:id="colDepartment" text="Department" prefWidth="110"/>
+                                    <TableColumn fx:id="colPurpose"    text="Purpose"    prefWidth="120"/>
+                                    <TableColumn fx:id="colTimeOut"    text="Time Out"   prefWidth="80"/>
+                                    <TableColumn fx:id="colTimeIn"     text="Time In"    prefWidth="80"/>
+                                    <TableColumn fx:id="colStatus"     text="Status"     prefWidth="90"/>
+                                    <TableColumn fx:id="colActions"    text="Actions"    prefWidth="70"/>
+                                </columns>
+                                <placeholder>
+                                    <Label text="No pass slip records found."
+                                           style="-fx-text-fill: #AAAAAA; -fx-font-size: 13px;"/>
+                                </placeholder>
+                            </TableView>
+                        </VBox>
+
+                        <!-- RIGHT PANELS -->
+                        <VBox spacing="15" prefWidth="250">
+
+                            <!-- Notifications -->
+                            <VBox spacing="10"
+                                  style="-fx-background-color: white; -fx-background-radius: 12;
+                                         -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 3);">
+                                <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
+                                <Label text="Notifications"
+                                       style="-fx-text-fill: #1A1A2E; -fx-font-size: 15px; -fx-font-weight: bold;"/>
+                                <VBox fx:id="notifContainer" spacing="6">
+                                    <Label text="No notifications."
+                                           style="-fx-text-fill: #999999; -fx-font-size: 12px;"/>
+                                </VBox>
+                            </VBox>
+
+                            <!-- Recent Activity -->
+                            <VBox spacing="10"
+                                  style="-fx-background-color: white; -fx-background-radius: 12;
+                                         -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 3);">
+                                <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
+                                <Label text="Recent Activity"
+                                       style="-fx-text-fill: #1A1A2E; -fx-font-size: 15px; -fx-font-weight: bold;"/>
+                                <VBox fx:id="activityContainer" spacing="8">
+                                    <Label text="No recent activity."
+                                           style="-fx-text-fill: #999999; -fx-font-size: 12px;"/>
+                                </VBox>
+                            </VBox>
+
+                            <!-- Today's Summary -->
+                            <VBox spacing="10"
+                                  style="-fx-background-color: linear-gradient(to bottom right, #8B0000, #5A0000);
+                                         -fx-background-radius: 12;
+                                         -fx-effect: dropshadow(gaussian, rgba(139,0,0,0.30), 10, 0, 0, 3);">
+                                <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
+                                <Label text="Today's Summary"
+                                       style="-fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: bold;"/>
+                                <HBox alignment="CENTER_LEFT">
+                                    <Label text="Total Requests" HBox.hgrow="ALWAYS"
+                                           style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 13px;"/>
+                                    <Label fx:id="lblTotalRequests" text="0"
+                                           style="-fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: bold;"/>
+                                </HBox>
+                                <HBox alignment="CENTER_LEFT">
+                                    <Label text="Approval Rate" HBox.hgrow="ALWAYS"
+                                           style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 13px;"/>
+                                    <Label fx:id="lblApprovalRate" text="0%"
+                                           style="-fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: bold;"/>
+                                </HBox>
+                                <HBox alignment="CENTER_LEFT">
+                                    <Label text="Active Now" HBox.hgrow="ALWAYS"
+                                           style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 13px;"/>
+                                    <Label fx:id="lblActiveNow" text="0"
+                                           style="-fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: bold;"/>
+                                </HBox>
+                            </VBox>
+
+                        </VBox>
+                    </HBox>
+
+                </VBox>
+            </ScrollPane>
+        </VBox>
+    </center>
+
+</BorderPane>
