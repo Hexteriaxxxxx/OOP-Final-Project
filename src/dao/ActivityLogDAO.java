@@ -1,8 +1,7 @@
 package dao;
 
 import models.ActivityLog;
-import utils.DBConnection;
-
+import main.utils.DBConnection;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;

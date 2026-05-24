@@ -1,8 +1,7 @@
 package dao;
 
 import models.User;
-import utils.DBConnection;
-
+import main.utils.DBConnection;
 import java.sql.*;
 
 public class UserDAO {

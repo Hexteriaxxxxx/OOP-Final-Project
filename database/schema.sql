@@ -30,6 +30,16 @@ CREATE TABLE IF NOT EXISTS Employee (
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE Visitor (
+                         visitor_id    INT AUTO_INCREMENT PRIMARY KEY,
+                         visitor_name  VARCHAR(100) NOT NULL,
+                         company       VARCHAR(100),
+                         purpose       VARCHAR(200),
+                         time_out      DATETIME,
+                         time_in       DATETIME,
+                         host_employee VARCHAR(100),
+                         status        VARCHAR(20) DEFAULT 'Pending'
+);
 -- ============================================
 -- TABLE: Pass_slip
 -- ============================================

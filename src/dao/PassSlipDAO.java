@@ -1,8 +1,7 @@
 package dao;
 
+import main.utils.DBConnection;
 import models.PassSlip;
-import utils.DBConnection;
-
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;

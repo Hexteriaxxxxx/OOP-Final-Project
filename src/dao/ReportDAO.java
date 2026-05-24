@@ -1,41 +1,35 @@
 package dao;
 
 import models.PassSlip;
-import utils.DBConnection;
-
+import main.utils.DBConnection;
 import java.sql.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 
 public class ReportDAO {
 
     // ─────────────────────────────────────────────
     // GET DAILY REPORT
-    // Returns all pass slips for a specific date
     // ─────────────────────────────────────────────
     public List<PassSlip> getDailyReport(LocalDate date) {
         List<PassSlip> list = new ArrayList<>();
 
-        String sql = """
-                SELECT ps.slip_id, ps.emp_id, e.name AS emp_name, e.department,
-                       ps.reason, ps.time_out, ps.time_in, ps.duration,
-                       ps.issued_by, ps.status
-                FROM pass_slip ps
-                JOIN employee e ON ps.emp_id = e.emp_id
-                WHERE DATE(ps.time_out) = ?
-                ORDER BY ps.time_out ASC
-                """;
+        String sql = "SELECT ps.slip_id, ps.emp_id, e.name AS emp_name, e.department, " +
+                "ps.reason, ps.time_out, ps.time_in, ps.duration, " +
+                "ps.issued_by, ps.status " +
+                "FROM Pass_slip ps " +
+                "JOIN Employee e ON ps.emp_id = e.emp_id " +
+                "WHERE DATE(ps.time_out) = ? " +
+                "ORDER BY ps.time_out ASC";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setDate(1, Date.valueOf(date));
+            stmt.setDate(1, java.sql.Date.valueOf(date));
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                PassSlip slip = mapResultSet(rs);
-                list.add(slip);
+                list.add(mapResultSet(rs));
             }
 
         } catch (SQLException e) {
@@ -47,20 +41,17 @@ public class ReportDAO {
 
     // ─────────────────────────────────────────────
     // GET MONTHLY REPORT
-    // Returns all pass slips for a specific month and year
     // ─────────────────────────────────────────────
     public List<PassSlip> getMonthlyReport(int month, int year) {
         List<PassSlip> list = new ArrayList<>();
 
-        String sql = """
-                SELECT ps.slip_id, ps.emp_id, e.name AS emp_name, e.department,
-                       ps.reason, ps.time_out, ps.time_in, ps.duration,
-                       ps.issued_by, ps.status
-                FROM pass_slip ps
-                JOIN employee e ON ps.emp_id = e.emp_id
-                WHERE MONTH(ps.time_out) = ? AND YEAR(ps.time_out) = ?
-                ORDER BY ps.time_out ASC
-                """;
+        String sql = "SELECT ps.slip_id, ps.emp_id, e.name AS emp_name, e.department, " +
+                "ps.reason, ps.time_out, ps.time_in, ps.duration, " +
+                "ps.issued_by, ps.status " +
+                "FROM Pass_slip ps " +
+                "JOIN Employee e ON ps.emp_id = e.emp_id " +
+                "WHERE MONTH(ps.time_out) = ? AND YEAR(ps.time_out) = ? " +
+                "ORDER BY ps.time_out ASC";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -70,8 +61,7 @@ public class ReportDAO {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                PassSlip slip = mapResultSet(rs);
-                list.add(slip);
+                list.add(mapResultSet(rs));
             }
 
         } catch (SQLException e) {
@@ -83,19 +73,15 @@ public class ReportDAO {
 
     // ─────────────────────────────────────────────
     // GET TOTAL BY DEPARTMENT
-    // Returns count of pass slips per department
-    // Key = department name, Value = count
     // ─────────────────────────────────────────────
     public Map<String, Integer> getTotalByDepartment() {
         Map<String, Integer> map = new LinkedHashMap<>();
 
-        String sql = """
-                SELECT e.department, COUNT(ps.slip_id) AS total
-                FROM pass_slip ps
-                JOIN employee e ON ps.emp_id = e.emp_id
-                GROUP BY e.department
-                ORDER BY total DESC
-                """;
+        String sql = "SELECT e.department, COUNT(ps.slip_id) AS total " +
+                "FROM Pass_slip ps " +
+                "JOIN Employee e ON ps.emp_id = e.emp_id " +
+                "GROUP BY e.department " +
+                "ORDER BY total DESC";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -103,9 +89,7 @@ public class ReportDAO {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                String department = rs.getString("department");
-                int total = rs.getInt("total");
-                map.put(department, total);
+                map.put(rs.getString("department"), rs.getInt("total"));
             }
 
         } catch (SQLException e) {
@@ -117,14 +101,11 @@ public class ReportDAO {
 
     // ─────────────────────────────────────────────
     // GET AVERAGE DURATION
-    // Returns average time outside in minutes (completed slips only)
     // ─────────────────────────────────────────────
     public double getAverageDuration() {
-        String sql = """
-                SELECT AVG(TIMESTAMPDIFF(MINUTE, time_out, time_in)) AS avg_duration
-                FROM pass_slip
-                WHERE time_in IS NOT NULL AND status = 'Completed'
-                """;
+        String sql = "SELECT AVG(TIMESTAMPDIFF(MINUTE, time_out, time_in)) AS avg_duration " +
+                "FROM Pass_slip " +
+                "WHERE time_in IS NOT NULL AND status = 'Returned'";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -143,7 +124,7 @@ public class ReportDAO {
     }
 
     // ─────────────────────────────────────────────
-    // HELPER — Map ResultSet to PassSlip object
+    // HELPER — Map ResultSet to PassSlip
     // ─────────────────────────────────────────────
     private PassSlip mapResultSet(ResultSet rs) throws SQLException {
         PassSlip slip = new PassSlip();
@@ -153,9 +134,9 @@ public class ReportDAO {
         slip.setEmpName(rs.getString("emp_name"));
         slip.setDepartment(rs.getString("department"));
         slip.setReason(rs.getString("reason"));
-        slip.setIssuedBy(rs.getString("issued_by"));
-        slip.setStatus(rs.getString("status"));
         slip.setDuration(rs.getString("duration"));
+        slip.setStatus(rs.getString("status"));
+        slip.setIssuedBy(rs.getInt("issued_by"));
 
         Timestamp timeOut = rs.getTimestamp("time_out");
         if (timeOut != null) slip.setTimeOut(timeOut.toLocalDateTime());
