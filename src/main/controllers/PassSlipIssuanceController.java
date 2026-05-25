@@ -1,8 +1,8 @@
 package main.controllers;
 
-import main.dao.PassSlipDAO;
-import main.dao.ActivityLogDAO;
-import main.models.PassSlip;
+import dao.PassSlipDAO;
+import dao.ActivityLogDAO;
+import models.PassSlip;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

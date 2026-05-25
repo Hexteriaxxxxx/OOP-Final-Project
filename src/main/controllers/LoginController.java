@@ -1,5 +1,4 @@
-package controllers;
-
+package main.controllers;
 import dao.UserDAO;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -122,24 +121,35 @@ public class LoginController implements Initializable {
 
     @FXML
     public void handleSignUp(ActionEvent event) {
+
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/fxml/Register.fxml"));
+
+            FXMLLoader loader =
+                    new FXMLLoader(
+                            getClass().getResource(
+                                    "/fxml/Register.fxml"
+                            )
+                    );
+
             Parent root = loader.load();
 
-            Stage stage = (Stage) usernameField.getScene().getWindow();
-            Scene scene = new Scene(root);
-            stage.setScene(scene);
-            stage.setTitle("Register - Pass Slip System");
+            Stage stage =
+                    (Stage) usernameField
+                            .getScene()
+                            .getWindow();
+
+            stage.setScene(new Scene(root));
+
+            stage.setTitle("Register");
+
             stage.show();
 
-        } catch (IOException e) {
+        } catch (Exception e) {
+
+            System.out.println("ERROR LOADING REGISTER:");
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Navigation Error",
-                    "Could not load Registration page.");
         }
     }
-
     // ─── Forgot Password ──────────────────────────────────────────
 
     @FXML

@@ -8,13 +8,13 @@ public class ActivityLog {
     private int empId;
     private String action;
     private LocalDateTime timestamp;
-    private int performedBy;
+    private String performedBy;
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm a");
 
     public ActivityLog() {}
 
-    public ActivityLog(int empId, String action, int performedBy) {
+    public ActivityLog(int empId, String action, String performedBy) {
         this.empId = empId;
         this.action = action;
         this.performedBy = performedBy;
@@ -33,8 +33,8 @@ public class ActivityLog {
     public LocalDateTime getTimestamp() { return timestamp; }
     public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
 
-    public int getPerformedBy() { return performedBy; }
-    public void setPerformedBy(int performedBy) { this.performedBy = performedBy; }
+    public String getPerformedBy() { return performedBy; }
+    public void setPerformedBy(String performedBy) { this.performedBy = performedBy; }
 
     public String getFormattedTimestamp() {
         return timestamp != null ? timestamp.format(FORMATTER) : "";

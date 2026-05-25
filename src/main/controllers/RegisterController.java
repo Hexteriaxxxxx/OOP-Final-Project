@@ -1,5 +1,4 @@
-package controllers;
-
+package main.controllers;
 import dao.UserDAO;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
