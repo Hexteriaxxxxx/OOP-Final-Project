@@ -22,14 +22,12 @@ public class LoginController implements Initializable {
     @FXML private PasswordField passwordField;
     @FXML private CheckBox rememberMe;
 
-    // Currently selected role
-    private String selectedRole = "Staff";
+    private String selectedRole = "staff";  // ✅ lowercase
 
     private final UserDAO userDAO = new UserDAO();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        // Staff tab active by default
         setActiveTab("Staff");
     }
 
@@ -37,13 +35,13 @@ public class LoginController implements Initializable {
 
     @FXML
     public void handleStaffTab(ActionEvent event) {
-        selectedRole = "Staff";
+        selectedRole = "staff";  // ✅ lowercase
         setActiveTab("Staff");
     }
 
     @FXML
     public void handleAdminTab(ActionEvent event) {
-        selectedRole = "Admin";
+        selectedRole = "admin";  // ✅ lowercase
         setActiveTab("Admin");
     }
 
@@ -51,7 +49,6 @@ public class LoginController implements Initializable {
         String activeStyle = "-fx-background-color: #8B0000; -fx-text-fill: white; " +
                 "-fx-font-weight: bold; -fx-font-size: 13px; " +
                 "-fx-background-radius: 6; -fx-padding: 8 36;";
-
         String inactiveStyle = "-fx-background-color: transparent; -fx-text-fill: #888; " +
                 "-fx-font-size: 13px; -fx-background-radius: 6; -fx-padding: 8 36;";
 
@@ -71,14 +68,12 @@ public class LoginController implements Initializable {
         String username = usernameField.getText().trim();
         String password = passwordField.getText().trim();
 
-        // Validation
         if (username.isEmpty() || password.isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Missing Fields",
                     "Please enter your username and password.");
             return;
         }
 
-        // Attempt login via DAO
         User user = userDAO.login(username, password, selectedRole);
 
         if (user != null) {
@@ -96,18 +91,18 @@ public class LoginController implements Initializable {
 
     private void redirectToDashboard(ActionEvent event, User user) {
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/fxml/Dashboard.fxml"));
+            String fxmlPath = selectedRole.equals("admin")  // ✅ lowercase
+                    ? "/main/resources/fxml/AdminDashboard.fxml"
+                    : "/main/resources/fxml/Dashboard.fxml";
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Parent root = loader.load();
 
-            // Pass user to DashboardController if needed
-            // DashboardController dc = loader.getController();
-            // dc.setUser(user);
-
             Stage stage = (Stage) usernameField.getScene().getWindow();
-            Scene scene = new Scene(root);
-            stage.setScene(scene);
-            stage.setTitle("Employee Pass Slip System - Dashboard");
+            stage.setScene(new Scene(root, 1280, 720));
+            stage.setTitle(selectedRole.equals("admin")
+                    ? "Pass Slip System - Admin Dashboard"
+                    : "Pass Slip System - Dashboard");
             stage.show();
 
         } catch (IOException e) {
@@ -121,35 +116,21 @@ public class LoginController implements Initializable {
 
     @FXML
     public void handleSignUp(ActionEvent event) {
-
         try {
-
-            FXMLLoader loader =
-                    new FXMLLoader(
-                            getClass().getResource(
-                                    "/fxml/Register.fxml"
-                            )
-                    );
-
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/main/resources/fxml/Register.fxml")  // ✅ correct path
+            );
             Parent root = loader.load();
-
-            Stage stage =
-                    (Stage) usernameField
-                            .getScene()
-                            .getWindow();
-
-            stage.setScene(new Scene(root));
-
+            Stage stage = (Stage) usernameField.getScene().getWindow();
+            stage.setScene(new Scene(root, 1280, 720));
             stage.setTitle("Register");
-
             stage.show();
-
         } catch (Exception e) {
-
             System.out.println("ERROR LOADING REGISTER:");
             e.printStackTrace();
         }
     }
+
     // ─── Forgot Password ──────────────────────────────────────────
 
     @FXML

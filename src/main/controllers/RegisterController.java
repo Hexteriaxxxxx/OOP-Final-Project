@@ -24,7 +24,7 @@ public class RegisterController implements Initializable {
     @FXML private PasswordField confirmPasswordField;
     @FXML private CheckBox termsCheckBox;
 
-    private String selectedRole = "Admin";
+    private String selectedRole = "admin";  // ✅ lowercase
 
     private final UserDAO userDAO = new UserDAO();
 
@@ -37,13 +37,13 @@ public class RegisterController implements Initializable {
 
     @FXML
     public void handleStaffTab(ActionEvent event) {
-        selectedRole = "Staff";
+        selectedRole = "staff";  // ✅ lowercase
         setActiveTab("Staff");
     }
 
     @FXML
     public void handleAdminTab(ActionEvent event) {
-        selectedRole = "Admin";
+        selectedRole = "admin";  // ✅ lowercase
         setActiveTab("Admin");
     }
 
@@ -73,7 +73,6 @@ public class RegisterController implements Initializable {
         String password = passwordField.getText().trim();
         String confirm  = confirmPasswordField.getText().trim();
 
-        // 1. Empty fields check
         if (fullName.isEmpty() || email.isEmpty() || username.isEmpty()
                 || password.isEmpty() || confirm.isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Missing Fields",
@@ -81,14 +80,12 @@ public class RegisterController implements Initializable {
             return;
         }
 
-        // 2. Email format check
         if (!email.contains("@") || !email.contains(".")) {
             showAlert(Alert.AlertType.WARNING, "Invalid Email",
                     "Please enter a valid email address.");
             return;
         }
 
-        // 3. Password match check
         if (!password.equals(confirm)) {
             showAlert(Alert.AlertType.WARNING, "Password Mismatch",
                     "Passwords do not match. Please try again.");
@@ -96,21 +93,18 @@ public class RegisterController implements Initializable {
             return;
         }
 
-        // 4. Password length check
         if (password.length() < 6) {
             showAlert(Alert.AlertType.WARNING, "Weak Password",
                     "Password must be at least 6 characters long.");
             return;
         }
 
-        // 5. Terms and Conditions check
         if (!termsCheckBox.isSelected()) {
             showAlert(Alert.AlertType.WARNING, "Terms Not Accepted",
                     "Please agree to the Terms and Conditions to proceed.");
             return;
         }
 
-        // 6. Username exists check
         if (userDAO.usernameExists(username)) {
             showAlert(Alert.AlertType.WARNING, "Username Taken",
                     "The username \"" + username + "\" is already taken.\nPlease choose a different username.");
@@ -118,7 +112,6 @@ public class RegisterController implements Initializable {
             return;
         }
 
-        // 7. Register in database
         boolean success = userDAO.register(fullName, email, username, password, selectedRole);
 
         if (success) {
@@ -140,8 +133,10 @@ public class RegisterController implements Initializable {
 
     private void navigateToLogin(ActionEvent event) {
         try {
-            URL loginUrl = getClass().getClassLoader().getResource("fxml/Login.fxml");
-            Parent root = FXMLLoader.load(loginUrl);
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/main/resources/fxml/Login.fxml")  // ✅ correct path
+            );
+            Parent root = loader.load();
             Stage stage = (Stage) fullNameField.getScene().getWindow();
             stage.setScene(new Scene(root, 1280, 720));
             stage.setTitle("Pass Slip Issuance System");

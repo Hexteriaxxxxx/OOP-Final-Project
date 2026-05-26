@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="main.controllers.AddEmployeeController"
+      style="-fx-background-color: white; -fx-background-radius: 10; -fx-pref-width: 500px;"
+      spacing="0">
+
+    <HBox style="-fx-padding: 18 20 14 20; -fx-alignment: CENTER_LEFT;">
+        <Label text="Add New Employee"
+               style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="✕" onAction="#handleClose"
+                style="-fx-background-color: transparent; -fx-text-fill: #6b7280; -fx-font-size: 16px; -fx-cursor: hand; -fx-border-color: transparent;"/>
+    </HBox>
+
+    <VBox style="-fx-padding: 0 20 14 20;" spacing="12">
+
+        <HBox spacing="12">
+            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                <Label text="Employee ID" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+                <TextField fx:id="tfEmployeeId" promptText="e.g. 7"
+                           style="-fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #fca5a5; -fx-padding: 8 12 8 12; -fx-font-size: 12.5px;"/>
+            </VBox>
+            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                <Label text="Full Name" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+                <TextField fx:id="tfFullName" promptText="Juan Dela Cruz"
+                           style="-fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #fca5a5; -fx-padding: 8 12 8 12; -fx-font-size: 12.5px;"/>
+            </VBox>
+        </HBox>
+
+        <HBox spacing="12">
+            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                <Label text="Department" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+                <TextField fx:id="tfDepartment" promptText="e.g. IT Department"
+                           style="-fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #fca5a5; -fx-padding: 8 12 8 12; -fx-font-size: 12.5px;"/>
+            </VBox>
+            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                <Label text="Position" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+                <TextField fx:id="tfPosition" promptText="e.g. Developer"
+                           style="-fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #fca5a5; -fx-padding: 8 12 8 12; -fx-font-size: 12.5px;"/>
+            </VBox>
+        </HBox>
+
+        <HBox style="-fx-background-color: #fff1f2; -fx-background-radius: 8; -fx-padding: 10 14 10 14;">
+            <Label text="Note: " style="-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #7f1d1d;"/>
+            <Label text="Employee will be added to the system and can access based on assigned role."
+                   style="-fx-font-size: 12px; -fx-text-fill: #7f1d1d;" wrapText="true" HBox.hgrow="ALWAYS"/>
+        </HBox>
+    </VBox>
+
+    <HBox style="-fx-padding: 14 20 14 20; -fx-alignment: CENTER_RIGHT; -fx-border-color: #e5e7eb; -fx-border-width: 0.5 0 0 0;" spacing="10">
+        <Button text="Cancel" onAction="#handleClose"
+                style="-fx-background-color: white; -fx-text-fill: #374151; -fx-border-color: #d1d5db; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 8 18 8 18; -fx-font-size: 13px; -fx-cursor: hand;"/>
+        <Button text="💾  Add Employee" onAction="#handleAddEmployee"
+                style="-fx-background-color: #7f1d1d; -fx-text-fill: white; -fx-background-radius: 6; -fx-border-radius: 6; -fx-padding: 8 18 8 18; -fx-font-size: 13px; -fx-font-weight: bold; -fx-cursor: hand;"/>
+    </HBox>
+</VBox>

@@ -15,7 +15,6 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import models.Visitor;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
