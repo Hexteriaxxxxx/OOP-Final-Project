@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane
+    xmlns="http://javafx.com/javafx/21"
+    xmlns:fx="http://javafx.com/fxml/1"
+    prefWidth="1100" prefHeight="760">
+
+    <!-- ═══════════════════════════ SIDEBAR ═══════════════════════════ -->
+    <left>
+        <VBox prefWidth="160" minWidth="160"
+              style="-fx-background-color:#8B0000;">
+
+            <!-- Brand -->
+            <HBox alignment="CENTER_LEFT" spacing="10"
+                  style="-fx-padding:22 16 18 16; -fx-background-color:#7A0000;">
+                <Label text="⬡"
+                       style="-fx-text-fill:white; -fx-font-size:24px;"/>
+                <VBox spacing="1">
+                    <Label text="Pass Slip"
+                           style="-fx-text-fill:white; -fx-font-size:15px; -fx-font-weight:bold;"/>
+                    <Label text="Issuance System"
+                           style="-fx-text-fill:rgba(255,255,255,0.55); -fx-font-size:10px;"/>
+                </VBox>
+            </HBox>
+
+            <!-- Nav -->
+            <VBox spacing="2" VBox.vgrow="ALWAYS"
+                  style="-fx-padding:14 10 14 10;">
+                <Button fx:id="btnDashboard" text="  Dashboard" maxWidth="Infinity"
+                        style="-fx-background-color:transparent; -fx-text-fill:rgba(255,255,255,0.72); -fx-alignment:CENTER_LEFT; -fx-font-size:13px; -fx-padding:9 14; -fx-cursor:hand; -fx-background-radius:7; -fx-border-width:0;"/>
+                <Button fx:id="btnPassSlip" text="  Pass Slip Issuance" maxWidth="Infinity"
+                        style="-fx-background-color:transparent; -fx-text-fill:rgba(255,255,255,0.72); -fx-alignment:CENTER_LEFT; -fx-font-size:13px; -fx-padding:9 14; -fx-cursor:hand; -fx-background-radius:7; -fx-border-width:0;"/>
+                <Button fx:id="btnVisitor" text="  Visitor Module" maxWidth="Infinity"
+                        style="-fx-background-color:rgba(255,255,255,0.20); -fx-text-fill:white; -fx-font-weight:bold; -fx-alignment:CENTER_LEFT; -fx-font-size:13px; -fx-padding:9 14; -fx-cursor:hand; -fx-background-radius:7; -fx-border-width:0;"/>
+                <Button fx:id="btnReports" text="  Reports" maxWidth="Infinity"
+                        style="-fx-background-color:transparent; -fx-text-fill:rgba(255,255,255,0.72); -fx-alignment:CENTER_LEFT; -fx-font-size:13px; -fx-padding:9 14; -fx-cursor:hand; -fx-background-radius:7; -fx-border-width:0;"/>
+            </VBox>
+
+            <!-- Footer -->
+            <VBox spacing="8"
+                  style="-fx-padding:12 12 18 12; -fx-background-color:rgba(0,0,0,0.18);">
+                <VBox spacing="1"
+                      style="-fx-padding:7 10; -fx-background-color:rgba(255,255,255,0.09); -fx-background-radius:6;">
+                    <Label fx:id="lblStaffName" text="Staff"
+                           style="-fx-text-fill:white; -fx-font-size:13px; -fx-font-weight:bold;"/>
+                    <Label fx:id="lblStaffRole" text="Staff"
+                           style="-fx-text-fill:rgba(255,255,255,0.50); -fx-font-size:11px;"/>
+                </VBox>
+                <Button fx:id="btnLogout" text="↪  Logout" maxWidth="Infinity"
+                        style="-fx-background-color:rgba(255,255,255,0.10); -fx-text-fill:rgba(255,255,255,0.85); -fx-font-size:12px; -fx-padding:8 12; -fx-cursor:hand; -fx-background-radius:6; -fx-alignment:CENTER_LEFT; -fx-border-width:0;"/>
+            </VBox>
+        </VBox>
+    </left>
+
+    <!-- ═══════════════════════════ MAIN ═══════════════════════════ -->
+    <center>
+        <VBox spacing="18"
+              style="-fx-background-color:#F2F2F2; -fx-padding:0 20 20 20;">
+
+            <!-- Top Bar -->
+            <HBox alignment="CENTER_LEFT"
+                  style="-fx-padding:16 4 8 4;">
+                <VBox HBox.hgrow="ALWAYS" spacing="2">
+                    <Label text="Visitor Module"
+                           style="-fx-text-fill:#8B0000; -fx-font-size:22px; -fx-font-weight:bold;"/>
+                    <Label text="Manage visitor access and requests"
+                           style="-fx-text-fill:#888; -fx-font-size:12px;"/>
+                </VBox>
+                <Button text="🔔"
+                        style="-fx-background-color:transparent; -fx-font-size:18px; -fx-padding:4 8; -fx-cursor:hand; -fx-background-radius:20; -fx-border-width:0;"/>
+            </HBox>
+
+            <!-- Stat Cards -->
+            <HBox spacing="14">
+                <!-- Pending -->
+                <VBox spacing="6" HBox.hgrow="ALWAYS"
+                      style="-fx-background-color:white; -fx-background-radius:10; -fx-border-color:#E5E5E5; -fx-border-radius:10; -fx-border-width:1; -fx-padding:16 20; -fx-effect:dropshadow(gaussian,rgba(0,0,0,0.05),4,0,0,2);">
+                    <Label text="Pending Requests" style="-fx-text-fill:#999; -fx-font-size:12px;"/>
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label fx:id="lblPendingCount" text="0"
+                               style="-fx-font-size:30px; -fx-font-weight:bold; -fx-text-fill:#E6A817;"/>
+                        <Label text="⏱" style="-fx-font-size:22px; -fx-text-fill:#E6A817;"/>
+                    </HBox>
+                </VBox>
+                <!-- Approved -->
+                <VBox spacing="6" HBox.hgrow="ALWAYS"
+                      style="-fx-background-color:white; -fx-background-radius:10; -fx-border-color:#E5E5E5; -fx-border-radius:10; -fx-border-width:1; -fx-padding:16 20; -fx-effect:dropshadow(gaussian,rgba(0,0,0,0.05),4,0,0,2);">
+                    <Label text="Approved Requests" style="-fx-text-fill:#999; -fx-font-size:12px;"/>
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label fx:id="lblApprovedCount" text="0"
+                               style="-fx-font-size:30px; -fx-font-weight:bold; -fx-text-fill:#2EAA5A;"/>
+                        <Label text="✔" style="-fx-font-size:22px; -fx-text-fill:#2EAA5A;"/>
+                    </HBox>
+                </VBox>
+                <!-- Rejected -->
+                <VBox spacing="6" HBox.hgrow="ALWAYS"
+                      style="-fx-background-color:white; -fx-background-radius:10; -fx-border-color:#E5E5E5; -fx-border-radius:10; -fx-border-width:1; -fx-padding:16 20; -fx-effect:dropshadow(gaussian,rgba(0,0,0,0.05),4,0,0,2);">
+                    <Label text="Rejected Requests" style="-fx-text-fill:#999; -fx-font-size:12px;"/>
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label fx:id="lblRejectedCount" text="0"
+                               style="-fx-font-size:30px; -fx-font-weight:bold; -fx-text-fill:#E53935;"/>
+                        <Label text="✖" style="-fx-font-size:22px; -fx-text-fill:#E53935;"/>
+                    </HBox>
+                </VBox>
+                <!-- Active Visitors -->
+                <VBox spacing="6" HBox.hgrow="ALWAYS"
+                      style="-fx-background-color:white; -fx-background-radius:10; -fx-border-color:#E5E5E5; -fx-border-radius:10; -fx-border-width:1; -fx-padding:16 20; -fx-effect:dropshadow(gaussian,rgba(0,0,0,0.05),4,0,0,2);">
+                    <Label text="Active Visitors Today" style="-fx-text-fill:#999; -fx-font-size:12px;"/>
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label fx:id="lblActiveCount" text="0"
+                               style="-fx-font-size:30px; -fx-font-weight:bold; -fx-text-fill:#8B0000;"/>
+                        <Label text="👤" style="-fx-font-size:20px;"/>
+                    </HBox>
+                </VBox>
+            </HBox>
+
+            <!-- Table Card -->
+            <VBox spacing="12" VBox.vgrow="ALWAYS"
+                  style="-fx-background-color:white; -fx-background-radius:10; -fx-border-color:#E5E5E5; -fx-border-radius:10; -fx-border-width:1; -fx-padding:16; -fx-effect:dropshadow(gaussian,rgba(0,0,0,0.05),4,0,0,2);">
+
+                <HBox alignment="CENTER_LEFT">
+                    <Label text="Visitor Requests"
+                           style="-fx-text-fill:#333; -fx-font-size:14px; -fx-font-weight:bold;"
+                           HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="btnNewVisitorRequest" text="+ New Visitor Request"
+                            style="-fx-background-color:#8B0000; -fx-text-fill:white; -fx-font-size:13px; -fx-font-weight:bold; -fx-padding:9 18; -fx-cursor:hand; -fx-background-radius:7; -fx-border-width:0;"/>
+                </HBox>
+
+                <HBox spacing="8">
+                    <TextField fx:id="txtSearch"
+                               promptText="Search by name, ID, or company..."
+                               HBox.hgrow="ALWAYS"
+                               style="-fx-background-color:#F8F8F8; -fx-border-color:#DEDEDE; -fx-border-radius:6; -fx-background-radius:6; -fx-padding:7 12; -fx-font-size:13px;"/>
+                    <ComboBox fx:id="cmbFilter" prefWidth="150"
+                              style="-fx-background-color:#F8F8F8; -fx-border-color:#DEDEDE; -fx-border-radius:6; -fx-background-radius:6; -fx-font-size:13px;"/>
+                </HBox>
+
+                <TableView fx:id="tblVisitors" VBox.vgrow="ALWAYS"
+                           style="-fx-background-color:transparent; -fx-border-color:transparent;">
+                    <columns>
+                        <TableColumn fx:id="colId"       text="Request ID"    prefWidth="90"/>
+                        <TableColumn fx:id="colName"     text="Visitor Name"  prefWidth="110"/>
+                        <TableColumn fx:id="colCompany"  text="Company"       prefWidth="120"/>
+                        <TableColumn fx:id="colPurpose"  text="Purpose"       prefWidth="120"/>
+                        <TableColumn fx:id="colTimeOut"  text="Time Out"      prefWidth="80"/>
+                        <TableColumn fx:id="colTimeIn"   text="Time In"       prefWidth="80"/>
+                        <TableColumn fx:id="colHost"     text="Host Employee" prefWidth="110"/>
+                        <TableColumn fx:id="colStatus"   text="Status"        prefWidth="90"/>
+                        <TableColumn fx:id="colActions"  text="Actions"       prefWidth="100" sortable="false"/>
+                    </columns>
+                    <placeholder>
+                        <Label text="No visitor requests found."
+                               style="-fx-text-fill:#AAA; -fx-font-size:13px;"/>
+                    </placeholder>
+                </TableView>
+            </VBox>
+        </VBox>
+    </center>
+
+</BorderPane>
