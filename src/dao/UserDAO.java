@@ -2,28 +2,33 @@ package dao;
 
 import models.User;
 import main.utils.DBConnection;
+import utils.PasswordUtils;
 import java.sql.*;
 
 public class UserDAO {
 
     // Login - check username and password
     public User login(String username, String password, String role) {
-        String sql = "SELECT * FROM User WHERE username = ? AND password = ? AND role = ?";
+        String sql = "SELECT * FROM User WHERE username = ? AND role = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, username);
-            stmt.setString(2, password);
-            stmt.setString(3, role);
+            stmt.setString(2, role);
 
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                User user = new User();
-                user.setUserId(rs.getInt("user_id"));
-                user.setUsername(rs.getString("username"));
-                user.setPassword(rs.getString("password"));
-                user.setRole(rs.getString("role"));
-                return user;
+                String storedHash = rs.getString("password");
+
+                // I-verify ang password gamit ang PasswordUtils
+                if (PasswordUtils.verifyPassword(password, storedHash)) {
+                    User user = new User();
+                    user.setUserId(rs.getInt("user_id"));
+                    user.setUsername(rs.getString("username"));
+                    user.setPassword(storedHash);
+                    user.setRole(rs.getString("role"));
+                    return user;
+                }
             }
         } catch (SQLException e) {
             System.out.println("Login error: " + e.getMessage());
@@ -37,8 +42,11 @@ public class UserDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
+            // I-hash ang password bago i-save sa database
+            String hashedPassword = PasswordUtils.hashPassword(password);
+
             stmt.setString(1, username);
-            stmt.setString(2, password);
+            stmt.setString(2, hashedPassword); // ← hashed na!
             stmt.setString(3, role);
             stmt.setString(4, fullName);
             stmt.setString(5, email);

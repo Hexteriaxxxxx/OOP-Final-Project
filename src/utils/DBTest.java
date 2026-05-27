@@ -11,6 +11,10 @@ import models.User;
 import main.utils.DBConnection;
 import java.sql.Connection;
 import java.util.List;
+import java.sql.Statement;
+import java.sql.ResultSet;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class DBTest {
     public static void main(String[] args) {
@@ -87,6 +91,37 @@ public class DBTest {
 
         List<ActivityLog> empLogs = logDAO.getLogsByEmployee(1);
         System.out.println("getLogsByEmployee(1): " + empLogs.size() + " records");
+        // =============================
+        // HASH EXISTING PASSWORDS
+        // =============================
+        System.out.println("\n--- Hashing Existing Passwords ---");
+        String selectSQL = "SELECT user_id, password FROM User";
+        String updateSQL = "UPDATE User SET password = ? WHERE user_id = ?";
+
+        try (Statement hashStmt = conn.createStatement();
+             ResultSet hashRs = hashStmt.executeQuery(selectSQL);
+             PreparedStatement updateStmt = conn.prepareStatement(updateSQL)) {
+
+            while (hashRs.next()) {
+                int userId = hashRs.getInt("user_id");
+                String plainPassword = hashRs.getString("password");
+
+                if (plainPassword.length() > 50) {
+                    System.out.println("Skipping user_id " + userId + " - already hashed.");
+                    continue;
+                }
+
+                String hashed = utils.PasswordUtils.hashPassword(plainPassword);
+                updateStmt.setString(1, hashed);
+                updateStmt.setInt(2, userId);
+                updateStmt.executeUpdate();
+                System.out.println("✅ Hashed user_id: " + userId);
+            }
+            System.out.println("✅ Done! Lahat ng passwords na-hash na!");
+
+        } catch (SQLException e) {
+            System.out.println("Hash error: " + e.getMessage());
+        }
 
         System.out.println("\n=============================");
         System.out.println("      ALL TESTS DONE!        ");

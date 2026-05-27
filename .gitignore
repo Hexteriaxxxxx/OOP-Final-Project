@@ -28,3 +28,4 @@ mysql-connector*/
 javafx-sdk*/
 # Environment variables
 .env
+src/resources/config.properties
