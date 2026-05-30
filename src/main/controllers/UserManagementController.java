@@ -1,4 +1,5 @@
 package main.controllers;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -42,7 +43,6 @@ public class UserManagementController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Sample data
         masterList.addAll(
                 new Employee(1, "John Cruz",     "IT Department", "Senior Developer"),
                 new Employee(2, "Maria Santos",  "HR Department", "HR Manager"),
@@ -58,6 +58,9 @@ public class UserManagementController implements Initializable {
         refreshStats();
     }
 
+    // ─────────────────────────────────────────────────────────────
+    //  SETUP
+    // ─────────────────────────────────────────────────────────────
     private void setupFilterCombo() {
         cbFilter.setItems(FXCollections.observableArrayList(
                 "All Departments", "IT Department", "HR Department",
@@ -73,7 +76,6 @@ public class UserManagementController implements Initializable {
         colDept.setCellValueFactory(new PropertyValueFactory<>("department"));
         colPosition.setCellValueFactory(new PropertyValueFactory<>("position"));
 
-        // Actions column — Edit (blue) + Delete (red)
         colActions.setCellFactory(col -> new TableCell<>() {
             private final Button btnEdit   = new Button("✏");
             private final Button btnDelete = new Button("🗑");
@@ -134,11 +136,11 @@ public class UserManagementController implements Initializable {
     }
 
     private void refreshStats() {
-        long total = masterList.size();
-        long itHr  = masterList.stream()
+        long total  = masterList.size();
+        long itHr   = masterList.stream()
                 .filter(e -> e.getDepartment().equals("IT Department")
                         || e.getDepartment().equals("HR Department")).count();
-        long fin   = masterList.stream()
+        long fin    = masterList.stream()
                 .filter(e -> e.getDepartment().equals("Finance")).count();
         long others = masterList.stream()
                 .filter(e -> !e.getDepartment().equals("IT Department")
@@ -151,11 +153,14 @@ public class UserManagementController implements Initializable {
         lblAdmins.setText(String.valueOf(others));
     }
 
+    // ─────────────────────────────────────────────────────────────
+    //  ADD / EDIT / DELETE
+    // ─────────────────────────────────────────────────────────────
     @FXML
     private void handleAddEmployee() {
         try {
             FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/fxml/AddEmployee.fxml"));
+                    getClass().getResource("/main/resources/fxml/AddEmployee.fxml"));
             Parent root = loader.load();
 
             AddEmployeeController ctrl = loader.getController();
@@ -170,7 +175,6 @@ public class UserManagementController implements Initializable {
             dialog.showAndWait();
 
         } catch (IOException ex) {
-            ex.printStackTrace();
             showError("Hindi mabuksan ang Add Employee dialog:\n" + ex.getMessage());
         }
     }
@@ -178,7 +182,7 @@ public class UserManagementController implements Initializable {
     private void openEditDialog(Employee emp) {
         try {
             FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/fxml/EditEmployee.fxml"));
+                    getClass().getResource("/main/resources/fxml/EditEmployee.fxml"));
             Parent root = loader.load();
 
             EditEmployeeController ctrl = loader.getController();
@@ -196,7 +200,6 @@ public class UserManagementController implements Initializable {
             dialog.showAndWait();
 
         } catch (IOException ex) {
-            ex.printStackTrace();
             showError("Hindi mabuksan ang Edit Employee dialog:\n" + ex.getMessage());
         }
     }
@@ -214,6 +217,54 @@ public class UserManagementController implements Initializable {
         }
     }
 
+    // ─────────────────────────────────────────────────────────────
+    //  NAV HANDLERS (FIXED)
+    // ─────────────────────────────────────────────────────────────
+    @FXML private void handleNavDashboard() {
+        goTo("/main/resources/fxml/AdminDashboard.fxml", "Dashboard");
+    }
+    @FXML private void handleNavPassSlip() {
+        goTo("/main/resources/fxml/PassSlipIssuance.fxml", "Pass Slip Issuance");
+    }
+    @FXML private void handleNavVisitor() {
+        goTo("/main/resources/fxml/Visitor.fxml", "Visitor Module");
+    }
+    @FXML private void handleNavReports() {
+        goTo("/main/resources/fxml/Reports.fxml", "Reports");
+    }
+    @FXML private void handleNavUserMgmt() { /* already here */ }
+    @FXML private void handleNotifications() { }
+
+    @FXML
+    private void handleLogout() {
+        Optional<ButtonType> res = new Alert(
+                Alert.AlertType.CONFIRMATION,
+                "Are you sure you want to logout?",
+                ButtonType.OK, ButtonType.CANCEL)
+                .showAndWait();
+        if (res.isPresent() && res.get() == ButtonType.OK) {
+            goTo("/main/resources/fxml/Login.fxml", "Pass Slip System — Login");
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  NAVIGATION HELPER
+    // ─────────────────────────────────────────────────────────────
+    private void goTo(String fxml, String title) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
+            Parent root = loader.load();
+            Stage stage = (Stage) tableEmployees.getScene().getWindow();
+            stage.setTitle(title);
+            stage.setScene(new Scene(root));
+        } catch (IOException e) {
+            showError("Screen not available:\n" + fxml);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  HELPERS
+    // ─────────────────────────────────────────────────────────────
     private void showError(String msg) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");

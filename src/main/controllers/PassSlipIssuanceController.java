@@ -75,7 +75,6 @@ public class PassSlipIssuanceController implements Initializable {
     private static final DateTimeFormatter DATE_FMT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    // ─────────────────────────────────────────────────────────────
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         setupFilter();
@@ -84,7 +83,6 @@ public class PassSlipIssuanceController implements Initializable {
         loadData();
     }
 
-    /** Called by previous controller after scene load */
     public void initSession(String username, String role) {
         this.sessionUser = username;
         this.sessionRole = role;
@@ -92,9 +90,6 @@ public class PassSlipIssuanceController implements Initializable {
         if (lblAdminRole != null) lblAdminRole.setText(role);
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  SETUP
-    // ─────────────────────────────────────────────────────────────
     private void setupFilter() {
         cmbFilter.setItems(FXCollections.observableArrayList(
                 "All Departments", "IT Department", "HR Department",
@@ -108,29 +103,21 @@ public class PassSlipIssuanceController implements Initializable {
         colId.setCellValueFactory(c ->
                 new SimpleStringProperty(
                         "PS-" + String.format("%04d", c.getValue().getSlipId())));
-
         colName.setCellValueFactory(c ->
                 new SimpleStringProperty(c.getValue().getEmpName()));
-
         colDept.setCellValueFactory(c ->
                 new SimpleStringProperty(c.getValue().getDepartment()));
-
         colPurpose.setCellValueFactory(c ->
                 new SimpleStringProperty(c.getValue().getReason()));
-
         colTimeOut.setCellValueFactory(c ->
                 new SimpleStringProperty(c.getValue().getFormattedTimeOut()));
-
         colTimeIn.setCellValueFactory(c ->
                 new SimpleStringProperty(c.getValue().getFormattedTimeIn()));
-
         colDate.setCellValueFactory(c -> {
             String date = c.getValue().getTimeOut() != null
                     ? c.getValue().getTimeOut().format(DATE_FMT) : "";
             return new SimpleStringProperty(date);
         });
-
-        // "Approved By" — issuedBy is int (user ID); show as "User #ID"
         colApprovedBy.setCellValueFactory(c ->
                 new SimpleStringProperty("User #" + c.getValue().getIssuedBy()));
     }
@@ -141,23 +128,20 @@ public class PassSlipIssuanceController implements Initializable {
             final Button btnPrint    = new Button("🖨");
             final Button btnView     = new Button("👁");
             final HBox   box         = new HBox(4, btnDownload, btnPrint, btnView);
-
             {
                 box.setAlignment(Pos.CENTER);
-
                 btnDownload.setStyle(
                         "-fx-background-color:#8B0000; -fx-text-fill:white; " +
-                        "-fx-font-size:11px; -fx-font-weight:bold; " +
-                        "-fx-padding:5 10; -fx-cursor:hand; -fx-background-radius:5;");
+                                "-fx-font-size:11px; -fx-font-weight:bold; " +
+                                "-fx-padding:5 10; -fx-cursor:hand; -fx-background-radius:5;");
                 btnPrint.setStyle(
                         "-fx-background-color:transparent; -fx-text-fill:#E67E22; " +
-                        "-fx-font-size:15px; -fx-cursor:hand; -fx-padding:2 5; " +
-                        "-fx-background-radius:4;");
+                                "-fx-font-size:15px; -fx-cursor:hand; -fx-padding:2 5; " +
+                                "-fx-background-radius:4;");
                 btnView.setStyle(
                         "-fx-background-color:transparent; -fx-text-fill:#1565C0; " +
-                        "-fx-font-size:15px; -fx-cursor:hand; -fx-padding:2 5; " +
-                        "-fx-background-radius:4;");
-
+                                "-fx-font-size:15px; -fx-cursor:hand; -fx-padding:2 5; " +
+                                "-fx-background-radius:4;");
                 btnDownload.setOnAction(e -> {
                     PassSlip ps = getTableView().getItems().get(getIndex());
                     handleDownload(ps);
@@ -171,7 +155,6 @@ public class PassSlipIssuanceController implements Initializable {
                     showDetails(ps);
                 });
             }
-
             @Override
             protected void updateItem(String val, boolean empty) {
                 super.updateItem(val, empty);
@@ -181,39 +164,27 @@ public class PassSlipIssuanceController implements Initializable {
         });
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  DATA LOADING
-    //  — "Approved" status  = active/out (approved but not yet returned)
-    //  — "Returned" status  = completed (shown in Issuance for download)
-    // ─────────────────────────────────────────────────────────────
     private void loadData() {
         masterList.clear();
-
-        // getAllPassSlips() — existing DAO method
         List<PassSlip> all = passSlipDAO.getAllPassSlips();
         if (all != null) {
             for (PassSlip ps : all) {
-                // Show only "Approved" slips (ready for issuance/download)
                 if ("Approved".equalsIgnoreCase(ps.getStatus())) {
                     masterList.add(ps);
                 }
             }
         }
-
         refreshStats();
         applyFilters();
     }
 
     private void refreshStats() {
         int total = masterList.size();
-
-        // Count today's approved from masterList
         String today = java.time.LocalDate.now().format(DATE_FMT);
         long todayCount = masterList.stream()
                 .filter(ps -> ps.getTimeOut() != null &&
                         ps.getTimeOut().format(DATE_FMT).equals(today))
                 .count();
-
         lblTotalApproved.setText(String.valueOf(total));
         lblTodayApproved.setText(String.valueOf(todayCount));
         lblDownloaded   .setText(String.valueOf(downloadCount));
@@ -221,16 +192,12 @@ public class PassSlipIssuanceController implements Initializable {
         lblApprovedCount.setText(total + " approved requests");
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  SEARCH & FILTER
-    // ─────────────────────────────────────────────────────────────
     @FXML private void handleSearch() { applyFilters(); }
     @FXML private void handleFilter() { applyFilters(); }
 
     private void applyFilters() {
         String kw   = txtSearch.getText().toLowerCase().trim();
         String dept = cmbFilter.getValue();
-
         filteredList.setPredicate(ps -> {
             boolean matchDept = "All Departments".equals(dept)
                     || ps.getDepartment().equalsIgnoreCase(dept);
@@ -243,23 +210,18 @@ public class PassSlipIssuanceController implements Initializable {
         });
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  DOWNLOAD ALL
-    // ─────────────────────────────────────────────────────────────
     @FXML
     private void handleDownloadAll() {
         if (filteredList.isEmpty()) {
             showError("No records to download.");
             return;
         }
-
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Save All Pass Slips");
         chooser.setInitialFileName("PassSlips_All.csv");
         chooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
         File file = chooser.showSaveDialog(tblSlips.getScene().getWindow());
-
         if (file != null) {
             try (FileWriter fw = new FileWriter(file)) {
                 fw.write("Slip ID,Name,Department,Purpose,Time Out,Time In,Duration,Status\n");
@@ -276,23 +238,17 @@ public class PassSlipIssuanceController implements Initializable {
                 }
                 downloadCount += filteredList.size();
                 refreshStats();
-
-                // Log the activity — activityLogDAO.logActivity()
                 activityLogDAO.logActivity(0,
                         "Downloaded " + filteredList.size() + " pass slip(s)",
                         sessionUser);
-
                 showInfo("Downloaded " + filteredList.size() +
-                         " record(s) to:\n" + file.getPath());
+                        " record(s) to:\n" + file.getPath());
             } catch (IOException e) {
                 showError("Download failed:\n" + e.getMessage());
             }
         }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  DOWNLOAD SINGLE
-    // ─────────────────────────────────────────────────────────────
     private void handleDownload(PassSlip ps) {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Save Pass Slip");
@@ -300,7 +256,6 @@ public class PassSlipIssuanceController implements Initializable {
         chooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
         File file = chooser.showSaveDialog(tblSlips.getScene().getWindow());
-
         if (file != null) {
             try (FileWriter fw = new FileWriter(file)) {
                 fw.write("Slip ID,Name,Department,Purpose,Time Out,Time In,Duration,Status\n");
@@ -313,15 +268,11 @@ public class PassSlipIssuanceController implements Initializable {
                         ps.getFormattedTimeIn(),
                         ps.getDuration() != null ? ps.getDuration() : "",
                         ps.getStatus()));
-
                 downloadCount++;
                 refreshStats();
-
-                // Log activity
                 activityLogDAO.logActivity(ps.getEmpId(),
                         "Pass slip PS-" + String.format("%04d", ps.getSlipId()) + " downloaded",
                         sessionUser);
-
                 showInfo("Pass slip downloaded:\n" + file.getPath());
             } catch (IOException e) {
                 showError("Download failed:\n" + e.getMessage());
@@ -329,14 +280,10 @@ public class PassSlipIssuanceController implements Initializable {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  PRINT
-    // ─────────────────────────────────────────────────────────────
     private void handlePrint(PassSlip ps) {
         Label printLabel = new Label(buildPrintText(ps));
         printLabel.setStyle(
                 "-fx-font-family:'Courier New'; -fx-font-size:13px; -fx-padding:20;");
-
         PrinterJob job = PrinterJob.createPrinterJob();
         if (job != null) {
             boolean ok = job.showPrintDialog(tblSlips.getScene().getWindow());
@@ -346,12 +293,9 @@ public class PassSlipIssuanceController implements Initializable {
                     job.endJob();
                     printCount++;
                     refreshStats();
-
-                    // Log activity
                     activityLogDAO.logActivity(ps.getEmpId(),
                             "Pass slip PS-" + String.format("%04d", ps.getSlipId()) + " printed",
                             sessionUser);
-
                     showInfo("Pass slip sent to printer.");
                 } else {
                     showError("Printing failed.");
@@ -362,9 +306,6 @@ public class PassSlipIssuanceController implements Initializable {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  VIEW DETAILS
-    // ─────────────────────────────────────────────────────────────
     private void showDetails(PassSlip ps) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setTitle("Pass Slip Details");
@@ -384,26 +325,24 @@ public class PassSlipIssuanceController implements Initializable {
                 "Time Out   : " + ps.getFormattedTimeOut()  + "\n" +
                 "Time In    : " + ps.getFormattedTimeIn()   + "\n" +
                 "Duration   : " + (ps.getDuration() != null
-                                    ? ps.getDuration() : "—") + "\n" +
+                ? ps.getDuration() : "—") + "\n" +
                 "Status     : " + ps.getStatus()            + "\n" +
                 "====================================";
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  NAVIGATION
-    // ─────────────────────────────────────────────────────────────
+    // ── NAVIGATION (FIXED) ──
     @FXML private void handleNavDashboard() {
-        goTo("/resources.fxml/AdminDashboard.fxml", "Dashboard");
+        goTo("/main/resources/fxml/AdminDashboard.fxml", "Dashboard");
     }
-    @FXML private void handleNavPassSlip()  { /* already here */ }
-    @FXML private void handleNavVisitor()   {
-        goTo("/resources.fxml/Visitor.fxml", "Visitor Module");
+    @FXML private void handleNavPassSlip() { /* already here */ }
+    @FXML private void handleNavVisitor() {
+        goTo("/main/resources/fxml/Visitor.fxml", "Visitor Module");
     }
-    @FXML private void handleNavReports()   {
-        goTo("/resources.fxml/Reports.fxml", "Reports");
+    @FXML private void handleNavReports() {
+        goTo("/main/resources/fxml/Reports.fxml", "Reports");
     }
-    @FXML private void handleNavUserMgmt()  {
-        goTo("/resources.fxml/UserManagement.fxml", "User Management");
+    @FXML private void handleNavUserMgmt() {
+        goTo("/main/resources/fxml/UserManagement.fxml", "User Management");
     }
     @FXML private void handleNotifications() { }
 
@@ -415,7 +354,7 @@ public class PassSlipIssuanceController implements Initializable {
                 ButtonType.OK, ButtonType.CANCEL)
                 .showAndWait();
         if (res.isPresent() && res.get() == ButtonType.OK) {
-            goTo("/resources.fxml/Login.fxml", "Pass Slip System — Login");
+            goTo("/main/resources/fxml/Login.fxml", "Pass Slip System — Login");
         }
     }
 
@@ -431,9 +370,6 @@ public class PassSlipIssuanceController implements Initializable {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  HELPERS
-    // ─────────────────────────────────────────────────────────────
     private void showInfo(String msg) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setTitle("Success");

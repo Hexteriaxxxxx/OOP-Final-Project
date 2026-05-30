@@ -1,19 +1,25 @@
 package main.controllers;
+
 import dao.PassSlipDAO;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import models.PassSlip;
 
+import java.io.IOException;
 import java.net.URL;
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class ReportsController implements Initializable {
@@ -66,6 +72,10 @@ public class ReportsController implements Initializable {
 
     private final PassSlipDAO passSlipDAO = new PassSlipDAO();
 
+    // ─── Session ──────────────────────────────────────────────────
+    private String sessionUser = "Admin";
+    private String sessionRole = "Admin";
+
     // ─────────────────────────────────────────────────────────────
     //  INITIALIZE
     // ─────────────────────────────────────────────────────────────
@@ -77,6 +87,13 @@ public class ReportsController implements Initializable {
         loadDailyData();
         loadMonthlyData();
         loadStatCards();
+    }
+
+    public void initSession(String username, String role) {
+        this.sessionUser = username;
+        this.sessionRole = role;
+        if (lblLoggedInUser != null) lblLoggedInUser.setText(username);
+        if (lblLoggedInRole != null) lblLoggedInRole.setText(role);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -144,7 +161,6 @@ public class ReportsController implements Initializable {
         colStatus.setCellValueFactory(data ->
                 new SimpleStringProperty(data.getValue().getStatus()));
 
-        // Color-code status column
         colStatus.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -164,7 +180,6 @@ public class ReportsController implements Initializable {
             }
         });
 
-        // Color-code approved column in monthly (reuse pattern)
         dailyTable.setItems(filteredDailyData != null ? filteredDailyData : dailyData);
     }
 
@@ -187,7 +202,6 @@ public class ReportsController implements Initializable {
         colAvgDuration.setCellValueFactory(data ->
                 new SimpleStringProperty(data.getValue().getAvgDuration()));
 
-        // Green for approved
         colApproved.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -197,7 +211,6 @@ public class ReportsController implements Initializable {
             }
         });
 
-        // Red for rejected
         colRejected.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -207,7 +220,6 @@ public class ReportsController implements Initializable {
             }
         });
 
-        // Amber for pending
         colPending.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -224,14 +236,11 @@ public class ReportsController implements Initializable {
     private void loadDailyData() {
         List<PassSlip> slips = passSlipDAO.getTodayPassSlips();
         dailyData.setAll(slips);
-
         filteredDailyData = new FilteredList<>(dailyData, p -> true);
         dailyTable.setItems(filteredDailyData);
     }
 
     private void loadMonthlyData() {
-        // TODO: Replace with real DAO call when MonthlyReportDAO is ready.
-        // For now, sample data matching the screenshot.
         ObservableList<MonthlyReport> monthlyData = FXCollections.observableArrayList(
                 new MonthlyReport("May 2026",      145, 120, 15, 10, 45, "2h 15m"),
                 new MonthlyReport("April 2026",    138, 115, 18,  5, 38, "2h 30m"),
@@ -243,20 +252,14 @@ public class ReportsController implements Initializable {
     }
 
     private void loadStatCards() {
-        int total = passSlipDAO.countTodaySlips();
-        int active = passSlipDAO.countActiveSlips();
-
-        // Total this month — from daily data size as approximation
         lblTotalMonth.setText(String.valueOf(dailyData.size()));
 
-        // Approved rate
         long approved = dailyData.stream()
                 .filter(s -> "completed".equalsIgnoreCase(s.getStatus()))
                 .count();
         double rate = dailyData.isEmpty() ? 0.0 : (double) approved / dailyData.size() * 100;
         lblApprovedRate.setText(String.format("%.1f%%", rate));
 
-        // Avg duration — parse "Xh Ym" from duration strings
         long totalMinutes = dailyData.stream()
                 .filter(s -> s.getDuration() != null && !s.getDuration().isBlank())
                 .mapToLong(s -> parseDurationToMinutes(s.getDuration()))
@@ -271,7 +274,6 @@ public class ReportsController implements Initializable {
             lblAvgDuration.setText("—");
         }
 
-        // Visitors — placeholder; connect VisitorDAO when ready
         lblTotalVisitors.setText("45");
     }
 
@@ -285,15 +287,8 @@ public class ReportsController implements Initializable {
         filterStatus.getSelectionModel().selectFirst();
     }
 
-    @FXML
-    private void handleSearch() {
-        applyFilter();
-    }
-
-    @FXML
-    private void handleFilter() {
-        applyFilter();
-    }
+    @FXML private void handleSearch() { applyFilter(); }
+    @FXML private void handleFilter() { applyFilter(); }
 
     private void applyFilter() {
         String keyword = searchField.getText() == null ? "" : searchField.getText().toLowerCase().trim();
@@ -319,7 +314,6 @@ public class ReportsController implements Initializable {
     // ─────────────────────────────────────────────────────────────
     @FXML
     private void handleExport() {
-        // TODO: Implement CSV/PDF export
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Export Report");
         alert.setHeaderText(null);
@@ -328,19 +322,51 @@ public class ReportsController implements Initializable {
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  NAV HANDLERS (replace with SceneManager calls)
+    //  NAV HANDLERS (FIXED)
     // ─────────────────────────────────────────────────────────────
-    @FXML private void handleDashboard()      { /* navigate to Dashboard */ }
-    @FXML private void handlePassSlip()       { /* navigate to PassSlip */ }
-    @FXML private void handleVisitor()        { /* navigate to Visitor */ }
-    @FXML private void handleUserManagement() { /* navigate to UserManagement */ }
-    @FXML private void handleLogout()         { /* navigate to Login */ }
+    @FXML private void handleDashboard() {
+        goTo("/main/resources/fxml/AdminDashboard.fxml", "Dashboard");
+    }
+    @FXML private void handlePassSlip() {
+        goTo("/main/resources/fxml/PassSlipIssuance.fxml", "Pass Slip Issuance");
+    }
+    @FXML private void handleVisitor() {
+        goTo("/main/resources/fxml/Visitor.fxml", "Visitor Module");
+    }
+    @FXML private void handleUserManagement() {
+        goTo("/main/resources/fxml/UserManagement.fxml", "User Management");
+    }
+    @FXML private void handleLogout() {
+        Optional<ButtonType> res = new Alert(
+                Alert.AlertType.CONFIRMATION,
+                "Are you sure you want to logout?",
+                ButtonType.OK, ButtonType.CANCEL)
+                .showAndWait();
+        if (res.isPresent() && res.get() == ButtonType.OK) {
+            goTo("/main/resources/fxml/Login.fxml", "Pass Slip System — Login");
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  NAVIGATION HELPER
+    // ─────────────────────────────────────────────────────────────
+    private void goTo(String fxml, String title) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
+            Parent root = loader.load();
+            Stage stage = (Stage) dailyTable.getScene().getWindow();
+            stage.setTitle(title);
+            stage.setScene(new Scene(root));
+        } catch (IOException e) {
+            new Alert(Alert.AlertType.ERROR,
+                    "Screen not available:\n" + fxml).showAndWait();
+        }
+    }
 
     // ─────────────────────────────────────────────────────────────
     //  HELPERS
     // ─────────────────────────────────────────────────────────────
     private long parseDurationToMinutes(String duration) {
-        // Parses formats like "2h 15m", "1h 30m", "45m"
         try {
             long minutes = 0;
             if (duration.contains("h")) {
@@ -380,12 +406,12 @@ public class ReportsController implements Initializable {
             this.avgDuration = avgDuration;
         }
 
-        public String getMonth()         { return month; }
-        public int getTotalRequests()    { return totalRequests; }
-        public int getApproved()         { return approved; }
-        public int getRejected()         { return rejected; }
-        public int getPending()          { return pending; }
-        public int getTotalVisitors()    { return totalVisitors; }
-        public String getAvgDuration()   { return avgDuration; }
+        public String getMonth()       { return month; }
+        public int getTotalRequests()  { return totalRequests; }
+        public int getApproved()       { return approved; }
+        public int getRejected()       { return rejected; }
+        public int getPending()        { return pending; }
+        public int getTotalVisitors()  { return totalVisitors; }
+        public String getAvgDuration() { return avgDuration; }
     }
 }

@@ -17,7 +17,7 @@ public class ActivityLogDAO {
     ) {
 
         String sql =
-                "INSERT INTO Activity_log " +
+                "INSERT INTO Activity_logs " +
                         "(emp_id, action, performed_by, timestamp) " +
                         "VALUES (?, ?, ?, NOW())";
 
@@ -56,7 +56,7 @@ public class ActivityLogDAO {
     ) {
 
         String sql =
-                "INSERT INTO Activity_log " +
+                "INSERT INTO Activity_logs " +
                         "(emp_id, action, performed_by, timestamp) " +
                         "VALUES (?, ?, ?, NOW())";
 
@@ -94,7 +94,7 @@ public class ActivityLogDAO {
                 new ArrayList<>();
 
         String sql =
-                "SELECT * FROM Activity_log " +
+                "SELECT * FROM Activity_logs " +
                         "ORDER BY timestamp DESC " +
                         "LIMIT ?";
 
@@ -138,7 +138,7 @@ public class ActivityLogDAO {
                 new ArrayList<>();
 
         String sql =
-                "SELECT * FROM Activity_log " +
+                "SELECT * FROM Activity_logs " +
                         "WHERE emp_id = ? " +
                         "ORDER BY timestamp DESC";
 

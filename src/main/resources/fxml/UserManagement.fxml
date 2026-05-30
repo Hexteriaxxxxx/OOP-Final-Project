@@ -3,171 +3,113 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
+<!-- UserManagement.fxml -->
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="main.controllers.UserManagementController"
-            prefWidth="1100" prefHeight="760"
             style="-fx-background-color: #f9fafb;">
 
-    <!-- ===== SIDEBAR ===== -->
-    <left>
-        <VBox prefWidth="160" minWidth="160"
-              style="-fx-background-color: #8B0000;">
+    <top>
+        <HBox style="-fx-background-color: #7f1d1d; -fx-padding: 10 16 10 16; -fx-alignment: CENTER_LEFT;">
+            <Label text="Admin User Management Module"
+                   style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="🔔" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 16px; -fx-cursor: hand;"/>
+        </HBox>
+    </top>
 
-            <!-- Logo -->
-            <VBox style="-fx-padding: 14 12 14 12; -fx-border-color: rgba(255,255,255,0.15); -fx-border-width: 0 0 1 0;">
-                <HBox alignment="CENTER_LEFT" spacing="8">
-                    <Label text="🛡" style="-fx-text-fill: white; -fx-font-size: 18px;"/>
-                    <VBox>
-                        <Label text="Pass Slip" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/>
-                        <Label text="Issuance System" style="-fx-text-fill: rgba(255,255,255,0.65); -fx-font-size: 10px;"/>
-                    </VBox>
-                </HBox>
-            </VBox>
-
-            <!-- Nav Items -->
-            <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 6 0 0 0;">
-                <Button text="  ⊞  Dashboard" maxWidth="Infinity"
-                        style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12.5px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12 10 12; -fx-border-width: 0; -fx-cursor: hand;"/>
-                <Button text="  📋  Pass Slip Issuance" maxWidth="Infinity"
-                        style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12.5px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12 10 12; -fx-border-width: 0; -fx-cursor: hand;"/>
-                <Button text="  👤  Visitor Module" maxWidth="Infinity"
-                        style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12.5px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12 10 12; -fx-border-width: 0; -fx-cursor: hand;"/>
-                <Button text="  📊  Reports" maxWidth="Infinity"
-                        style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12.5px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12 10 12; -fx-border-width: 0; -fx-cursor: hand;"/>
-                <Button text="  👥  User Management" maxWidth="Infinity"
-                        style="-fx-background-color: rgba(255,255,255,0.18); -fx-text-fill: white; -fx-font-size: 12.5px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12 10 12; -fx-border-width: 0; -fx-cursor: hand;"/>
-            </VBox>
-
-            <!-- Footer -->
-            <VBox style="-fx-padding: 12 12 12 12; -fx-border-color: rgba(255,255,255,0.15); -fx-border-width: 1 0 0 0;">
-                <Label text="Admin" style="-fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold;"/>
-                <Label text="Administrator" style="-fx-text-fill: rgba(255,255,255,0.6); -fx-font-size: 11px;"/>
-                <Button text="↪  Logout" maxWidth="Infinity"
-                        style="-fx-background-color: rgba(255,255,255,0.12); -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 6 10 6 10; -fx-background-radius: 6; -fx-border-width: 0; -fx-alignment: CENTER_LEFT; -fx-cursor: hand;"/>
-            </VBox>
-
-        </VBox>
-    </left>
-
-    <!-- ===== MAIN CONTENT ===== -->
     <center>
-        <VBox style="-fx-background-color: white;">
-
-            <!-- Top Bar -->
-            <HBox alignment="CENTER_LEFT"
-                  style="-fx-padding: 14 20 12 20; -fx-border-color: #e8e8e8; -fx-border-width: 0 0 1 0; -fx-background-color: white;">
-                <VBox HBox.hgrow="ALWAYS">
-                    <Label text="User Management" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1a1a1a;"/>
-                    <Label text="Manage employee records" style="-fx-font-size: 12px; -fx-text-fill: #888;"/>
+        <HBox>
+            <!-- SIDEBAR -->
+            <VBox style="-fx-background-color: #7f1d1d; -fx-pref-width: 180px; -fx-min-width: 180px;">
+                <VBox style="-fx-padding: 14 12 10 12; -fx-border-color: #991b1b; -fx-border-width: 0 0 1 0;">
+                    <Label text="Pass Slip" style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                    <Label text="Issuance System" style="-fx-text-fill: rgba(255,255,255,0.7); -fx-font-size: 10px;"/>
                 </VBox>
-                <Label text="🔔" style="-fx-font-size: 18px; -fx-text-fill: #888;"/>
-            </HBox>
+                <VBox style="-fx-padding: 10 8 10 8; -fx-spacing: 2;">
+                    <Button text="  Dashboard" maxWidth="Infinity"
+                            style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.75); -fx-alignment: CENTER_LEFT; -fx-padding: 8 10 8 10; -fx-cursor: hand; -fx-font-size: 12.5px;"/>
+                    <Button text="  Pass Slip Issuance" maxWidth="Infinity"
+                            style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.75); -fx-alignment: CENTER_LEFT; -fx-padding: 8 10 8 10; -fx-cursor: hand; -fx-font-size: 12.5px;"/>
+                    <Button text="  Visitor Module" maxWidth="Infinity"
+                            style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.75); -fx-alignment: CENTER_LEFT; -fx-padding: 8 10 8 10; -fx-cursor: hand; -fx-font-size: 12.5px;"/>
+                    <Button text="  Reports" maxWidth="Infinity"
+                            style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.75); -fx-alignment: CENTER_LEFT; -fx-padding: 8 10 8 10; -fx-cursor: hand; -fx-font-size: 12.5px;"/>
+                    <Button text="  User Management" maxWidth="Infinity"
+                            style="-fx-background-color: rgba(255,255,255,0.15); -fx-text-fill: white; -fx-alignment: CENTER_LEFT; -fx-padding: 8 10 8 10; -fx-cursor: hand; -fx-font-size: 12.5px;"/>
+                </VBox>
+                <Region VBox.vgrow="ALWAYS"/>
+                <VBox style="-fx-padding: 10 8 10 8; -fx-border-color: #991b1b; -fx-border-width: 1 0 0 0; -fx-spacing: 6;">
+                    <VBox style="-fx-background-color: rgba(255,255,255,0.1); -fx-background-radius: 6; -fx-padding: 8 10 8 10;">
+                        <Label text="Admin" style="-fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold;"/>
+                        <Label text="Admin" style="-fx-text-fill: rgba(255,255,255,0.6); -fx-font-size: 11px;"/>
+                    </VBox>
+                    <Button text="→  Logout" maxWidth="Infinity"
+                            style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.75); -fx-alignment: CENTER_LEFT; -fx-padding: 6 10 6 10; -fx-cursor: hand; -fx-font-size: 12px;"/>
+                </VBox>
+            </VBox>
 
-            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
-                        style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-background: white;">
-                <VBox style="-fx-padding: 16; -fx-spacing: 14; -fx-background-color: white;">
+            <!-- MAIN CONTENT -->
+            <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-border-color: transparent;" HBox.hgrow="ALWAYS">
+                <VBox style="-fx-padding: 16; -fx-spacing: 14;">
+                    <Label text="User Management" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                    <Label text="Manage employee records" style="-fx-font-size: 12px; -fx-text-fill: #6b7280;"/>
 
                     <!-- STAT CARDS -->
-                    <HBox spacing="12">
-
-                        <!-- Total Employees -->
-                        <HBox HBox.hgrow="ALWAYS"
-                              style="-fx-background-color: white; -fx-background-radius: 12;
-                                     -fx-border-color: #f0f0f0; -fx-border-radius: 12; -fx-border-width: 1.5;
-                                     -fx-padding: 14 16 14 16; -fx-alignment: CENTER_LEFT;">
-                            <VBox HBox.hgrow="ALWAYS" spacing="4">
+                    <HBox spacing="10">
+                        <HBox style="-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e5e7eb; -fx-border-radius: 8; -fx-padding: 12 14 12 14; -fx-alignment: CENTER_LEFT;" HBox.hgrow="ALWAYS">
+                            <VBox>
                                 <Label text="Total Employees" style="-fx-font-size: 11px; -fx-text-fill: #6b7280;"/>
-                                <Label fx:id="lblTotal" text="0"
-                                       style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #8B0000;"/>
+                                <Label fx:id="lblTotal" text="0" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
                             </VBox>
-                            <VBox alignment="CENTER" minWidth="38" minHeight="38"
-                                  style="-fx-background-color: #fce8e8; -fx-background-radius: 20;">
-                                <Label text="👥" style="-fx-font-size: 18px;"/>
-                            </VBox>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label text="👥" style="-fx-font-size: 20px;"/>
                         </HBox>
-
-                        <!-- Active -->
-                        <HBox HBox.hgrow="ALWAYS"
-                              style="-fx-background-color: white; -fx-background-radius: 12;
-                                     -fx-border-color: #f0f0f0; -fx-border-radius: 12; -fx-border-width: 1.5;
-                                     -fx-padding: 14 16 14 16; -fx-alignment: CENTER_LEFT;">
-                            <VBox HBox.hgrow="ALWAYS" spacing="4">
-                                <Label text="Active" style="-fx-font-size: 11px; -fx-text-fill: #6b7280;"/>
-                                <Label fx:id="lblActive" text="0"
-                                       style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1D9E75;"/>
+                        <HBox style="-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e5e7eb; -fx-border-radius: 8; -fx-padding: 12 14 12 14; -fx-alignment: CENTER_LEFT;" HBox.hgrow="ALWAYS">
+                            <VBox>
+                                <Label text="IT &amp; HR" style="-fx-font-size: 11px; -fx-text-fill: #6b7280;"/>
+                                <Label fx:id="lblActive" text="0" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
                             </VBox>
-                            <VBox alignment="CENTER" minWidth="38" minHeight="38"
-                                  style="-fx-background-color: #e6f7f1; -fx-background-radius: 20;">
-                                <Label text="👤" style="-fx-font-size: 18px;"/>
-                            </VBox>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label text="💻" style="-fx-font-size: 20px;"/>
                         </HBox>
-
-                        <!-- Inactive -->
-                        <HBox HBox.hgrow="ALWAYS"
-                              style="-fx-background-color: white; -fx-background-radius: 12;
-                                     -fx-border-color: #f0f0f0; -fx-border-radius: 12; -fx-border-width: 1.5;
-                                     -fx-padding: 14 16 14 16; -fx-alignment: CENTER_LEFT;">
-                            <VBox HBox.hgrow="ALWAYS" spacing="4">
-                                <Label text="Inactive" style="-fx-font-size: 11px; -fx-text-fill: #6b7280;"/>
-                                <Label fx:id="lblInactive" text="0"
-                                       style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #E74C3C;"/>
+                        <HBox style="-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e5e7eb; -fx-border-radius: 8; -fx-padding: 12 14 12 14; -fx-alignment: CENTER_LEFT;" HBox.hgrow="ALWAYS">
+                            <VBox>
+                                <Label text="Finance" style="-fx-font-size: 11px; -fx-text-fill: #6b7280;"/>
+                                <Label fx:id="lblInactive" text="0" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
                             </VBox>
-                            <VBox alignment="CENTER" minWidth="38" minHeight="38"
-                                  style="-fx-background-color: #fde8e8; -fx-background-radius: 20;">
-                                <Label text="👤" style="-fx-font-size: 18px;"/>
-                            </VBox>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label text="💰" style="-fx-font-size: 20px;"/>
                         </HBox>
-
-                        <!-- Administrators -->
-                        <HBox HBox.hgrow="ALWAYS"
-                              style="-fx-background-color: white; -fx-background-radius: 12;
-                                     -fx-border-color: #f0f0f0; -fx-border-radius: 12; -fx-border-width: 1.5;
-                                     -fx-padding: 14 16 14 16; -fx-alignment: CENTER_LEFT;">
-                            <VBox HBox.hgrow="ALWAYS" spacing="4">
-                                <Label text="Administrators" style="-fx-font-size: 11px; -fx-text-fill: #6b7280;"/>
-                                <Label fx:id="lblAdmins" text="0"
-                                       style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #185FA5;"/>
+                        <HBox style="-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e5e7eb; -fx-border-radius: 8; -fx-padding: 12 14 12 14; -fx-alignment: CENTER_LEFT;" HBox.hgrow="ALWAYS">
+                            <VBox>
+                                <Label text="Others" style="-fx-font-size: 11px; -fx-text-fill: #6b7280;"/>
+                                <Label fx:id="lblAdmins" text="0" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
                             </VBox>
-                            <VBox alignment="CENTER" minWidth="38" minHeight="38"
-                                  style="-fx-background-color: #e8f0fa; -fx-background-radius: 20;">
-                                <Label text="🛡" style="-fx-font-size: 18px;"/>
-                            </VBox>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label text="🏢" style="-fx-font-size: 20px;"/>
                         </HBox>
-
                     </HBox>
 
                     <!-- TABLE CARD -->
-                    <VBox spacing="10"
-                          style="-fx-background-color: #f8f8f8; -fx-background-radius: 10;
-                                 -fx-padding: 14 14 14 14; -fx-border-color: #ececec;
-                                 -fx-border-radius: 10; -fx-border-width: 1;">
-
-                        <HBox alignment="CENTER_LEFT" spacing="10">
-                            <Label text="Employee Records" HBox.hgrow="ALWAYS"
-                                   style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1a1a1a;"/>
+                    <VBox style="-fx-background-color: white; -fx-background-radius: 10; -fx-border-color: #e5e7eb; -fx-border-radius: 10; -fx-border-width: 0.5;">
+                        <HBox style="-fx-padding: 14 16 14 16; -fx-alignment: CENTER_LEFT; -fx-border-color: #e5e7eb; -fx-border-width: 0 0 0.5 0;">
+                            <Label text="Employee Records" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
                             <Button fx:id="btnAddEmployee" text="+ Add Employee"
                                     onAction="#handleAddEmployee"
-                                    style="-fx-background-color: #8B0000; -fx-text-fill: white;
-                                           -fx-font-size: 12px; -fx-padding: 6 14 6 14;
-                                           -fx-background-radius: 20; -fx-border-width: 0; -fx-cursor: hand;"/>
+                                    style="-fx-background-color: #7f1d1d; -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 7 14 7 14; -fx-font-size: 12.5px; -fx-font-weight: bold; -fx-cursor: hand;"/>
                         </HBox>
-
-                        <HBox spacing="8" alignment="CENTER_LEFT">
-                            <TextField fx:id="tfSearch"
-                                       promptText="🔍  Search by ID, name, department, or position..."
-                                       HBox.hgrow="ALWAYS"
-                                       style="-fx-background-color: white; -fx-border-color: #ddd;
-                                              -fx-border-radius: 20; -fx-background-radius: 20;
-                                              -fx-padding: 7 12 7 12; -fx-font-size: 12.5px;"/>
+                        <HBox style="-fx-padding: 10 16 10 16; -fx-spacing: 8; -fx-border-color: #e5e7eb; -fx-border-width: 0 0 0.5 0;">
+                            <TextField fx:id="tfSearch" promptText="Search by ID, name, department, or position..."
+                                       style="-fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: #d1d5db; -fx-padding: 7 10 7 10; -fx-font-size: 12.5px;"
+                                       HBox.hgrow="ALWAYS"/>
                             <ComboBox fx:id="cbFilter" promptText="All Departments"
-                                      style="-fx-background-radius: 20; -fx-border-radius: 20;
-                                             -fx-border-color: #ddd; -fx-background-color: white;
-                                             -fx-font-size: 12.5px; -fx-pref-width: 160px;"/>
+                                      style="-fx-background-radius: 6; -fx-border-color: #d1d5db; -fx-font-size: 12.5px; -fx-pref-width: 160px;"/>
                         </HBox>
-
-                        <TableView fx:id="tableEmployees" prefHeight="350" VBox.vgrow="ALWAYS"
-                                   style="-fx-background-color: white; -fx-border-color: #e8e8e8; -fx-table-cell-border-color: #f0f0f0;">
+                        <TableView fx:id="tableEmployees"
+                                   style="-fx-background-color: transparent; -fx-border-color: transparent;"
+                                   VBox.vgrow="ALWAYS" prefHeight="350">
                             <columns>
                                 <TableColumn fx:id="colId"       text="Employee ID" prefWidth="110"/>
                                 <TableColumn fx:id="colName"     text="Name"        prefWidth="150"/>
@@ -175,20 +117,13 @@
                                 <TableColumn fx:id="colPosition" text="Position"    prefWidth="180"/>
                                 <TableColumn fx:id="colActions"  text="Actions"     prefWidth="100"/>
                             </columns>
-                            <columnResizePolicy>
-                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
-                            </columnResizePolicy>
                             <placeholder>
-                                <Label text="Cannot find the employee."
-                                       style="-fx-text-fill: #aaa; -fx-font-size: 12px;"/>
+                                <Label text="Cannot find the employee." style="-fx-text-fill: #9ca3af;"/>
                             </placeholder>
                         </TableView>
-
                     </VBox>
                 </VBox>
             </ScrollPane>
-
-        </VBox>
+        </HBox>
     </center>
-
 </BorderPane>
