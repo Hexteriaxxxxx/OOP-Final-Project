@@ -464,8 +464,12 @@ public class AdminDashboardController implements Initializable {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Parent root = loader.load();
             Stage stage = (Stage) lblSidebarUser.getScene().getWindow();
+            double w = stage.getWidth();
+            double h = stage.getHeight();
             stage.setScene(new Scene(root));
             stage.setTitle(title);
+            stage.setWidth(w);
+            stage.setHeight(h);
         } catch (IOException e) {
             System.out.println("Navigation Error: " + e.getMessage());
             showAlert(Alert.AlertType.ERROR, "Navigation Error", "Could not open " + title + ".");
