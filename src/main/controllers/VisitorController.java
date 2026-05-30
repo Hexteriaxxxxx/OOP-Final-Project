@@ -327,8 +327,12 @@ public class VisitorController implements Initializable {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
             Parent root  = loader.load();
             Stage  stage = (Stage) tblVisitors.getScene().getWindow();
+            double w = stage.getWidth();
+            double h = stage.getHeight();
             stage.setTitle(title);
             stage.setScene(new Scene(root));
+            stage.setWidth(w);
+            stage.setHeight(h);
         } catch (IOException e) {
             showError("Screen not yet available:\n" + fxml);
         }
