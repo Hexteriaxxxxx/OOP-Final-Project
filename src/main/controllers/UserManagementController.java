@@ -175,7 +175,7 @@ public class UserManagementController implements Initializable {
             dialog.showAndWait();
 
         } catch (IOException ex) {
-            showError("Hindi mabuksan ang Add Employee dialog:\n" + ex.getMessage());
+            showError("Cannot open Add Employee dialog:\n" + ex.getMessage());
         }
     }
 
@@ -200,15 +200,15 @@ public class UserManagementController implements Initializable {
             dialog.showAndWait();
 
         } catch (IOException ex) {
-            showError("Hindi mabuksan ang Edit Employee dialog:\n" + ex.getMessage());
+            showError("Cannot open Edit Employee dialog:\n" + ex.getMessage());
         }
     }
 
     private void handleDelete(Employee emp) {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Delete Employee");
-        confirm.setHeaderText("I-delete si " + emp.getName() + "?");
-        confirm.setContentText("Hindi na mababawi ang aksyong ito.");
+        confirm.setHeaderText("Delete " + emp.getName() + "?");
+        confirm.setContentText("This action cannot be undone.");
 
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {

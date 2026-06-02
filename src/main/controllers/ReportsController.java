@@ -76,6 +76,18 @@ public class ReportsController implements Initializable {
     private String sessionUser = "Admin";
     private String sessionRole = "Admin";
 
+    // ─── Button Styles ────────────────────────────────────────────
+    private static final String ACTIVE_STYLE =
+            "-fx-background-color: #8B0000; -fx-text-fill: white; " +
+                    "-fx-background-radius: 20; -fx-border-radius: 20; " +
+                    "-fx-padding: 6 18; -fx-cursor: hand; -fx-font-weight: bold;";
+
+    private static final String INACTIVE_STYLE =
+            "-fx-background-color: white; -fx-text-fill: #333; " +
+                    "-fx-border-color: #ddd; -fx-border-width: 1; " +
+                    "-fx-background-radius: 20; -fx-border-radius: 20; " +
+                    "-fx-padding: 6 18; -fx-cursor: hand;";
+
     // ─────────────────────────────────────────────────────────────
     //  INITIALIZE
     // ─────────────────────────────────────────────────────────────
@@ -87,6 +99,10 @@ public class ReportsController implements Initializable {
         loadDailyData();
         loadMonthlyData();
         loadStatCards();
+
+        // Set initial button styles
+        btnDailyLogs.setStyle(ACTIVE_STYLE);
+        btnMonthlyLogs.setStyle(INACTIVE_STYLE);
     }
 
     public void initSession(String username, String role) {
@@ -97,7 +113,7 @@ public class ReportsController implements Initializable {
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  TAB SWITCHING
+    //  TAB SWITCHING — FIXED
     // ─────────────────────────────────────────────────────────────
     @FXML
     private void switchToDaily() {
@@ -105,8 +121,13 @@ public class ReportsController implements Initializable {
         dailySection.setManaged(true);
         monthlySection.setVisible(false);
         monthlySection.setManaged(false);
+
         btnDailyLogs.setSelected(true);
         btnMonthlyLogs.setSelected(false);
+
+        // ✅ Apply styles manually
+        btnDailyLogs.setStyle(ACTIVE_STYLE);
+        btnMonthlyLogs.setStyle(INACTIVE_STYLE);
     }
 
     @FXML
@@ -115,8 +136,13 @@ public class ReportsController implements Initializable {
         monthlySection.setManaged(true);
         dailySection.setVisible(false);
         dailySection.setManaged(false);
+
         btnMonthlyLogs.setSelected(true);
         btnDailyLogs.setSelected(false);
+
+        // ✅ Apply styles manually
+        btnMonthlyLogs.setStyle(ACTIVE_STYLE);
+        btnDailyLogs.setStyle(INACTIVE_STYLE);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -322,7 +348,7 @@ public class ReportsController implements Initializable {
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  NAV HANDLERS (FIXED)
+    //  NAV HANDLERS
     // ─────────────────────────────────────────────────────────────
     @FXML private void handleDashboard() {
         goTo("/main/resources/fxml/AdminDashboard.fxml", "Dashboard");
