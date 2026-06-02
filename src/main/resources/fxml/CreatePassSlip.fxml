@@ -41,12 +41,6 @@
                   style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
                          -fx-border-radius: 12; -fx-background-radius: 12; -fx-padding: 8 12;"/>
 
-        <Label text="Date" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
-        <TextField fx:id="txtDate" promptText=""
-                   editable="false"
-                   style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
-                          -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 9 14;"/>
-
         <HBox spacing="12">
             <VBox HBox.hgrow="ALWAYS" spacing="4">
                 <Label text="Time Out" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
@@ -81,7 +75,7 @@
                 style="-fx-background-color: white; -fx-text-fill: #555;
                        -fx-font-size: 12px; -fx-padding: 9 26; -fx-background-radius: 20;
                        -fx-border-color: #ccc; -fx-border-radius: 20; -fx-cursor: hand;"/>
-        <Button text="📋  Submit Request" onAction="#handleSubmit"
+        <Button fx:id="btnSubmit" text="📋  Submit Request" onAction="#handleSubmit"
                 style="-fx-background-color: #8B0000; -fx-text-fill: white;
                        -fx-font-size: 12px; -fx-padding: 9 26; -fx-background-radius: 20;
                        -fx-border-width: 0; -fx-cursor: hand; -fx-alignment: CENTER;"/>

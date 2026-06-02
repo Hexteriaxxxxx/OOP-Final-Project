@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="main.controllers.ViewPassSlipController"
+      prefWidth="600"
+      style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 0;">
+
+    <!-- Title Bar -->
+    <HBox alignment="CENTER_LEFT"
+          style="-fx-padding: 18 20 16 20; -fx-border-color: #e8e8e8; -fx-border-width: 0 0 1 0;">
+        <Label text="Pass Slip Issuance" HBox.hgrow="ALWAYS"
+               style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #8B0000;"/>
+        <Button text="✕" onAction="#handleClose"
+                style="-fx-background-color: transparent; -fx-text-fill: #8B0000;
+                       -fx-font-size: 14px; -fx-cursor: hand; -fx-border-width: 0; -fx-padding: 2 6;"/>
+    </HBox>
+
+    <!-- Details Grid -->
+    <GridPane hgap="20" vgap="0"
+              style="-fx-padding: 10 20 24 20;">
+        <columnConstraints>
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+        </columnConstraints>
+
+        <!-- Row 1: Request ID | Name -->
+        <VBox spacing="4" GridPane.columnIndex="0" GridPane.rowIndex="0"
+              style="-fx-padding: 16 0 16 0; -fx-border-color: #f0f0f0; -fx-border-width: 0 0 1 0;">
+            <Label text="Request ID"
+                   style="-fx-font-size: 12px; -fx-text-fill: #888;"/>
+            <Label fx:id="lblRequestId" text=""
+                   style="-fx-font-size: 13.5px; -fx-text-fill: #1a1a1a; -fx-font-weight: bold;"/>
+        </VBox>
+        <VBox spacing="4" GridPane.columnIndex="1" GridPane.rowIndex="0"
+              style="-fx-padding: 16 0 16 0; -fx-border-color: #f0f0f0; -fx-border-width: 0 0 1 0;">
+            <Label text="Name"
+                   style="-fx-font-size: 12px; -fx-text-fill: #888;"/>
+            <Label fx:id="lblName" text=""
+                   style="-fx-font-size: 13.5px; -fx-text-fill: #1a1a1a; -fx-font-weight: bold;"/>
+        </VBox>
+
+        <!-- Row 2: Department | Purpose -->
+        <VBox spacing="4" GridPane.columnIndex="0" GridPane.rowIndex="1"
+              style="-fx-padding: 16 0 16 0; -fx-border-color: #f0f0f0; -fx-border-width: 0 0 1 0;">
+            <Label text="Department"
+                   style="-fx-font-size: 12px; -fx-text-fill: #888;"/>
+            <Label fx:id="lblDepartment" text=""
+                   style="-fx-font-size: 13.5px; -fx-text-fill: #1a1a1a; -fx-font-weight: bold;"/>
+        </VBox>
+        <VBox spacing="4" GridPane.columnIndex="1" GridPane.rowIndex="1"
+              style="-fx-padding: 16 0 16 0; -fx-border-color: #f0f0f0; -fx-border-width: 0 0 1 0;">
+            <Label text="Purpose"
+                   style="-fx-font-size: 12px; -fx-text-fill: #888;"/>
+            <Label fx:id="lblPurpose" text="" wrapText="true"
+                   style="-fx-font-size: 13.5px; -fx-text-fill: #1a1a1a; -fx-font-weight: bold;"/>
+        </VBox>
+
+        <!-- Row 3: Time Out | Time In -->
+        <VBox spacing="4" GridPane.columnIndex="0" GridPane.rowIndex="2"
+              style="-fx-padding: 16 0 16 0; -fx-border-color: #f0f0f0; -fx-border-width: 0 0 1 0;">
+            <Label text="Time Out"
+                   style="-fx-font-size: 12px; -fx-text-fill: #888;"/>
+            <Label fx:id="lblTimeOut" text=""
+                   style="-fx-font-size: 13.5px; -fx-text-fill: #1a1a1a; -fx-font-weight: bold;"/>
+        </VBox>
+        <VBox spacing="4" GridPane.columnIndex="1" GridPane.rowIndex="2"
+              style="-fx-padding: 16 0 16 0; -fx-border-color: #f0f0f0; -fx-border-width: 0 0 1 0;">
+            <Label text="Time In"
+                   style="-fx-font-size: 12px; -fx-text-fill: #888;"/>
+            <Label fx:id="lblTimeIn" text=""
+                   style="-fx-font-size: 13.5px; -fx-text-fill: #1a1a1a; -fx-font-weight: bold;"/>
+        </VBox>
+
+        <!-- Row 4: Status (left only) -->
+        <VBox spacing="4" GridPane.columnIndex="0" GridPane.rowIndex="3"
+              style="-fx-padding: 16 0 8 0;">
+            <Label text="Status"
+                   style="-fx-font-size: 12px; -fx-text-fill: #888;"/>
+            <Label fx:id="lblStatus" text=""
+                   style="-fx-font-size: 13.5px; -fx-text-fill: #1a1a1a; -fx-font-weight: bold;"/>
+        </VBox>
+
+    </GridPane>
+
+</VBox>
