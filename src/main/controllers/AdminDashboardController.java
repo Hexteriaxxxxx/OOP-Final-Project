@@ -306,18 +306,30 @@ public class AdminDashboardController implements Initializable {
         });
     }
 
+    // ===== UPDATED: Opens CreatePassSlip modal form =====
     @FXML
     private void handleCreatePassSlip() {
         try {
             FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/main/resources/fxml/PassSlipIssuance.fxml") // ✅ FIXED
+                    getClass().getResource("/main/resources/fxml/CreatePassSlip.fxml")
             );
             Parent root = loader.load();
+
+            // Pass current user ID to the form
+            CreatePassSlipController controller = loader.getController();
+            if (currentUser != null) {
+                controller.setCurrentUserId(currentUser.getUserId());
+            }
+
             Stage stage = new Stage();
-            stage.setTitle("Issue Pass Slip");
+            stage.setTitle("Create Pass Slip");
             stage.setScene(new Scene(root));
             stage.showAndWait();
+
+            // Refresh after form closes
             loadDashboardData();
+            loadRecentActivity();
+
         } catch (IOException e) {
             System.out.println("Open Form Error: " + e.getMessage());
             showAlert(Alert.AlertType.ERROR, "Error", "Could not open Pass Slip form.");
@@ -391,25 +403,25 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private void handleNavPassSlip() {
         setActiveNav(btnPassSlip);
-        navigateTo("/main/resources/fxml/PassSlipIssuance.fxml", "Pass Slip Issuance"); // ✅ FIXED
+        navigateTo("/main/resources/fxml/PassSlipIssuance.fxml", "Pass Slip Issuance");
     }
 
     @FXML
     private void handleNavVisitor() {
         setActiveNav(btnVisitor);
-        navigateTo("/main/resources/fxml/Visitor.fxml", "Visitor Module"); // ✅ FIXED
+        navigateTo("/main/resources/fxml/Visitor.fxml", "Visitor Module");
     }
 
     @FXML
     private void handleNavReports() {
         setActiveNav(btnReports);
-        navigateTo("/main/resources/fxml/Reports.fxml", "Reports"); // ✅ FIXED
+        navigateTo("/main/resources/fxml/Reports.fxml", "Reports");
     }
 
     @FXML
     private void handleNavUserManagement() {
         setActiveNav(btnUserMgmt);
-        navigateTo("/main/resources/fxml/UserManagement.fxml", "User Management"); // ✅ FIXED
+        navigateTo("/main/resources/fxml/UserManagement.fxml", "User Management");
     }
 
     private void setActiveNav(Button active) {
@@ -445,7 +457,7 @@ public class AdminDashboardController implements Initializable {
             if (response == ButtonType.OK) {
                 try {
                     FXMLLoader loader = new FXMLLoader(
-                            getClass().getResource("/main/resources/fxml/Login.fxml") // ✅ FIXED
+                            getClass().getResource("/main/resources/fxml/Login.fxml")
                     );
                     Parent root = loader.load();
                     Stage stage = (Stage) lblSidebarUser.getScene().getWindow();

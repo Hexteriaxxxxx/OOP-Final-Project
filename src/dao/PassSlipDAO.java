@@ -10,6 +10,38 @@ import java.util.List;
 
 public class PassSlipDAO {
 
+    // ===== CREATE PASS SLIP (NEW) =====
+    public boolean createPassSlip(PassSlip passSlip) {
+
+        String sql =
+                "INSERT INTO Pass_slip " +
+                        "(emp_id, reason, time_out, time_in, issued_by, status) " +
+                        "VALUES (?, ?, ?, ?, ?, 'Pending')";
+
+        try (
+                Connection conn = DBConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)
+        ) {
+            stmt.setInt(1, passSlip.getEmpId());
+            stmt.setString(2, passSlip.getReason());
+            stmt.setTimestamp(3, Timestamp.valueOf(passSlip.getTimeOut()));
+
+            if (passSlip.getTimeIn() != null) {
+                stmt.setTimestamp(4, Timestamp.valueOf(passSlip.getTimeIn()));
+            } else {
+                stmt.setNull(4, Types.TIMESTAMP);
+            }
+
+            stmt.setInt(5, passSlip.getIssuedBy());
+
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.out.println("Create pass slip error: " + e.getMessage());
+            return false;
+        }
+    }
+
     // ===== ISSUE NEW PASS SLIP =====
     public boolean issuePassSlip(PassSlip passSlip) {
 
@@ -20,40 +52,23 @@ public class PassSlipDAO {
 
         try (
                 Connection conn = DBConnection.getConnection();
-
-                PreparedStatement stmt =
-                        conn.prepareStatement(sql)
+                PreparedStatement stmt = conn.prepareStatement(sql)
         ) {
-
             stmt.setInt(1, passSlip.getEmpId());
-
             stmt.setString(2, passSlip.getReason());
-
-            stmt.setTimestamp(
-                    3,
-                    Timestamp.valueOf(passSlip.getTimeOut())
-            );
-
+            stmt.setTimestamp(3, Timestamp.valueOf(passSlip.getTimeOut()));
             stmt.setInt(4, passSlip.getIssuedBy());
 
             return stmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
-
-            System.out.println(
-                    "Issue pass slip error: " +
-                            e.getMessage()
-            );
-
+            System.out.println("Issue pass slip error: " + e.getMessage());
             return false;
         }
     }
 
     // ===== UPDATE PASS SLIP STATUS =====
-    public boolean updatePassSlipStatus(
-            int slipId,
-            String status
-    ) {
+    public boolean updatePassSlipStatus(int slipId, String status) {
 
         String sql =
                 "UPDATE Pass_slip " +
@@ -62,34 +77,21 @@ public class PassSlipDAO {
 
         try (
                 Connection conn = DBConnection.getConnection();
-
-                PreparedStatement stmt =
-                        conn.prepareStatement(sql)
+                PreparedStatement stmt = conn.prepareStatement(sql)
         ) {
-
             stmt.setString(1, status);
-
             stmt.setInt(2, slipId);
 
             return stmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
-
-            System.out.println(
-                    "Update status error: " +
-                            e.getMessage()
-            );
-
+            System.out.println("Update status error: " + e.getMessage());
             return false;
         }
     }
 
     // ===== RECORD TIME IN =====
-    public boolean recordTimeIn(
-            int slipId,
-            LocalDateTime timeIn,
-            String duration
-    ) {
+    public boolean recordTimeIn(int slipId, LocalDateTime timeIn, String duration) {
 
         String sql =
                 "UPDATE Pass_slip " +
@@ -100,29 +102,16 @@ public class PassSlipDAO {
 
         try (
                 Connection conn = DBConnection.getConnection();
-
-                PreparedStatement stmt =
-                        conn.prepareStatement(sql)
+                PreparedStatement stmt = conn.prepareStatement(sql)
         ) {
-
-            stmt.setTimestamp(
-                    1,
-                    Timestamp.valueOf(timeIn)
-            );
-
+            stmt.setTimestamp(1, Timestamp.valueOf(timeIn));
             stmt.setString(2, duration);
-
             stmt.setInt(3, slipId);
 
             return stmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
-
-            System.out.println(
-                    "Record time-in error: " +
-                            e.getMessage()
-            );
-
+            System.out.println("Record time-in error: " + e.getMessage());
             return false;
         }
     }
@@ -137,34 +126,19 @@ public class PassSlipDAO {
                         "e.name AS emp_name, " +
                         "e.department " +
                         "FROM Pass_slip ps " +
-                        "JOIN Employee e " +
-                        "ON ps.emp_id = e.emp_id " +
+                        "JOIN Employee e ON ps.emp_id = e.emp_id " +
                         "ORDER BY ps.time_out DESC";
 
         try (
                 Connection conn = DBConnection.getConnection();
-
-                Statement stmt =
-                        conn.createStatement();
-
-                ResultSet rs =
-                        stmt.executeQuery(sql)
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)
         ) {
-
             while (rs.next()) {
-
-                PassSlip slip =
-                        mapResultSet(rs);
-
-                slips.add(slip);
+                slips.add(mapResultSet(rs));
             }
-
         } catch (SQLException e) {
-
-            System.out.println(
-                    "Get pass slips error: " +
-                            e.getMessage()
-            );
+            System.out.println("Get pass slips error: " + e.getMessage());
         }
 
         return slips;
@@ -180,35 +154,20 @@ public class PassSlipDAO {
                         "e.name AS emp_name, " +
                         "e.department " +
                         "FROM Pass_slip ps " +
-                        "JOIN Employee e " +
-                        "ON ps.emp_id = e.emp_id " +
+                        "JOIN Employee e ON ps.emp_id = e.emp_id " +
                         "WHERE DATE(ps.time_out) = CURDATE() " +
                         "ORDER BY ps.time_out DESC";
 
         try (
                 Connection conn = DBConnection.getConnection();
-
-                Statement stmt =
-                        conn.createStatement();
-
-                ResultSet rs =
-                        stmt.executeQuery(sql)
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)
         ) {
-
             while (rs.next()) {
-
-                PassSlip slip =
-                        mapResultSet(rs);
-
-                slips.add(slip);
+                slips.add(mapResultSet(rs));
             }
-
         } catch (SQLException e) {
-
-            System.out.println(
-                    "Get today slips error: " +
-                            e.getMessage()
-            );
+            System.out.println("Get today slips error: " + e.getMessage());
         }
 
         return slips;
@@ -224,35 +183,20 @@ public class PassSlipDAO {
                         "e.name AS emp_name, " +
                         "e.department " +
                         "FROM Pass_slip ps " +
-                        "JOIN Employee e " +
-                        "ON ps.emp_id = e.emp_id " +
+                        "JOIN Employee e ON ps.emp_id = e.emp_id " +
                         "WHERE ps.status = 'Approved' " +
                         "ORDER BY ps.time_out DESC";
 
         try (
                 Connection conn = DBConnection.getConnection();
-
-                Statement stmt =
-                        conn.createStatement();
-
-                ResultSet rs =
-                        stmt.executeQuery(sql)
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)
         ) {
-
             while (rs.next()) {
-
-                PassSlip slip =
-                        mapResultSet(rs);
-
-                slips.add(slip);
+                slips.add(mapResultSet(rs));
             }
-
         } catch (SQLException e) {
-
-            System.out.println(
-                    "Get active slips error: " +
-                            e.getMessage()
-            );
+            System.out.println("Get active slips error: " + e.getMessage());
         }
 
         return slips;
@@ -260,23 +204,13 @@ public class PassSlipDAO {
 
     // ===== COUNT TODAY SLIPS =====
     public int countTodaySlips() {
-
-        String sql =
-                "SELECT COUNT(*) " +
-                        "FROM Pass_slip " +
-                        "WHERE DATE(time_out) = CURDATE()";
-
+        String sql = "SELECT COUNT(*) FROM Pass_slip WHERE DATE(time_out) = CURDATE()";
         return countQuery(sql);
     }
 
     // ===== COUNT ACTIVE SLIPS =====
     public int countActiveSlips() {
-
-        String sql =
-                "SELECT COUNT(*) " +
-                        "FROM Pass_slip " +
-                        "WHERE status = 'Approved'";
-
+        String sql = "SELECT COUNT(*) FROM Pass_slip WHERE status = 'Approved'";
         return countQuery(sql);
     }
 
@@ -285,82 +219,39 @@ public class PassSlipDAO {
 
         try (
                 Connection conn = DBConnection.getConnection();
-
-                Statement stmt =
-                        conn.createStatement();
-
-                ResultSet rs =
-                        stmt.executeQuery(sql)
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)
         ) {
-
             if (rs.next()) {
-
                 return rs.getInt(1);
             }
-
         } catch (SQLException e) {
-
-            System.out.println(
-                    "Count error: " +
-                            e.getMessage()
-            );
+            System.out.println("Count error: " + e.getMessage());
         }
 
         return 0;
     }
 
     // ===== MAP RESULT SET =====
-    private PassSlip mapResultSet(ResultSet rs)
-            throws SQLException {
+    private PassSlip mapResultSet(ResultSet rs) throws SQLException {
 
         PassSlip slip = new PassSlip();
 
-        slip.setSlipId(
-                rs.getInt("slip_id")
-        );
+        slip.setSlipId(rs.getInt("slip_id"));
+        slip.setEmpId(rs.getInt("emp_id"));
+        slip.setEmpName(rs.getString("emp_name"));
+        slip.setDepartment(rs.getString("department"));
+        slip.setReason(rs.getString("reason"));
+        slip.setTimeOut(rs.getTimestamp("time_out").toLocalDateTime());
 
-        slip.setEmpId(
-                rs.getInt("emp_id")
-        );
-
-        slip.setEmpName(
-                rs.getString("emp_name")
-        );
-
-        slip.setDepartment(
-                rs.getString("department")
-        );
-
-        slip.setReason(
-                rs.getString("reason")
-        );
-
-        slip.setTimeOut(
-                rs.getTimestamp("time_out")
-                        .toLocalDateTime()
-        );
-
-        Timestamp timeIn =
-                rs.getTimestamp("time_in");
-
+        Timestamp timeIn = rs.getTimestamp("time_in");
         if (timeIn != null) {
-
-            slip.setTimeIn(
-                    timeIn.toLocalDateTime()
-            );
+            slip.setTimeIn(timeIn.toLocalDateTime());
         }
 
-        slip.setDuration(
-                rs.getString("duration")
-        );
-
-        slip.setIssuedBy(
-                rs.getInt("issued_by")
-        );
-
-        slip.setStatus(
-                rs.getString("status")
-        );
+        slip.setDuration(rs.getString("duration"));
+        slip.setIssuedBy(rs.getInt("issued_by"));
+        slip.setStatus(rs.getString("status"));
 
         return slip;
     }
