@@ -24,11 +24,13 @@ public class CreatePassSlipController implements Initializable {
 
     @FXML private ComboBox<String> cmbEmployee;
     @FXML private TextField txtDepartment;
+    @FXML private TextField txtDate;
     @FXML private TextArea txtPurpose;
     @FXML private TextField txtTimeOut;
     @FXML private TextField txtTimeIn;
     @FXML private Label lblError;
     @FXML private Button btnCancel;
+    @FXML private Button btnSubmit;
 
     private final EmployeeDAO employeeDAO       = new EmployeeDAO();
     private final PassSlipDAO passSlipDAO       = new PassSlipDAO();
@@ -39,6 +41,9 @@ public class CreatePassSlipController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        // Auto-fill today's date
+        txtDate.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM dd, yyyy")));
+
         loadEmployees();
 
         // Auto-fill department when employee is selected
