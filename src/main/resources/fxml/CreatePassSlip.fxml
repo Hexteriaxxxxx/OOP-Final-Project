@@ -3,58 +3,88 @@
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.*?>
 
-<VBox xmlns="http://javafx.com/javafx/17"
+<VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="main.controllers.CreatePassSlipController"
-      spacing="14" prefWidth="420"
-      style="-fx-background-color: white; -fx-padding: 24;">
+      spacing="14" prefWidth="460"
+      style="-fx-background-color: white; -fx-padding: 0 0 20 0; -fx-background-radius: 12;">
 
-    <Label text="Create Pass Slip Request"
-           style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1a1a1a;"/>
-
-    <Label text="Employee Name" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
-    <ComboBox fx:id="cmbEmployee" promptText="Select employee"
-              maxWidth="Infinity"
-              style="-fx-background-color: white; -fx-border-color: #ddd;
-                     -fx-border-radius: 6; -fx-background-radius: 6;"/>
-
-    <Label text="Department" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
-    <TextField fx:id="txtDepartment" promptText="Auto-filled"
-               editable="false"
-               style="-fx-background-color: #f5f5f5; -fx-border-color: #ddd;
-                      -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 8;"/>
-
-    <Label text="Purpose" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
-    <TextArea fx:id="txtPurpose" promptText="Enter reason for pass slip"
-              prefHeight="80" wrapText="true"
-              style="-fx-background-color: white; -fx-border-color: #ddd;
-                     -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 8;"/>
-
-    <HBox spacing="12">
-        <VBox HBox.hgrow="ALWAYS" spacing="4">
-            <Label text="Time Out" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
-            <TextField fx:id="txtTimeOut" promptText="HH:MM (e.g. 09:30)"
-                       style="-fx-background-color: white; -fx-border-color: #ddd;
-                              -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 8;"/>
-        </VBox>
-        <VBox HBox.hgrow="ALWAYS" spacing="4">
-            <Label text="Time In (optional)" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
-            <TextField fx:id="txtTimeIn" promptText="HH:MM (optional)"
-                       style="-fx-background-color: white; -fx-border-color: #ddd;
-                              -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 8;"/>
-        </VBox>
+    <!-- Title Bar -->
+    <HBox alignment="CENTER_LEFT"
+          style="-fx-padding: 16 18 14 18; -fx-border-color: #e8e8e8; -fx-border-width: 0 0 1 0;">
+        <Label text="Create Pass Slip Request" HBox.hgrow="ALWAYS"
+               style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #1a1a1a;"/>
+        <Button text="✕" onAction="#handleCancel"
+                style="-fx-background-color: transparent; -fx-text-fill: #999;
+                       -fx-font-size: 13px; -fx-cursor: hand; -fx-border-width: 0; -fx-padding: 2 6;"/>
     </HBox>
 
-    <Label fx:id="lblError" text=""
-           style="-fx-text-fill: #dc3545; -fx-font-size: 11px;"/>
+    <!-- Form Body -->
+    <VBox spacing="12" style="-fx-padding: 10 18 0 18;">
 
-    <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding: 6 0 0 0;">
+        <Label text="Employee Name" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
+        <ComboBox fx:id="cmbEmployee" promptText="Enter employee name"
+                  maxWidth="Infinity"
+                  style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
+                         -fx-border-radius: 20; -fx-background-radius: 20;
+                         -fx-padding: 4 8;"/>
+
+        <Label text="Department" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
+        <TextField fx:id="txtDepartment" promptText=""
+                   editable="false"
+                   style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
+                          -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 9 14;"/>
+
+        <Label text="Purpose" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
+        <TextArea fx:id="txtPurpose" promptText="Enter reason for pass slip"
+                  prefHeight="90" wrapText="true"
+                  style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
+                         -fx-border-radius: 12; -fx-background-radius: 12; -fx-padding: 8 12;"/>
+
+        <Label text="Date" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
+        <TextField fx:id="txtDate" promptText=""
+                   editable="false"
+                   style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
+                          -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 9 14;"/>
+
+        <HBox spacing="12">
+            <VBox HBox.hgrow="ALWAYS" spacing="4">
+                <Label text="Time Out" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
+                <TextField fx:id="txtTimeOut" promptText=""
+                           style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
+                                  -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 9 14;"/>
+            </VBox>
+            <VBox HBox.hgrow="ALWAYS" spacing="4">
+                <Label text="Time In" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
+                <TextField fx:id="txtTimeIn" promptText=""
+                           style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
+                                  -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 9 14;"/>
+            </VBox>
+        </HBox>
+
+        <!-- Note Box -->
+        <VBox style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
+                     -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10 12;">
+            <Label text="Note: Pass slip request will be sent for approval. You will be notified once approved or rejected."
+                   wrapText="true"
+                   style="-fx-font-size: 11.5px; -fx-text-fill: #8B0000;"/>
+        </VBox>
+
+        <Label fx:id="lblError" text=""
+               style="-fx-text-fill: #dc3545; -fx-font-size: 11px;"/>
+
+    </VBox>
+
+    <!-- Buttons -->
+    <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding: 6 18 0 18;">
         <Button fx:id="btnCancel" text="Cancel" onAction="#handleCancel"
-                style="-fx-background-color: #e0e0e0; -fx-text-fill: #333;
-                       -fx-font-size: 12px; -fx-padding: 8 20; -fx-background-radius: 8; -fx-cursor: hand;"/>
-        <Button text="  📋  Submit Request" onAction="#handleSubmit"
+                style="-fx-background-color: white; -fx-text-fill: #555;
+                       -fx-font-size: 12px; -fx-padding: 9 26; -fx-background-radius: 20;
+                       -fx-border-color: #ccc; -fx-border-radius: 20; -fx-cursor: hand;"/>
+        <Button text="📋  Submit Request" onAction="#handleSubmit"
                 style="-fx-background-color: #8B0000; -fx-text-fill: white;
-                       -fx-font-size: 12px; -fx-padding: 8 20; -fx-background-radius: 8; -fx-cursor: hand;"/>
+                       -fx-font-size: 12px; -fx-padding: 9 26; -fx-background-radius: 20;
+                       -fx-border-width: 0; -fx-cursor: hand; -fx-alignment: CENTER;"/>
     </HBox>
 
 </VBox>
