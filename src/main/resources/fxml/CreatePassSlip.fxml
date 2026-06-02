@@ -41,6 +41,12 @@
                   style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
                          -fx-border-radius: 12; -fx-background-radius: 12; -fx-padding: 8 12;"/>
 
+        <Label text="Date" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
+        <TextField fx:id="txtDate" promptText=""
+                   editable="false"
+                   style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
+                          -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 9 14;"/>
+
         <HBox spacing="12">
             <VBox HBox.hgrow="ALWAYS" spacing="4">
                 <Label text="Time Out" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
