@@ -8,13 +8,20 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import models.Visitor;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
@@ -193,75 +200,208 @@ public class VisitorController implements Initializable {
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  ACTIONS
+    //  NEW VISITOR DIALOG
     // ─────────────────────────────────────────────────────────────
     @FXML
     private void handleNewVisitor() {
-        // Simple dialog para sa new visitor
-        Dialog<Visitor> dialog = new Dialog<>();
+        Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.initStyle(StageStyle.UNDECORATED);
         dialog.setTitle("New Visitor Request");
-        dialog.setHeaderText("Enter Visitor Details");
 
-        ButtonType saveBtn = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(saveBtn, ButtonType.CANCEL);
+        // ── Root ──
+        VBox root = new VBox();
+        root.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-border-radius: 12;");
+        root.setPrefWidth(620);
 
-        // Form fields
-        TextField txtName    = new TextField(); txtName.setPromptText("Visitor Name");
-        TextField txtCompany = new TextField(); txtCompany.setPromptText("Company");
-        TextField txtPurpose = new TextField(); txtPurpose.setPromptText("Purpose");
-        TextField txtHost    = new TextField(); txtHost.setPromptText("Host Employee");
+        // ── Title Bar ──
+        HBox titleBar = new HBox();
+        titleBar.setAlignment(Pos.CENTER_LEFT);
+        titleBar.setPadding(new Insets(18, 20, 14, 20));
+        titleBar.setStyle("-fx-border-color: #f0f0f0; -fx-border-width: 0 0 1 0;");
 
-        javafx.scene.layout.VBox form = new javafx.scene.layout.VBox(10,
-                new Label("Visitor Name:"), txtName,
-                new Label("Company:"),      txtCompany,
-                new Label("Purpose:"),      txtPurpose,
-                new Label("Host Employee:"),txtHost);
-        form.setPadding(new javafx.geometry.Insets(10));
-        dialog.getDialogPane().setContent(form);
+        Label lblTitle = new Label("New Visitor Request");
+        lblTitle.setFont(Font.font("System", FontWeight.BOLD, 15));
+        lblTitle.setTextFill(Color.web("#1a1a1a"));
+        HBox.setHgrow(lblTitle, Priority.ALWAYS);
 
-        dialog.setResultConverter(btn -> {
-            if (btn == saveBtn) {
-                if (txtName.getText().isEmpty() || txtCompany.getText().isEmpty()
-                        || txtPurpose.getText().isEmpty() || txtHost.getText().isEmpty()) {
-                    showError("Please fill in all fields.");
-                    return null;
-                }
-                Visitor v = new Visitor(
-                        txtName.getText().trim(),
-                        txtCompany.getText().trim(),
-                        txtPurpose.getText().trim(),
-                        java.time.LocalDateTime.now(),
-                        txtHost.getText().trim()
-                );
-                return v;
+        Button btnClose = new Button("✕");
+        btnClose.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; " +
+                "-fx-font-size: 14px; -fx-cursor: hand; -fx-border-width: 0;");
+        btnClose.setOnAction(e -> dialog.close());
+
+        titleBar.getChildren().addAll(lblTitle, btnClose);
+
+        // ── Form ──
+        GridPane grid = new GridPane();
+        grid.setHgap(14);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(18, 20, 10, 20));
+
+        ColumnConstraints col1 = new ColumnConstraints();
+        col1.setPercentWidth(50);
+        ColumnConstraints col2 = new ColumnConstraints();
+        col2.setPercentWidth(50);
+        grid.getColumnConstraints().addAll(col1, col2);
+
+        // Fields
+        TextField txtVisitorName  = styledField("Visitor's full name");
+        TextField txtCompany      = styledField("Company name");
+        TextField txtContact      = styledField("Phone number");
+        TextField txtEmail        = styledField("Email");
+        TextField txtHost         = styledField("Employee to visit");
+        TextField txtVisitDate    = styledField("YYYY-MM-DD");
+        TextField txtTimeIn       = styledField("e.g. 09:00 AM");
+        TextField txtTimeOut      = styledField("e.g. 05:00 PM");
+        TextArea  txtPurpose      = new TextArea();
+        txtPurpose.setPromptText("Enter purpose of visit");
+        txtPurpose.setPrefRowCount(3);
+        txtPurpose.setStyle(fieldStyle());
+        txtPurpose.setWrapText(true);
+
+        // Row 0
+        grid.add(labelFor("Visitor Name"),         0, 0);
+        grid.add(labelFor("Company/Organization"), 1, 0);
+        grid.add(txtVisitorName,                   0, 1);
+        grid.add(txtCompany,                       1, 1);
+
+        // Row 2
+        grid.add(labelFor("Contact Number"), 0, 2);
+        grid.add(labelFor("Email Address"),  1, 2);
+        grid.add(txtContact,                 0, 3);
+        grid.add(txtEmail,                   1, 3);
+
+        // Row 4
+        grid.add(labelFor("Host Employee"), 0, 4);
+        grid.add(labelFor("Visit Date"),    1, 4);
+        grid.add(txtHost,                   0, 5);
+        grid.add(txtVisitDate,              1, 5);
+
+        // Row 6
+        grid.add(labelFor("Expected Time In"),  0, 6);
+        grid.add(labelFor("Expected Time Out"), 1, 6);
+        grid.add(txtTimeIn,                     0, 7);
+        grid.add(txtTimeOut,                    1, 7);
+
+        // Row 8 — Purpose (full width)
+        grid.add(labelFor("Purpose of Visit"), 0, 8, 2, 1);
+        grid.add(txtPurpose,                   0, 9, 2, 1);
+
+        // ── Note ──
+        HBox noteBox = new HBox();
+        noteBox.setStyle("-fx-background-color: #fff5f5; -fx-background-radius: 8; " +
+                "-fx-border-color: #ffd6d6; -fx-border-radius: 8; -fx-border-width: 1;");
+        noteBox.setPadding(new Insets(10, 14, 10, 14));
+        noteBox.setMargin(noteBox, new Insets(0, 20, 0, 20));
+        Label noteLabel = new Label("Note: ");
+        noteLabel.setFont(Font.font("System", FontWeight.BOLD, 12));
+        noteLabel.setTextFill(Color.web("#8B0000"));
+        Label noteText = new Label("Request will be sent for approval.");
+        noteText.setStyle("-fx-font-size: 12px; -fx-text-fill: #555;");
+        noteBox.getChildren().addAll(noteLabel, noteText);
+
+        VBox noteWrapper = new VBox(noteBox);
+        noteWrapper.setPadding(new Insets(6, 20, 10, 20));
+
+        // ── Footer Buttons ──
+        HBox footer = new HBox(10);
+        footer.setAlignment(Pos.CENTER_RIGHT);
+        footer.setPadding(new Insets(12, 20, 16, 20));
+        footer.setStyle("-fx-border-color: #f0f0f0; -fx-border-width: 1 0 0 0;");
+
+        Button btnCancel = new Button("Cancel");
+        btnCancel.setStyle("-fx-background-color: transparent; -fx-text-fill: #555; " +
+                "-fx-font-size: 12px; -fx-padding: 7 18 7 18; " +
+                "-fx-border-color: #ccc; -fx-border-radius: 6; -fx-background-radius: 6; -fx-cursor: hand;");
+        btnCancel.setOnAction(e -> dialog.close());
+
+        Button btnSubmit = new Button("🖫  Submit Request");
+        btnSubmit.setStyle("-fx-background-color: #8B0000; -fx-text-fill: white; " +
+                "-fx-font-size: 12px; -fx-padding: 7 18 7 18; " +
+                "-fx-background-radius: 6; -fx-border-width: 0; -fx-cursor: hand;");
+        btnSubmit.setOnAction(e -> {
+            // Validate required fields
+            if (txtVisitorName.getText().trim().isEmpty()
+                    || txtCompany.getText().trim().isEmpty()
+                    || txtContact.getText().trim().isEmpty()
+                    || txtEmail.getText().trim().isEmpty()
+                    || txtHost.getText().trim().isEmpty()
+                    || txtVisitDate.getText().trim().isEmpty()
+                    || txtTimeIn.getText().trim().isEmpty()
+                    || txtTimeOut.getText().trim().isEmpty()
+                    || txtPurpose.getText().trim().isEmpty()) {
+                showError("Please fill in all fields.");
+                return;
             }
-            return null;
-        });
 
-        Optional<Visitor> result = dialog.showAndWait();
-        result.ifPresent(v -> {
+            Visitor v = new Visitor(
+                    txtVisitorName.getText().trim(),
+                    txtCompany.getText().trim(),
+                    txtPurpose.getText().trim(),
+                    java.time.LocalDateTime.now(),
+                    txtHost.getText().trim()
+            );
+
             boolean ok = dao.addVisitor(v);
             if (ok) {
-                showInfo("Visitor request added successfully!");
+                dialog.close();
+                showInfo("Visitor request submitted successfully!");
                 loadData();
             } else {
-                showError("Failed to add visitor request.");
+                showError("Failed to submit visitor request.");
             }
         });
+
+        footer.getChildren().addAll(btnCancel, btnSubmit);
+
+        // ── Assemble ──
+        root.getChildren().addAll(titleBar, grid, noteWrapper, footer);
+
+        Scene scene = new Scene(root);
+        scene.setFill(Color.TRANSPARENT);
+        dialog.setScene(scene);
+        dialog.showAndWait();
     }
 
+    // ── Field helpers ──
+    private TextField styledField(String prompt) {
+        TextField tf = new TextField();
+        tf.setPromptText(prompt);
+        tf.setStyle(fieldStyle());
+        tf.setMaxWidth(Double.MAX_VALUE);
+        return tf;
+    }
+
+    private String fieldStyle() {
+        return "-fx-background-color: white; " +
+                "-fx-border-color: #e0c0c0; " +
+                "-fx-border-radius: 6; " +
+                "-fx-background-radius: 6; " +
+                "-fx-padding: 7 10 7 10; " +
+                "-fx-font-size: 12.5px;";
+    }
+
+    private Label labelFor(String text) {
+        Label lbl = new Label(text);
+        lbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #333; -fx-font-weight: bold;");
+        return lbl;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  ACTIONS
+    // ─────────────────────────────────────────────────────────────
     private void showDetails(Visitor v) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setTitle("Visitor Details");
         a.setHeaderText(v.getRequestId());
         a.setContentText(
                 "Name          : " + v.getVisitorName()      + "\n" +
-                "Company       : " + v.getCompany()          + "\n" +
-                "Purpose       : " + v.getPurpose()          + "\n" +
-                "Time Out      : " + v.getFormattedTimeOut() + "\n" +
-                "Time In       : " + v.getFormattedTimeIn()  + "\n" +
-                "Host Employee : " + v.getHostEmployee()     + "\n" +
-                "Status        : " + v.getStatus()
+                        "Company       : " + v.getCompany()          + "\n" +
+                        "Purpose       : " + v.getPurpose()          + "\n" +
+                        "Time Out      : " + v.getFormattedTimeOut() + "\n" +
+                        "Time In       : " + v.getFormattedTimeIn()  + "\n" +
+                        "Host Employee : " + v.getHostEmployee()     + "\n" +
+                        "Status        : " + v.getStatus()
         );
         a.showAndWait();
     }
@@ -305,11 +445,11 @@ public class VisitorController implements Initializable {
     // ─────────────────────────────────────────────────────────────
     //  NAVIGATION
     // ─────────────────────────────────────────────────────────────
-    @FXML private void handleNavDashboard() { goTo("/main/resources/fxml/AdminDashboard.fxml", "Dashboard");         }
-    @FXML private void handleNavPassSlip()  { goTo("/main/resources/fxml/PassSlipIssuance.fxml","Pass Slip Issuance");}
+    @FXML private void handleNavDashboard() { goTo("/main/resources/fxml/AdminDashboard.fxml",  "Dashboard");          }
+    @FXML private void handleNavPassSlip()  { goTo("/main/resources/fxml/PassSlipIssuance.fxml","Pass Slip Issuance"); }
     @FXML private void handleNavVisitor()   { /* already here */ }
-    @FXML private void handleNavReports()   { goTo("/main/resources/fxml/Reports.fxml",        "Reports");           }
-    @FXML private void handleNavUserMgmt()  { goTo("/main/resources/fxml/UserManagement.fxml", "User Management");   }
+    @FXML private void handleNavReports()   { goTo("/main/resources/fxml/Reports.fxml",         "Reports");            }
+    @FXML private void handleNavUserMgmt()  { goTo("/main/resources/fxml/UserManagement.fxml",  "User Management");    }
 
     @FXML
     private void handleLogout() {
