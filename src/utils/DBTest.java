@@ -9,6 +9,7 @@ import models.Employee;
 import models.PassSlip;
 import models.User;
 import main.utils.DBConnection;
+import main.utils.PasswordUtils;
 import java.sql.Connection;
 import java.util.List;
 import java.sql.Statement;
@@ -23,7 +24,6 @@ public class DBTest {
         System.out.println("   DATABASE CONNECTION TEST  ");
         System.out.println("=============================");
 
-        // ✅ Test Connection
         Connection conn = DBConnection.getConnection();
         if (conn != null) {
             System.out.println("✅ Database connected successfully!\n");
@@ -41,7 +41,7 @@ public class DBTest {
         boolean exists = userDAO.usernameExists("admin");
         System.out.println("usernameExists('admin'): " + exists);
 
-        User user = userDAO.login("admin", "admin123", "Admin");
+        User user = userDAO.login("admin", "admin123", "admin");
         System.out.println("login(): " + (user != null ? "✅ Found: " + user.getUsername() : "❌ Not found"));
 
         // =============================
@@ -91,6 +91,7 @@ public class DBTest {
 
         List<ActivityLog> empLogs = logDAO.getLogsByEmployee(1);
         System.out.println("getLogsByEmployee(1): " + empLogs.size() + " records");
+
         // =============================
         // HASH EXISTING PASSWORDS
         // =============================
@@ -111,7 +112,7 @@ public class DBTest {
                     continue;
                 }
 
-                String hashed = utils.PasswordUtils.hashPassword(plainPassword);
+                String hashed = PasswordUtils.hashPassword(plainPassword);
                 updateStmt.setString(1, hashed);
                 updateStmt.setInt(2, userId);
                 updateStmt.executeUpdate();

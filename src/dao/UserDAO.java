@@ -2,7 +2,7 @@ package dao;
 
 import models.User;
 import main.utils.DBConnection;
-import utils.PasswordUtils;
+import main.utils.PasswordUtils;
 import java.sql.*;
 
 public class UserDAO {
@@ -20,7 +20,6 @@ public class UserDAO {
             if (rs.next()) {
                 String storedHash = rs.getString("password");
 
-                // I-verify ang password gamit ang PasswordUtils
                 if (PasswordUtils.verifyPassword(password, storedHash)) {
                     User user = new User();
                     user.setUserId(rs.getInt("user_id"));
@@ -42,11 +41,10 @@ public class UserDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            // I-hash ang password bago i-save sa database
             String hashedPassword = PasswordUtils.hashPassword(password);
 
             stmt.setString(1, username);
-            stmt.setString(2, hashedPassword); // ← hashed na!
+            stmt.setString(2, hashedPassword);
             stmt.setString(3, role);
             stmt.setString(4, fullName);
             stmt.setString(5, email);

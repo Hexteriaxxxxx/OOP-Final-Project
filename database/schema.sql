@@ -30,16 +30,20 @@ CREATE TABLE IF NOT EXISTS Employee (
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE Visitor (
-                         visitor_id    INT AUTO_INCREMENT PRIMARY KEY,
-                         visitor_name  VARCHAR(100) NOT NULL,
-                         company       VARCHAR(100),
-                         purpose       VARCHAR(200),
-                         time_out      DATETIME,
-                         time_in       DATETIME,
-                         host_employee VARCHAR(100),
-                         status        VARCHAR(20) DEFAULT 'Pending'
+-- ============================================
+-- TABLE: Visitor
+-- ============================================
+CREATE TABLE IF NOT EXISTS Visitor (
+    visitor_id    INT AUTO_INCREMENT PRIMARY KEY,
+    visitor_name  VARCHAR(100) NOT NULL,
+    company       VARCHAR(100),
+    purpose       VARCHAR(200),
+    time_out      DATETIME,
+    time_in       DATETIME,
+    host_employee VARCHAR(100),
+    status        VARCHAR(20) DEFAULT 'Pending'
 );
+
 -- ============================================
 -- TABLE: Pass_slip
 -- ============================================
@@ -51,7 +55,7 @@ CREATE TABLE IF NOT EXISTS Pass_slip (
     time_in     DATETIME,
     duration    VARCHAR(50),
     issued_by   INT NOT NULL,
-    status      ENUM('active', 'returned') DEFAULT 'active',
+    status      ENUM('Pending', 'Approved', 'Rejected', 'Returned') DEFAULT 'Pending',
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (emp_id) REFERENCES Employee(emp_id),
     FOREIGN KEY (issued_by) REFERENCES User(user_id)
@@ -65,9 +69,8 @@ CREATE TABLE IF NOT EXISTS Activity_logs (
     emp_id       INT,
     action       VARCHAR(255) NOT NULL,
     timestamp    DATETIME DEFAULT CURRENT_TIMESTAMP,
-    performed_by INT,
-    FOREIGN KEY (emp_id) REFERENCES Employee(emp_id),
-    FOREIGN KEY (performed_by) REFERENCES User(user_id)
+    performed_by VARCHAR(100),
+    FOREIGN KEY (emp_id) REFERENCES Employee(emp_id)
 );
 
 -- ============================================

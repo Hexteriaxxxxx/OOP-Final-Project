@@ -26,6 +26,11 @@ mysql-connector*/
 
 # JavaFX SDK - download from gluonhq.com
 javafx-sdk*/
-# Environment variables
+
+# Environment / secrets - NEVER push these
 .env
+preferences.properties
 src/resources/config.properties
+
+# Python server config
+visitor_server_config.json
