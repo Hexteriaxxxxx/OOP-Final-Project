@@ -12,7 +12,6 @@ import java.util.List;
 
 public class VisitorDAO {
 
-    // ── Read ngrok URL from .env ───────────────────────────────────
     private static String getServerUrl() {
         File envFile = new File(".env");
         if (!envFile.exists()) return "http://localhost:5055";
@@ -20,21 +19,14 @@ public class VisitorDAO {
             String line;
             while ((line = br.readLine()) != null) {
                 line = line.trim();
-                if (line.startsWith("VISITOR_SERVER_URL=")) {
-                    return line.split("=", 2)[1].trim();
-                }
+                if (line.startsWith("VISITOR_SERVER_URL=")) return line.split("=", 2)[1].trim();
             }
-        } catch (IOException e) {
-            System.out.println("Could not read .env: " + e.getMessage());
-        }
+        } catch (IOException e) { System.out.println("Could not read .env: " + e.getMessage()); }
         return "http://localhost:5055";
     }
 
-    // ── Add new visitor request ────────────────────────────────────
     public boolean addVisitor(Visitor visitor) {
-        String sql = "INSERT INTO Visitor (visitor_name, company, purpose, " +
-                     "time_out, host_employee, email, contact, status) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending')";
+        String sql = "INSERT INTO \"Visitor\" (visitor_name, company, purpose, time_out, host_employee, email, contact, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending')";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, visitor.getVisitorName());
@@ -45,19 +37,13 @@ public class VisitorDAO {
             stmt.setString(6, visitor.getEmail()   != null ? visitor.getEmail()   : "");
             stmt.setString(7, visitor.getContact() != null ? visitor.getContact() : "");
             return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.out.println("addVisitor error: " + e.getMessage());
-            return false;
-        }
+        } catch (SQLException e) { System.out.println("addVisitor error: " + e.getMessage()); return false; }
     }
 
-    // ── Add visitor from web form (returns generated ID) ──────────
     public int addVisitorGetId(Visitor visitor) {
-        String sql = "INSERT INTO Visitor (visitor_name, company, purpose, " +
-                     "time_out, host_employee, email, contact, status) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending')";
+        String sql = "INSERT INTO \"Visitor\" (visitor_name, company, purpose, time_out, host_employee, email, contact, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending') RETURNING visitor_id";
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, visitor.getVisitorName());
             stmt.setString(2, visitor.getCompany());
             stmt.setString(3, visitor.getPurpose());
@@ -65,48 +51,36 @@ public class VisitorDAO {
             stmt.setString(5, visitor.getHostEmployee());
             stmt.setString(6, visitor.getEmail()   != null ? visitor.getEmail()   : "");
             stmt.setString(7, visitor.getContact() != null ? visitor.getContact() : "");
-            int rows = stmt.executeUpdate();
-            if (rows > 0) {
-                ResultSet keys = stmt.getGeneratedKeys();
-                if (keys.next()) return keys.getInt(1);
-            }
-        } catch (SQLException e) {
-            System.out.println("addVisitorGetId error: " + e.getMessage());
-        }
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) { System.out.println("addVisitorGetId error: " + e.getMessage()); }
         return -1;
     }
 
-    // ── Get all visitors ───────────────────────────────────────────
     public List<Visitor> getAllVisitors() {
         List<Visitor> list = new ArrayList<>();
-        String sql = "SELECT * FROM Visitor ORDER BY visitor_id DESC";
+        String sql = "SELECT * FROM \"Visitor\" ORDER BY visitor_id DESC";
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) list.add(mapResultSet(rs));
-        } catch (SQLException e) {
-            System.out.println("getAllVisitors error: " + e.getMessage());
-        }
+        } catch (SQLException e) { System.out.println("getAllVisitors error: " + e.getMessage()); }
         return list;
     }
 
-    // ── Get visitor by ID ──────────────────────────────────────────
     public Visitor getById(int id) {
-        String sql = "SELECT * FROM Visitor WHERE visitor_id = ?";
+        String sql = "SELECT * FROM \"Visitor\" WHERE visitor_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) return mapResultSet(rs);
-        } catch (SQLException e) {
-            System.out.println("getById error: " + e.getMessage());
-        }
+        } catch (SQLException e) { System.out.println("getById error: " + e.getMessage()); }
         return null;
     }
 
-    // ── Update visitor status + send email if approved ────────────
     public boolean updateStatus(int visitorId, String status) {
-        String sql = "UPDATE Visitor SET status = ? WHERE visitor_id = ?";
+        String sql = "UPDATE \"Visitor\" SET status = ? WHERE visitor_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, status);
@@ -114,18 +88,13 @@ public class VisitorDAO {
             boolean ok = stmt.executeUpdate() > 0;
             if (ok && "Approved".equalsIgnoreCase(status)) {
                 Visitor v = getById(visitorId);
-                if (v != null && v.getEmail() != null && !v.getEmail().isBlank()) {
+                if (v != null && v.getEmail() != null && !v.getEmail().isBlank())
                     sendApprovalEmailViaPython(v);
-                }
             }
             return ok;
-        } catch (SQLException e) {
-            System.out.println("updateStatus error: " + e.getMessage());
-            return false;
-        }
+        } catch (SQLException e) { System.out.println("updateStatus error: " + e.getMessage()); return false; }
     }
 
-    // ── Send approval email via Python server ─────────────────────
     private void sendApprovalEmailViaPython(Visitor v) {
         new Thread(() -> {
             try {
@@ -137,55 +106,35 @@ public class VisitorDAO {
                 conn.setDoOutput(true);
                 conn.setConnectTimeout(5000);
                 conn.setReadTimeout(5000);
-
                 String json = String.format(
                     "{\"visitor_id\":%d,\"visitor_name\":\"%s\",\"email\":\"%s\"," +
                     "\"company\":\"%s\",\"purpose\":\"%s\",\"visit_date\":\"%s\"," +
                     "\"host_employee\":\"%s\",\"request_id\":\"%s\"}",
-                    v.getVisitorId(),
-                    escape(v.getVisitorName()),
-                    escape(v.getEmail()),
-                    escape(v.getCompany()),
-                    escape(v.getPurpose()),
-                    escape(v.getFormattedTimeOut()),
-                    escape(v.getHostEmployee()),
-                    escape(v.getRequestId())
-                );
-
-                try (OutputStream os = conn.getOutputStream()) {
-                    os.write(json.getBytes());
-                }
-
+                    v.getVisitorId(), escape(v.getVisitorName()), escape(v.getEmail()),
+                    escape(v.getCompany()), escape(v.getPurpose()), escape(v.getFormattedTimeOut()),
+                    escape(v.getHostEmployee()), escape(v.getRequestId()));
+                try (OutputStream os = conn.getOutputStream()) { os.write(json.getBytes()); }
                 int code = conn.getResponseCode();
-                if (code == 200) {
-                    System.out.println("[OK] Approval email sent to: " + v.getEmail());
-                } else {
-                    System.out.println("[WARN] Email server returned: " + code);
-                }
+                System.out.println(code == 200 ? "[OK] Approval email sent to: " + v.getEmail() : "[WARN] Email server returned: " + code);
                 conn.disconnect();
-
-            } catch (Exception e) {
-                System.out.println("[WARN] Could not send approval email: " + e.getMessage());
-                // Non-fatal — approval still saves even if email fails
-            }
+            } catch (Exception e) { System.out.println("[WARN] Could not send approval email: " + e.getMessage()); }
         }).start();
     }
 
     private String escape(String s) {
         if (s == null) return "";
-        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
+        return s.replace("\\","\\\\").replace("\"","\\\"").replace("\n","\\n");
     }
 
-    // ── Count stats ────────────────────────────────────────────────
-    public int countPending()     { return countByStatus("Pending");  }
-    public int countApproved()    { return countByStatus("Approved"); }
-    public int countRejected()    { return countByStatus("Rejected"); }
+    public int countPending()  { return countByStatus("Pending");  }
+    public int countApproved() { return countByStatus("Approved"); }
+    public int countRejected() { return countByStatus("Rejected"); }
     public int countActiveToday() {
-        return countQuery("SELECT COUNT(*) FROM Visitor WHERE status='Approved' AND DATE(time_out)=CURDATE()");
+        return countQuery("SELECT COUNT(*) FROM \"Visitor\" WHERE status='Approved' AND DATE(time_out)=CURRENT_DATE");
     }
 
     private int countByStatus(String status) {
-        String sql = "SELECT COUNT(*) FROM Visitor WHERE status = ?";
+        String sql = "SELECT COUNT(*) FROM \"Visitor\" WHERE status = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, status);
@@ -204,15 +153,14 @@ public class VisitorDAO {
         return 0;
     }
 
-    // ── Map ResultSet to Visitor ───────────────────────────────────
     private Visitor mapResultSet(ResultSet rs) throws SQLException {
         Visitor v = new Visitor();
-        v.setVisitorId  (rs.getInt   ("visitor_id"));
-        v.setVisitorName(rs.getString("visitor_name"));
-        v.setCompany    (rs.getString("company"));
-        v.setPurpose    (rs.getString("purpose"));
+        v.setVisitorId   (rs.getInt   ("visitor_id"));
+        v.setVisitorName (rs.getString("visitor_name"));
+        v.setCompany     (rs.getString("company"));
+        v.setPurpose     (rs.getString("purpose"));
         v.setHostEmployee(rs.getString("host_employee"));
-        v.setStatus     (rs.getString("status"));
+        v.setStatus      (rs.getString("status"));
         try { v.setEmail  (rs.getString("email"));   } catch (SQLException ignored) {}
         try { v.setContact(rs.getString("contact")); } catch (SQLException ignored) {}
         Timestamp to = rs.getTimestamp("time_out");
