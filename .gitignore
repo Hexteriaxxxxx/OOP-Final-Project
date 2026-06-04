@@ -5,13 +5,13 @@
 *.ipr
 out/
 
-# Compiled Java
+# Compiled Java classes only
 *.class
-*.jar
 
-# Libraries - download separately, do not push
+# Libraries - gitignored by default EXCEPT PostgreSQL driver
 lib/
 libs/
+!lib/postgresql-42.7.3.jar
 
 # OS Files
 .DS_Store
