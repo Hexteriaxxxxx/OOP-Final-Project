@@ -13,8 +13,15 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/main/resources/fxml/Login.fxml")));
+        Scene scene = new Scene(root, 1280, 720);
+
+        // Load global CSS to fix button border-radius
+        scene.getStylesheets().add(
+            Objects.requireNonNull(getClass().getResource("/main/resources/styles/app.css")).toExternalForm()
+        );
+
         primaryStage.setTitle("Pass Slip Issuance System");
-        primaryStage.setScene(new Scene(root, 1280, 720));
+        primaryStage.setScene(scene);
         primaryStage.setResizable(false);
         primaryStage.show();
     }

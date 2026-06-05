@@ -1,5 +1,6 @@
 package main.controllers;
 
+import dao.EmployeeDAO;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -12,7 +13,6 @@ import java.util.ResourceBundle;
 
 public class AddEmployeeController implements Initializable {
 
-    @FXML private TextField tfEmployeeId;
     @FXML private TextField tfFullName;
     @FXML private TextField tfDepartment;
     @FXML private TextField tfPosition;
@@ -20,6 +20,7 @@ public class AddEmployeeController implements Initializable {
     private Stage                    dialogStage;
     private ObservableList<Employee> masterList;
     private Runnable                 onSaveCallback;
+    private final EmployeeDAO        employeeDAO = new EmployeeDAO();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {}
@@ -32,30 +33,25 @@ public class AddEmployeeController implements Initializable {
     private void handleAddEmployee() {
         if (!isValid()) return;
 
-        int id;
-        try {
-            id = Integer.parseInt(tfEmployeeId.getText().trim());
-        } catch (NumberFormatException e) {
-            showAlert(Alert.AlertType.WARNING, "Invalid ID",
-                    "Ang Employee ID ay dapat numero lamang.");
+        Employee emp = new Employee();
+        emp.setName      (tfFullName  .getText().trim());
+        emp.setDepartment(tfDepartment.getText().trim());
+        emp.setPosition  (tfPosition  .getText().trim());
+
+        // Save to Supabase database
+        boolean saved = employeeDAO.addEmployee(emp);
+        if (!saved) {
+            showAlert(Alert.AlertType.ERROR, "Save Failed",
+                    "Hindi nasave ang employee. Please try again.");
             return;
         }
 
-        boolean duplicate = masterList.stream().anyMatch(e -> e.getEmpId() == id);
-        if (duplicate) {
-            showAlert(Alert.AlertType.WARNING, "Duplicate ID",
-                    "Ang Employee ID " + id + " ay mayroon na.");
-            return;
-        }
-
-        masterList.add(new Employee(
-                id,
-                tfFullName.getText().trim(),
-                tfDepartment.getText().trim(),
-                tfPosition.getText().trim()
-        ));
+        // Reload fresh list from DB
+        masterList.setAll(employeeDAO.getAllEmployees());
 
         if (onSaveCallback != null) onSaveCallback.run();
+        showAlert(Alert.AlertType.INFORMATION, "Success",
+                emp.getName() + " ay naadded na!");
         dialogStage.close();
     }
 
@@ -66,11 +62,9 @@ public class AddEmployeeController implements Initializable {
 
     private boolean isValid() {
         StringBuilder msg = new StringBuilder();
-        if (tfEmployeeId.getText().trim().isEmpty())  msg.append("• Employee ID ay required.\n");
-        if (tfFullName.getText().trim().isEmpty())    msg.append("• Full Name ay required.\n");
-        if (tfDepartment.getText().trim().isEmpty())  msg.append("• Department ay required.\n");
-        if (tfPosition.getText().trim().isEmpty())    msg.append("• Position ay required.\n");
-
+        if (tfFullName  .getText().trim().isEmpty()) msg.append("• Full Name ay required.\n");
+        if (tfDepartment.getText().trim().isEmpty()) msg.append("• Department ay required.\n");
+        if (tfPosition  .getText().trim().isEmpty()) msg.append("• Position ay required.\n");
         if (msg.length() > 0) {
             showAlert(Alert.AlertType.WARNING, "Validation Error", msg.toString().trim());
             return false;
@@ -79,10 +73,7 @@ public class AddEmployeeController implements Initializable {
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
+        Alert a = new Alert(type);
+        a.setTitle(title); a.setHeaderText(null); a.setContentText(content); a.showAndWait();
     }
 }

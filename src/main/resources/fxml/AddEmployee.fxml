@@ -19,27 +19,20 @@
 
     <VBox style="-fx-padding: 0 20 14 20;" spacing="12">
 
-        <HBox spacing="12">
-            <VBox spacing="5" HBox.hgrow="ALWAYS">
-                <Label text="Employee ID" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
-                <TextField fx:id="tfEmployeeId" promptText="e.g. 7"
-                           style="-fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #fca5a5; -fx-padding: 8 12 8 12; -fx-font-size: 12.5px;"/>
-            </VBox>
-            <VBox spacing="5" HBox.hgrow="ALWAYS">
-                <Label text="Full Name" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
-                <TextField fx:id="tfFullName" promptText="Juan Dela Cruz"
-                           style="-fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #fca5a5; -fx-padding: 8 12 8 12; -fx-font-size: 12.5px;"/>
-            </VBox>
-        </HBox>
+        <VBox spacing="5">
+            <Label text="Full Name *" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+            <TextField fx:id="tfFullName" promptText="e.g. Juan Dela Cruz"
+                       style="-fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #fca5a5; -fx-padding: 8 12 8 12; -fx-font-size: 12.5px;"/>
+        </VBox>
 
         <HBox spacing="12">
             <VBox spacing="5" HBox.hgrow="ALWAYS">
-                <Label text="Department" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+                <Label text="Department *" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
                 <TextField fx:id="tfDepartment" promptText="e.g. IT Department"
                            style="-fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #fca5a5; -fx-padding: 8 12 8 12; -fx-font-size: 12.5px;"/>
             </VBox>
             <VBox spacing="5" HBox.hgrow="ALWAYS">
-                <Label text="Position" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+                <Label text="Position *" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
                 <TextField fx:id="tfPosition" promptText="e.g. Developer"
                            style="-fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #fca5a5; -fx-padding: 8 12 8 12; -fx-font-size: 12.5px;"/>
             </VBox>
@@ -47,7 +40,7 @@
 
         <HBox style="-fx-background-color: #fff1f2; -fx-background-radius: 8; -fx-padding: 10 14 10 14;">
             <Label text="Note: " style="-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #7f1d1d;"/>
-            <Label text="Employee will be added to the system and can access based on assigned role."
+            <Label text="Employee will be saved to the database permanently."
                    style="-fx-font-size: 12px; -fx-text-fill: #7f1d1d;" wrapText="true" HBox.hgrow="ALWAYS"/>
         </HBox>
     </VBox>

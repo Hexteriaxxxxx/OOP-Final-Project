@@ -8,7 +8,8 @@ import java.sql.*;
 public class UserDAO {
 
     public User login(String username, String password, String role) {
-        String sql = "SELECT * FROM \"User\" WHERE username = ? AND role = ?";
+        // Case-insensitive role check
+        String sql = "SELECT * FROM \"User\" WHERE username = ? AND LOWER(role) = LOWER(?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, username);
@@ -16,7 +17,6 @@ public class UserDAO {
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 String storedHash = rs.getString("password");
-                // Try hashed password first, then plain text fallback
                 boolean valid = false;
                 try { valid = PasswordUtils.verifyPassword(password, storedHash); } catch (Exception e) {}
                 if (!valid) valid = password.equals(storedHash); // plain text fallback

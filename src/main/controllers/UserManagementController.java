@@ -1,6 +1,7 @@
 package main.controllers;
 
 import dao.EmployeeDAO;
+import dao.UserDAO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -28,7 +29,7 @@ public class UserManagementController implements Initializable {
     @FXML private Label lblTotal, lblActive, lblInactive, lblAdmins;
     @FXML private TextField tfSearch;
     @FXML private ComboBox<String> cbFilter;
-    @FXML private TableView<Employee>          tableEmployees;
+    @FXML private TableView<Employee>            tableEmployees;
     @FXML private TableColumn<Employee, Integer> colId;
     @FXML private TableColumn<Employee, String>  colName, colDept, colPosition;
     @FXML private TableColumn<Employee, Void>    colActions;
@@ -63,7 +64,7 @@ public class UserManagementController implements Initializable {
 
     private void setupFilterCombo() {
         cbFilter.setItems(FXCollections.observableArrayList(
-                "All Departments","IT Department","HR Department","Finance","Marketing","Operations"));
+                "All Departments","IT Department","HR Department","Finance","Marketing","Operations","Admin"));
         cbFilter.setValue("All Departments");
         cbFilter.setOnAction(e -> applyFilter());
     }
@@ -107,16 +108,44 @@ public class UserManagementController implements Initializable {
                     || emp.getName()      .toLowerCase().contains(query)
                     || emp.getDepartment().toLowerCase().contains(query)
                     || emp.getPosition()  .toLowerCase().contains(query);
-            boolean matchDept = dept==null||dept.equals("All Departments")||emp.getDepartment().equals(dept);
+            boolean matchDept = dept==null||dept.equals("All Departments")||emp.getDepartment().equalsIgnoreCase(dept);
             return matchSearch && matchDept;
         });
     }
 
     private void refreshStats() {
-        lblTotal   .setText(String.valueOf(masterList.size()));
-        lblActive  .setText(String.valueOf(masterList.stream().filter(e -> e.getDepartment().contains("IT")||e.getDepartment().contains("HR")).count()));
-        lblInactive.setText(String.valueOf(masterList.stream().filter(e -> e.getDepartment().contains("Finance")).count()));
-        lblAdmins  .setText(String.valueOf(masterList.stream().filter(e -> !e.getDepartment().contains("IT")&&!e.getDepartment().contains("HR")&&!e.getDepartment().contains("Finance")).count()));
+        int total = masterList.size();
+
+        // ✅ Meaningful stats based on actual data:
+        // Total Employees — all employees in DB
+        // With Pass Slip — employees who have at least one pass slip
+        // Departments — number of unique departments
+        // Positions — number of unique positions
+
+        long uniqueDepts = masterList.stream()
+                .map(Employee::getDepartment)
+                .filter(d -> d != null && !d.isBlank())
+                .distinct()
+                .count();
+
+        long uniquePositions = masterList.stream()
+                .map(Employee::getPosition)
+                .filter(p -> p != null && !p.isBlank())
+                .distinct()
+                .count();
+
+        long adminCount = masterList.stream()
+                .filter(e -> e.getPosition() != null &&
+                        (e.getPosition().toLowerCase().contains("admin") ||
+                         e.getPosition().toLowerCase().contains("director") ||
+                         e.getPosition().toLowerCase().contains("manager") ||
+                         e.getPosition().toLowerCase().contains("officer")))
+                .count();
+
+        lblTotal   .setText(String.valueOf(total));
+        lblActive  .setText(String.valueOf(uniqueDepts));
+        lblInactive.setText(String.valueOf(uniquePositions));
+        lblAdmins  .setText(String.valueOf(adminCount));
     }
 
     @FXML
@@ -130,7 +159,7 @@ public class UserManagementController implements Initializable {
             Stage dialog = new Stage();
             dialog.initModality(Modality.APPLICATION_MODAL);
             dialog.initStyle(StageStyle.UNDECORATED);
-            dialog.setScene(new Scene(root));
+            dialog.setScene(new javafx.scene.Scene(root));
             ctrl.setDialogStage(dialog);
             dialog.showAndWait();
         } catch (IOException ex) { showError("Cannot open Add Employee dialog:\n" + ex.getMessage()); }
@@ -146,7 +175,7 @@ public class UserManagementController implements Initializable {
             Stage dialog = new Stage();
             dialog.initModality(Modality.APPLICATION_MODAL);
             dialog.initStyle(StageStyle.UNDECORATED);
-            dialog.setScene(new Scene(root));
+            dialog.setScene(new javafx.scene.Scene(root));
             ctrl.setDialogStage(dialog);
             dialog.showAndWait();
         } catch (IOException ex) { showError("Cannot open Edit Employee dialog:\n" + ex.getMessage()); }
@@ -154,7 +183,8 @@ public class UserManagementController implements Initializable {
 
     private void handleDelete(Employee emp) {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Delete Employee"); confirm.setHeaderText("Delete " + emp.getName() + "?");
+        confirm.setTitle("Delete Employee");
+        confirm.setHeaderText("Delete " + emp.getName() + "?");
         confirm.setContentText("This action cannot be undone.");
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
@@ -185,5 +215,7 @@ public class UserManagementController implements Initializable {
         } catch (IOException e) { showError("Screen not available:\n" + e.getMessage()); }
     }
 
-    private void showError(String msg) { Alert a=new Alert(Alert.AlertType.ERROR);a.setTitle("Error");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }
+    private void showError(String msg) {
+        Alert a=new Alert(Alert.AlertType.ERROR);a.setTitle("Error");a.setHeaderText(null);a.setContentText(msg);a.showAndWait();
+    }
 }

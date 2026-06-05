@@ -1,0 +1,11 @@
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        setupDailyColumns(); setupMonthlyColumns(); setupFilterCombo();
+        loadAllData(); loadMonthlyData();
+        btnDailyLogs.setStyle(TOGGLE_ACTIVE); btnMonthlyLogs.setStyle(TOGGLE_INACTIVE);
+        // Set ALL filter buttons to inactive style first so they're all rounded
+        for (Button btn : new Button[]{btnFilterToday, btnFilterWeek, btnFilterMonth, btnFilterAll, btnFilterDate}) {
+            btn.setStyle(DATE_INACTIVE);
+        }
+        setActiveDateBtn(btnFilterAll);
+    }

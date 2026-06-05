@@ -45,7 +45,7 @@ public class StaffPassSlipController implements Initializable {
     private final ObservableList<PassSlip> masterList = FXCollections.observableArrayList();
     private FilteredList<PassSlip> filteredList;
     private int downloadCount = 0, printCount = 0;
-    private String sessionUser = "Staff";
+    private String sessionUser = "Staff", sessionRole = "Staff";
     private NotificationHelper notifHelper;
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -53,6 +53,13 @@ public class StaffPassSlipController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         setupFilter(); setupColumns(); setupActionColumn(); loadData();
+    }
+
+    public void initSession(String username, String role) {
+        this.sessionUser = username != null ? username : "Staff";
+        this.sessionRole = role     != null ? role     : "Staff";
+        if (lblStaffName != null) lblStaffName.setText(this.sessionUser);
+        if (lblStaffRole != null) lblStaffRole.setText(this.sessionRole);
     }
 
     @FXML
@@ -113,12 +120,29 @@ public class StaffPassSlipController implements Initializable {
     private void showDetails(PassSlip ps){Alert a=new Alert(Alert.AlertType.INFORMATION);a.setTitle("Pass Slip Details");a.setHeaderText("PS-"+String.format("%04d",ps.getSlipId()));a.setContentText(buildText(ps));a.showAndWait();}
     private String buildText(PassSlip ps){return "====================================\n       EMPLOYEE PASS SLIP\n====================================\nSlip ID    : PS-"+String.format("%04d",ps.getSlipId())+"\nName       : "+ps.getEmpName()+"\nDepartment : "+ps.getDepartment()+"\nPurpose    : "+ps.getReason()+"\nTime Out   : "+ps.getFormattedTimeOut()+"\nTime In    : "+ps.getFormattedTimeIn()+"\nDuration   : "+(ps.getDuration()!=null?ps.getDuration():"—")+"\nStatus     : "+ps.getStatus()+"\n===================================="; }
 
-    @FXML private void handleNavDashboard(){goTo("/main/resources/fxml/StaffDashboard.fxml","Dashboard");}
+    @FXML private void handleNavDashboard(){goTo("/main/resources/fxml/StaffDashboard.fxml","Dashboard",null);}
     @FXML private void handleNavPassSlip(){/* already here */}
-    @FXML private void handleNavVisitor(){goTo("/main/resources/fxml/StaffVisitorModule.fxml","Visitor Module");}
-    @FXML private void handleNavReports(){goTo("/main/resources/fxml/StaffReports.fxml","Reports");}
-    @FXML private void handleLogout(){Optional<ButtonType> res=new Alert(Alert.AlertType.CONFIRMATION,"Logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();if(res.isPresent()&&res.get()==ButtonType.OK)goTo("/main/resources/fxml/Login.fxml","Login");}
-    private void goTo(String fxml,String title){try{FXMLLoader loader=new FXMLLoader(getClass().getResource(fxml));Parent root=loader.load();Stage stage=(Stage)tblSlips.getScene().getWindow();double w=stage.getWidth(),h=stage.getHeight();stage.setTitle(title);stage.setScene(new Scene(root));stage.setWidth(w);stage.setHeight(h);}catch(IOException e){showError("Screen not available:\n"+fxml);}}
+    @FXML private void handleNavVisitor(){goTo("/main/resources/fxml/StaffVisitorModule.fxml","Visitor Module",null);}
+    @FXML private void handleNavReports(){goTo("/main/resources/fxml/StaffReports.fxml","Reports",null);}
+    @FXML private void handleLogout(){Optional<ButtonType> res=new Alert(Alert.AlertType.CONFIRMATION,"Logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();if(res.isPresent()&&res.get()==ButtonType.OK)goTo("/main/resources/fxml/Login.fxml","Login",null);}
+
+    private void goTo(String fxml, String title, String user) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
+            Parent root = loader.load();
+            // Pass session to next screen
+            Object ctrl = loader.getController();
+            if (ctrl instanceof StaffVisitorController) ((StaffVisitorController)ctrl).initSession(sessionUser, sessionRole);
+            else if (ctrl instanceof StaffReportsController) ((StaffReportsController)ctrl).initSession(sessionUser, sessionRole);
+            else if (ctrl instanceof StaffDashboardController) {
+                // handled by setCurrentUser
+            }
+            Stage stage=(Stage)tblSlips.getScene().getWindow();
+            double w=stage.getWidth(),h=stage.getHeight();
+            stage.setTitle(title);stage.setScene(new Scene(root));stage.setWidth(w);stage.setHeight(h);
+        } catch(IOException e){showError("Screen not available:\n"+fxml);}
+    }
+
     private void showInfo(String msg){Alert a=new Alert(Alert.AlertType.INFORMATION);a.setTitle("Success");a.setHeaderText(null);a.setContentText(msg);a.showAndWait();}
     private void showError(String msg){Alert a=new Alert(Alert.AlertType.ERROR);a.setTitle("Error");a.setHeaderText(null);a.setContentText(msg);a.showAndWait();}
 }

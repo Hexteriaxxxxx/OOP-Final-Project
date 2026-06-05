@@ -37,7 +37,7 @@ public class StaffDashboardController implements Initializable {
     @FXML private Button btnNotification;
     @FXML private TextField        txtSearch;
     @FXML private ComboBox<String> cmbFilter;
-    @FXML private TableView<PassSlip>          tblPassSlips;
+    @FXML private TableView<PassSlip>           tblPassSlips;
     @FXML private TableColumn<PassSlip, String> colRequestId, colName, colDepartment;
     @FXML private TableColumn<PassSlip, String> colPurpose, colTimeOut, colTimeIn, colStatus;
     @FXML private TableColumn<PassSlip, Void>   colActions;
@@ -50,12 +50,18 @@ public class StaffDashboardController implements Initializable {
     private Timer autoRefreshTimer;
     private NotificationHelper notifHelper;
 
-    public void setCurrentUser(User user) { currentUser = user; }
+    public void setCurrentUser(User user) {
+        this.currentUser = user;
+        if (user != null) {
+            if (lblUserName != null) lblUserName.setText(user.getUsername());
+            if (lblUserRole != null) lblUserRole.setText(user.getRole());
+            if (lblWelcome  != null) lblWelcome .setText("Welcome back, " + user.getUsername());
+        }
+    }
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        setupFilterCombo(); setupTableColumns(); applyCurrentUser();
-        loadDashboardStats(); loadPassSlipRequests(); loadNotifications(); loadRecentActivity();
+        setupFilterCombo(); setupTableColumns(); loadDashboardStats(); loadPassSlipRequests(); loadNotifications(); loadRecentActivity();
         startAutoRefresh();
     }
 
@@ -101,14 +107,6 @@ public class StaffDashboardController implements Initializable {
         });
     }
 
-    private void applyCurrentUser() {
-        if (currentUser != null) {
-            lblUserName.setText(currentUser.getUsername());
-            lblUserRole.setText(currentUser.getRole());
-            lblWelcome.setText("Welcome back, " + currentUser.getUsername());
-        }
-    }
-
     public void loadDashboardStats() {
         try {
             List<PassSlip> all = passSlipDAO.getAllPassSlips();
@@ -138,6 +136,7 @@ public class StaffDashboardController implements Initializable {
     }
 
     private void loadNotifications() {
+        if (notifContainer == null) return;
         notifContainer.getChildren().clear();
         try {
             List<PassSlip> all = passSlipDAO.getAllPassSlips();
@@ -150,6 +149,7 @@ public class StaffDashboardController implements Initializable {
     }
 
     private void loadRecentActivity() {
+        if (activityContainer == null) return;
         activityContainer.getChildren().clear();
         try {
             List<ActivityLog> logs = activityLogDAO.getRecentLogs(5);
@@ -167,11 +167,9 @@ public class StaffDashboardController implements Initializable {
     }
 
     private void addNotifItem(VBox container, String text, String bg, String border) {
-        HBox box = new HBox();
-        box.setPadding(new Insets(8,10,8,10));
+        HBox box = new HBox(); box.setPadding(new Insets(8,10,8,10));
         box.setStyle("-fx-background-color:"+bg+";-fx-border-color:"+border+";-fx-border-width:0 0 0 3;-fx-background-radius:4;-fx-border-radius:4;");
-        Label lbl = new Label(text);
-        lbl.setStyle("-fx-font-size:12px;-fx-text-fill:#333;"); lbl.setWrapText(true);
+        Label lbl = new Label(text); lbl.setStyle("-fx-font-size:12px;-fx-text-fill:#333;"); lbl.setWrapText(true);
         box.getChildren().add(lbl); container.getChildren().add(box);
     }
 
@@ -192,8 +190,8 @@ public class StaffDashboardController implements Initializable {
         String kw = txtSearch.getText().trim().toLowerCase();
         String filter = cmbFilter.getValue();
         tblPassSlips.setItems(masterList.filtered(slip -> {
-            boolean matchKw = kw.isEmpty()||slip.getEmpName().toLowerCase().contains(kw)||String.valueOf(slip.getSlipId()).contains(kw)||slip.getDepartment().toLowerCase().contains(kw);
-            boolean matchF  = "All".equals(filter)||slip.getStatus().equalsIgnoreCase(filter);
+            boolean matchKw  = kw.isEmpty()||slip.getEmpName().toLowerCase().contains(kw)||String.valueOf(slip.getSlipId()).contains(kw)||slip.getDepartment().toLowerCase().contains(kw);
+            boolean matchF   = "All".equals(filter)||slip.getStatus().equalsIgnoreCase(filter);
             return matchKw && matchF;
         }));
     }
@@ -219,15 +217,32 @@ public class StaffDashboardController implements Initializable {
     }
 
     @FXML public void handleDashboard()        { setActiveButton(btnDashboard); refreshDashboard(); }
-    @FXML public void handlePassSlipIssuance() { setActiveButton(btnPassSlip);  navigateTo("/main/resources/fxml/StaffPassSlipIssuance.fxml","Pass Slip Issuance"); }
-    @FXML public void handleVisitorModule()    { setActiveButton(btnVisitor);   navigateTo("/main/resources/fxml/StaffVisitorModule.fxml","Visitor Module"); }
-    @FXML public void handleReports()          { setActiveButton(btnReports);   navigateTo("/main/resources/fxml/StaffReports.fxml","Reports"); }
+    @FXML public void handlePassSlipIssuance() { setActiveButton(btnPassSlip);  navigateToStaff("/main/resources/fxml/StaffPassSlipIssuance.fxml","Pass Slip Issuance"); }
+    @FXML public void handleVisitorModule()    { setActiveButton(btnVisitor);   navigateToStaff("/main/resources/fxml/StaffVisitorModule.fxml","Visitor Module"); }
+    @FXML public void handleReports()          { setActiveButton(btnReports);   navigateToStaff("/main/resources/fxml/StaffReports.fxml","Reports"); }
 
     private void handleViewPassSlip(PassSlip slip) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setTitle("Pass Slip Details"); a.setHeaderText("Slip ID: PS-" + slip.getSlipId());
         a.setContentText("Employee : " + slip.getEmpName() + "\nDepartment: " + slip.getDepartment() + "\nPurpose   : " + slip.getReason() + "\nTime Out  : " + slip.getFormattedTimeOut() + "\nTime In   : " + slip.getFormattedTimeIn() + "\nStatus    : " + slip.getStatus());
         a.showAndWait();
+    }
+
+    // Navigate to staff screens AND pass session info
+    private void navigateToStaff(String fxmlPath, String title) {
+        try {
+            stopAutoRefresh();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
+            Object ctrl = loader.getController();
+            String username = currentUser != null ? currentUser.getUsername() : "Staff";
+            String role     = currentUser != null ? currentUser.getRole()     : "Staff";
+            if (ctrl instanceof StaffPassSlipController) ((StaffPassSlipController)ctrl).initSession(username, role);
+            else if (ctrl instanceof StaffVisitorController) ((StaffVisitorController)ctrl).initSession(username, role);
+            else if (ctrl instanceof StaffReportsController) ((StaffReportsController)ctrl).initSession(username, role);
+            Stage stage = (Stage) tblPassSlips.getScene().getWindow();
+            stage.setScene(new Scene(root)); stage.setTitle(title + " – Pass Slip System"); stage.show();
+        } catch (IOException e) { System.out.println("Nav error: " + e.getMessage()); }
     }
 
     private void navigateTo(String fxmlPath, String title) {
@@ -241,8 +256,10 @@ public class StaffDashboardController implements Initializable {
     }
 
     private void setActiveButton(Button active) {
-        for (Button btn : new Button[]{btnDashboard,btnPassSlip,btnVisitor,btnReports}) btn.getStyleClass().remove("nav-btn-active");
-        if (!active.getStyleClass().contains("nav-btn-active")) active.getStyleClass().add("nav-btn-active");
+        for (Button btn : new Button[]{btnDashboard,btnPassSlip,btnVisitor,btnReports})
+            if (btn != null) btn.getStyleClass().remove("nav-btn-active");
+        if (active != null && !active.getStyleClass().contains("nav-btn-active"))
+            active.getStyleClass().add("nav-btn-active");
     }
 
     private void stopAutoRefresh() { if (autoRefreshTimer!=null){autoRefreshTimer.cancel();autoRefreshTimer=null;} }

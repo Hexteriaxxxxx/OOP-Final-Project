@@ -1,0 +1,14 @@
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        setupDailyColumns(); setupMonthlyColumns(); setupFilterCombo();
+        loadAllData(); loadMonthlyData();
+        btnDailyLogs.setStyle(TOGGLE_ACTIVE);
+        btnMonthlyLogs.setStyle(TOGGLE_INACTIVE);
+        // Apply rounded style to ALL filter buttons on init
+        btnFilterToday.setStyle(DATE_INACTIVE);
+        btnFilterWeek .setStyle(DATE_INACTIVE);
+        btnFilterMonth.setStyle(DATE_INACTIVE);
+        btnFilterAll  .setStyle(DATE_INACTIVE);
+        btnFilterDate .setStyle(DATE_INACTIVE);
+        setActiveDateBtn(btnFilterAll);
+    }

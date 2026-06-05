@@ -2,7 +2,7 @@
 // Auto-sends confirmation email when form is submitted
 // Auto-sends approval email when admin approves
 
-var SERVER_URL = "http://192.168.93.20:5055/submit-visitor";
+var SERVER_URL = "http://192.168.0.111:5055/submit-visitor";
 
 function onFormSubmit(e) {
   try {

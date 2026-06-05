@@ -1,0 +1,12 @@
+            LocalDateTime dtTimeOut=LocalDateTime.of(datePicker.getValue(),selTimeOut[0]);
+            Visitor v=new Visitor(
+                txtVisitorName.getText().trim(),
+                txtCompany.getText().trim(),
+                txtPurpose.getText().trim(),
+                dtTimeOut,
+                txtHost.getText().trim(),
+                txtEmail.getText().trim(),
+                txtContact.getText().trim()
+            );
+            if(dao.addVisitor(v)){dialog.close();showInfo("Visitor request submitted!");loadData();}
+            else lblError.setText("Failed to submit.");

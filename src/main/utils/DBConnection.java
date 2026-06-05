@@ -6,16 +6,23 @@ import java.sql.SQLException;
 
 public class DBConnection {
 
-    private static final String URL      = "jdbc:postgresql://aws-1-ap-northeast-2.pooler.supabase.com:5432/postgres?sslmode=require";
+    private static final String URL      = "jdbc:postgresql://aws-1-ap-northeast-2.pooler.supabase.com:5432/postgres?sslmode=require&socketTimeout=30&connectTimeout=10";
     private static final String USER     = "postgres.axsrbppmxnekniiyfmuh";
     private static final String PASSWORD = "PupPassSlip2026!";
 
-    public static Connection getConnection() {
+    private static Connection sharedConnection = null;
+
+    public static synchronized Connection getConnection() {
         try {
+            // Reuse existing connection if still valid
+            if (sharedConnection != null && !sharedConnection.isClosed() && sharedConnection.isValid(3)) {
+                return sharedConnection;
+            }
+            // Create new connection
             Class.forName("org.postgresql.Driver");
-            Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+            sharedConnection = DriverManager.getConnection(URL, USER, PASSWORD);
             System.out.println("[DB] Connected to Supabase!");
-            return conn;
+            return sharedConnection;
         } catch (ClassNotFoundException e) {
             System.out.println("[DB ERROR] Driver not found: " + e.getMessage());
             return null;

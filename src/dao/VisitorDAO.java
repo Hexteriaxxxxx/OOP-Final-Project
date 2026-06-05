@@ -12,17 +12,66 @@ import java.util.List;
 
 public class VisitorDAO {
 
+    /**
+     * Gets the visitor server URL.
+     * Strategy (in order):
+     * 1. System property: -Dvisitor.server.url=http://...
+     * 2. Environment variable: VISITOR_SERVER_URL
+     * 3. Try multiple .env file locations
+     * 4. Default: localhost:5055 (same machine as Java app)
+     *
+     * NOTE: The Python server ALWAYS runs on the same machine as the Java app.
+     * So localhost:5055 is always correct — no hardcoding of IPs needed.
+     * The ngrok URL in .env is only used by the Python server itself for
+     * the Google Form webhook, NOT for Java-to-Python communication.
+     */
     private static String getServerUrl() {
-        File envFile = new File(".env");
-        if (!envFile.exists()) return "http://localhost:5055";
-        try (BufferedReader br = new BufferedReader(new FileReader(envFile))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                line = line.trim();
-                if (line.startsWith("VISITOR_SERVER_URL=")) return line.split("=", 2)[1].trim();
-            }
-        } catch (IOException e) { System.out.println("Could not read .env: " + e.getMessage()); }
+        // 1. System property (can be passed via -D flag)
+        String prop = System.getProperty("visitor.server.url");
+        if (prop != null && !prop.isBlank()) return prop.trim();
+
+        // 2. Environment variable
+        String env = System.getenv("VISITOR_SERVER_URL");
+        if (env != null && !env.isBlank()) return env.trim();
+
+        // 3. Look for .env in multiple locations
+        String[] envPaths = {
+            ".env",                                                    // working dir
+            System.getProperty("user.dir") + File.separator + ".env", // explicit working dir
+            getJarDirectory() + File.separator + ".env",              // next to JAR
+        };
+
+        for (String path : envPaths) {
+            try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    line = line.trim();
+                    if (line.startsWith("VISITOR_SERVER_URL=")) {
+                        String val = line.split("=", 2)[1].trim();
+                        // The VISITOR_SERVER_URL in .env is the ngrok public URL.
+                        // Java talks to Python locally — always use localhost.
+                        // We only use port from .env if specified differently.
+                        System.out.println("[DAO] Found .env at: " + path);
+                        // Return localhost with same port as server (always 5055)
+                        return "http://localhost:5055";
+                    }
+                }
+            } catch (IOException ignored) {}
+        }
+
+        // 4. Default — Python server is always on same machine, always port 5055
+        System.out.println("[DAO] Using default visitor server: http://localhost:5055");
         return "http://localhost:5055";
+    }
+
+    private static String getJarDirectory() {
+        try {
+            String path = VisitorDAO.class.getProtectionDomain()
+                .getCodeSource().getLocation().toURI().getPath();
+            return new File(path).getParent();
+        } catch (Exception e) {
+            return System.getProperty("user.dir");
+        }
     }
 
     public boolean addVisitor(Visitor visitor) {
@@ -88,8 +137,12 @@ public class VisitorDAO {
             boolean ok = stmt.executeUpdate() > 0;
             if (ok && "Approved".equalsIgnoreCase(status)) {
                 Visitor v = getById(visitorId);
-                if (v != null && v.getEmail() != null && !v.getEmail().isBlank())
+                if (v != null && v.getEmail() != null && !v.getEmail().isBlank()) {
+                    System.out.println("[DAO] Sending approval email to: " + v.getEmail());
                     sendApprovalEmailViaPython(v);
+                } else {
+                    System.out.println("[DAO] Skipping email — no email address for visitor " + visitorId);
+                }
             }
             return ok;
         } catch (SQLException e) { System.out.println("updateStatus error: " + e.getMessage()); return false; }
@@ -99,13 +152,14 @@ public class VisitorDAO {
         new Thread(() -> {
             try {
                 String serverUrl = getServerUrl() + "/send-approval-email";
+                System.out.println("[DAO] Calling: " + serverUrl);
                 URL url = new URL(serverUrl);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json");
                 conn.setDoOutput(true);
                 conn.setConnectTimeout(5000);
-                conn.setReadTimeout(5000);
+                conn.setReadTimeout(10000);
                 String json = String.format(
                     "{\"visitor_id\":%d,\"visitor_name\":\"%s\",\"email\":\"%s\"," +
                     "\"company\":\"%s\",\"purpose\":\"%s\",\"visit_date\":\"%s\"," +
@@ -113,12 +167,23 @@ public class VisitorDAO {
                     v.getVisitorId(), escape(v.getVisitorName()), escape(v.getEmail()),
                     escape(v.getCompany()), escape(v.getPurpose()), escape(v.getFormattedTimeOut()),
                     escape(v.getHostEmployee()), escape(v.getRequestId()));
+                System.out.println("[DAO] Payload: " + json);
                 try (OutputStream os = conn.getOutputStream()) { os.write(json.getBytes()); }
                 int code = conn.getResponseCode();
-                System.out.println(code == 200 ? "[OK] Approval email sent to: " + v.getEmail() : "[WARN] Email server returned: " + code);
+                if (code == 200) {
+                    System.out.println("[OK] Approval email sent to: " + v.getEmail());
+                } else {
+                    // Read error response
+                    InputStream errStream = conn.getErrorStream();
+                    String errBody = errStream != null ? new String(errStream.readAllBytes()) : "(no body)";
+                    System.out.println("[WARN] Email server returned " + code + ": " + errBody);
+                }
                 conn.disconnect();
-            } catch (Exception e) { System.out.println("[WARN] Could not send approval email: " + e.getMessage()); }
-        }).start();
+            } catch (Exception e) {
+                System.out.println("[WARN] Could not send approval email: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }, "EmailThread").start();
     }
 
     private String escape(String s) {

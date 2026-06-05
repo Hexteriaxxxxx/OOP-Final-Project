@@ -47,6 +47,7 @@ public class StaffVisitorController implements Initializable {
     private final VisitorDAO dao = new VisitorDAO();
     private final ObservableList<Visitor> masterList = FXCollections.observableArrayList();
     private FilteredList<Visitor> filteredList;
+    private String sessionUser = "Staff", sessionRole = "Staff";
     private NotificationHelper notifHelper;
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
@@ -56,6 +57,13 @@ public class StaffVisitorController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         setupFilter(); setupColumns(); setupActionColumn(); loadData();
+    }
+
+    public void initSession(String username, String role) {
+        this.sessionUser = username != null ? username : "Staff";
+        this.sessionRole = role     != null ? role     : "Staff";
+        if (lblStaffName != null) lblStaffName.setText(this.sessionUser);
+        if (lblStaffRole != null) lblStaffRole.setText(this.sessionRole);
     }
 
     @FXML
@@ -138,22 +146,20 @@ public class StaffVisitorController implements Initializable {
         grid.add(labelFor("Expected Time In *"),0,6);grid.add(labelFor("Expected Time Out *"),1,6);grid.add(btnTimeIn,0,7);grid.add(btnTimeOut,1,7);
         grid.add(labelFor("Purpose of Visit *"),0,8,2,1);grid.add(txtPurpose,0,9,2,1);grid.add(lblError,0,10,2,1);
         GridPane.setFillWidth(btnTimeIn,true);btnTimeIn.setMaxWidth(Double.MAX_VALUE);GridPane.setFillWidth(btnTimeOut,true);btnTimeOut.setMaxWidth(Double.MAX_VALUE);
-        HBox noteBox=new HBox(4);noteBox.setStyle("-fx-background-color:#fff5f5;-fx-background-radius:8;-fx-border-color:#ffd6d6;-fx-border-radius:8;-fx-border-width:1;");noteBox.setPadding(new Insets(10,14,10,14));
-        Label noteLbl=new Label("Note: ");noteLbl.setFont(Font.font("System",FontWeight.BOLD,12));noteLbl.setTextFill(Color.web("#8B0000"));Label noteTxt=new Label("Request will be sent for approval.");noteTxt.setStyle("-fx-font-size:12px;-fx-text-fill:#555;");noteBox.getChildren().addAll(noteLbl,noteTxt);VBox noteWrapper=new VBox(noteBox);noteWrapper.setPadding(new Insets(6,20,10,20));
         HBox footer=new HBox(10);footer.setAlignment(Pos.CENTER_RIGHT);footer.setPadding(new Insets(12,20,16,20));footer.setStyle("-fx-border-color:#f0f0f0;-fx-border-width:1 0 0 0;");
         Button btnCancel=new Button("Cancel");btnCancel.setStyle("-fx-background-color:transparent;-fx-text-fill:#555;-fx-font-size:12px;-fx-padding:7 18;-fx-border-color:#ccc;-fx-border-radius:6;-fx-background-radius:6;-fx-cursor:hand;");btnCancel.setOnAction(e->dialog.close());
         Button btnSubmit=new Button("🖫  Submit Request");btnSubmit.setStyle("-fx-background-color:#8B0000;-fx-text-fill:white;-fx-font-size:12px;-fx-padding:7 18;-fx-background-radius:6;-fx-border-width:0;-fx-cursor:hand;");
         btnSubmit.setOnAction(e->{lblError.setText("");if(txtVisitorName.getText().trim().isEmpty()){highlight(txtVisitorName);lblError.setText("Visitor name is required.");return;}if(txtContact.getText().trim().isEmpty()){highlight(txtContact);lblError.setText("Contact number is required.");return;}if(txtEmail.getText().trim().isEmpty()){highlight(txtEmail);lblError.setText("Email is required.");return;}if(txtHost.getText().trim().isEmpty()){highlight(txtHost);lblError.setText("Host employee is required.");return;}if(txtPurpose.getText().trim().isEmpty()){txtPurpose.setStyle(fieldStyle()+"-fx-border-color:#dc3545;");lblError.setText("Purpose is required.");return;}if(!EMAIL_PATTERN.matcher(txtEmail.getText().trim()).matches()){highlight(txtEmail);lblError.setText("Invalid email format.");return;}if(!PHONE_PATTERN.matcher(txtContact.getText().trim()).matches()){highlight(txtContact);lblError.setText("Invalid contact number.");return;}if(!selTimeOut[0].isAfter(selTimeIn[0])){lblError.setText("Time Out must be after Time In.");return;}LocalDateTime dtTimeOut=LocalDateTime.of(datePicker.getValue(),selTimeOut[0]);Visitor v=new Visitor(txtVisitorName.getText().trim(),txtCompany.getText().trim(),txtPurpose.getText().trim(),dtTimeOut,txtHost.getText().trim());if(dao.addVisitor(v)){dialog.close();showInfo("Visitor request submitted!");loadData();}else lblError.setText("Failed to submit.");});
-        footer.getChildren().addAll(btnCancel,btnSubmit);root.getChildren().addAll(titleBar,grid,noteWrapper,footer);
+        footer.getChildren().addAll(btnCancel,btnSubmit);root.getChildren().addAll(titleBar,grid,footer);
         Scene scene=new Scene(root);scene.setFill(Color.TRANSPARENT);dialog.setScene(scene);dialog.showAndWait();
     }
 
     private Button timePickerBtn(LocalTime t){Button btn=new Button("🕐  "+t.format(TIME_FMT));btn.setStyle("-fx-background-color:white;-fx-border-color:#e0c0c0;-fx-border-radius:6;-fx-background-radius:6;-fx-padding:8 14;-fx-font-size:12.5px;-fx-cursor:hand;-fx-text-fill:#333;-fx-alignment:CENTER_LEFT;");return btn;}
     private void highlight(TextField tf){tf.setStyle(fieldStyle()+"-fx-border-color:#dc3545;");tf.requestFocus();}
-    private TextField styledField(String p){TextField tf=new TextField();tf.setPromptText(p);tf.setStyle(fieldStyle());tf.setMaxWidth(Double.MAX_VALUE);tf.focusedProperty().addListener((obs,old,f)->tf.setStyle(f?fieldStyle()+"-fx-border-color:#8B0000;":fieldStyle()));return tf;}
+    private TextField styledField(String p){TextField tf=new TextField();tf.setPromptText(p);tf.setStyle(fieldStyle());tf.setMaxWidth(Double.MAX_VALUE);return tf;}
     private String fieldStyle(){return "-fx-background-color:white;-fx-border-color:#e0c0c0;-fx-border-radius:6;-fx-background-radius:6;-fx-padding:7 10;-fx-font-size:12.5px;";}
     private Label labelFor(String t){Label lbl=new Label(t);lbl.setStyle("-fx-font-size:12px;-fx-text-fill:#333;-fx-font-weight:bold;");return lbl;}
-    private void showDetails(Visitor v){Alert a=new Alert(Alert.AlertType.INFORMATION);a.setTitle("Visitor Details");a.setHeaderText(v.getRequestId());a.setContentText("Name: "+v.getVisitorName()+"\nCompany: "+v.getCompany()+"\nPurpose: "+v.getPurpose()+"\nTime Out: "+v.getFormattedTimeOut()+"\nTime In: "+v.getFormattedTimeIn()+"\nHost: "+v.getHostEmployee()+"\nStatus: "+v.getStatus());a.showAndWait();}
+    private void showDetails(Visitor v){Alert a=new Alert(Alert.AlertType.INFORMATION);a.setTitle("Visitor Details");a.setHeaderText(v.getRequestId());a.setContentText("Name: "+v.getVisitorName()+"\nCompany: "+v.getCompany()+"\nPurpose: "+v.getPurpose()+"\nTime Out: "+v.getFormattedTimeOut()+"\nHost: "+v.getHostEmployee()+"\nStatus: "+v.getStatus());a.showAndWait();}
     private void approveVisitor(Visitor v){Optional<ButtonType> res=new Alert(Alert.AlertType.CONFIRMATION,"Approve "+v.getVisitorName()+"?",ButtonType.OK,ButtonType.CANCEL).showAndWait();if(res.isPresent()&&res.get()==ButtonType.OK){if(dao.updateStatus(v.getVisitorId(),"Approved")){v.setStatus("Approved");tblVisitors.refresh();refreshStats();showInfo(v.getVisitorName()+" approved!");}else showError("Failed.");}}
     private void rejectVisitor(Visitor v){Optional<ButtonType> res=new Alert(Alert.AlertType.CONFIRMATION,"Reject "+v.getVisitorName()+"?",ButtonType.OK,ButtonType.CANCEL).showAndWait();if(res.isPresent()&&res.get()==ButtonType.OK){if(dao.updateStatus(v.getVisitorId(),"Rejected")){v.setStatus("Rejected");tblVisitors.refresh();refreshStats();showInfo(v.getVisitorName()+" rejected.");}else showError("Failed.");}}
 
@@ -162,7 +168,20 @@ public class StaffVisitorController implements Initializable {
     @FXML private void handleNavVisitor(){/* already here */}
     @FXML private void handleNavReports(){goTo("/main/resources/fxml/StaffReports.fxml","Reports");}
     @FXML private void handleLogout(){Optional<ButtonType> res=new Alert(Alert.AlertType.CONFIRMATION,"Logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();if(res.isPresent()&&res.get()==ButtonType.OK)goTo("/main/resources/fxml/Login.fxml","Login");}
-    private void goTo(String fxml,String title){try{FXMLLoader loader=new FXMLLoader(getClass().getResource(fxml));Parent root=loader.load();Stage stage=(Stage)tblVisitors.getScene().getWindow();double w=stage.getWidth(),h=stage.getHeight();stage.setTitle(title);stage.setScene(new Scene(root));stage.setWidth(w);stage.setHeight(h);}catch(IOException e){showError("Screen not available:\n"+fxml);}}
+
+    private void goTo(String fxml, String title) {
+        try {
+            FXMLLoader loader=new FXMLLoader(getClass().getResource(fxml));
+            Parent root=loader.load();
+            Object ctrl=loader.getController();
+            if(ctrl instanceof StaffPassSlipController) ((StaffPassSlipController)ctrl).initSession(sessionUser,sessionRole);
+            else if(ctrl instanceof StaffReportsController) ((StaffReportsController)ctrl).initSession(sessionUser,sessionRole);
+            Stage stage=(Stage)tblVisitors.getScene().getWindow();
+            double w=stage.getWidth(),h=stage.getHeight();
+            stage.setTitle(title);stage.setScene(new Scene(root));stage.setWidth(w);stage.setHeight(h);
+        } catch(IOException e){showError("Screen not available:\n"+fxml);}
+    }
+
     private void showInfo(String msg){Alert a=new Alert(Alert.AlertType.INFORMATION);a.setTitle("Success");a.setHeaderText(null);a.setContentText(msg);a.showAndWait();}
     private void showError(String msg){Alert a=new Alert(Alert.AlertType.ERROR);a.setTitle("Error");a.setHeaderText(null);a.setContentText(msg);a.showAndWait();}
 }

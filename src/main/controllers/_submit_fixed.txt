@@ -1,0 +1,24 @@
+        btnSubmit.setOnAction(e->{
+            lblError.setText("");
+            if(txtVisitorName.getText().trim().isEmpty()){highlight(txtVisitorName);lblError.setText("Visitor name is required.");return;}
+            if(txtContact.getText().trim().isEmpty()){highlight(txtContact);lblError.setText("Contact number is required.");return;}
+            if(txtEmail.getText().trim().isEmpty()){highlight(txtEmail);lblError.setText("Email is required.");return;}
+            if(txtHost.getText().trim().isEmpty()){highlight(txtHost);lblError.setText("Host employee is required.");return;}
+            if(txtPurpose.getText().trim().isEmpty()){txtPurpose.setStyle(fieldStyle()+"-fx-border-color:#dc3545;");lblError.setText("Purpose is required.");return;}
+            if(!EMAIL_PATTERN.matcher(txtEmail.getText().trim()).matches()){highlight(txtEmail);lblError.setText("Invalid email format.");return;}
+            if(!PHONE_PATTERN.matcher(txtContact.getText().trim()).matches()){highlight(txtContact);lblError.setText("Invalid contact number.");return;}
+            if(!selTimeOut[0].isAfter(selTimeIn[0])){lblError.setText("Time Out must be after Time In.");return;}
+            LocalDateTime dtTimeOut=LocalDateTime.of(datePicker.getValue(),selTimeOut[0]);
+            // Use 7-parameter constructor to include email and contact
+            Visitor v=new Visitor(
+                txtVisitorName.getText().trim(),
+                txtCompany.getText().trim(),
+                txtPurpose.getText().trim(),
+                dtTimeOut,
+                txtHost.getText().trim(),
+                txtEmail.getText().trim(),
+                txtContact.getText().trim()
+            );
+            if(dao.addVisitor(v)){dialog.close();showInfo("Visitor request submitted!");loadData();}
+            else lblError.setText("Failed to submit.");
+        });

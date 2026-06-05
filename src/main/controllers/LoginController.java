@@ -22,125 +22,102 @@ public class LoginController implements Initializable {
     @FXML private Button        adminTab;
     @FXML private TextField     usernameField;
     @FXML private PasswordField passwordField;
-    @FXML private TextField     passwordVisible;   // plain TextField overlay
+    @FXML private TextField     passwordVisible;
     @FXML private Button        btnTogglePassword;
     @FXML private CheckBox      rememberMe;
+    @FXML private Label         lblPortalType;   // ← dynamic portal label
 
-    private String  selectedRole   = "staff";
-    private boolean passwordShown  = false;
+    private String  selectedRole  = "staff";
+    private boolean passwordShown = false;
 
     private static final String PREFS_FILE = "preferences.properties";
     private final UserDAO userDAO = new UserDAO();
 
-    // ─────────────────────────────────────────────────────────────
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         setActiveTab("Staff");
 
-        // Keep passwordField and passwordVisible in sync
-        passwordVisible.textProperty().bindBidirectional(
-                // Use a string property bridge
-                new javafx.beans.property.SimpleStringProperty() {
-                    {
-                        addListener((obs, o, n) -> {
-                            if (!passwordField.getText().equals(n))
-                                passwordField.setText(n);
-                        });
-                    }
-                }
-        );
-        // Simpler sync via listeners
-        passwordField  .textProperty().addListener((obs, o, n) -> { if (!passwordVisible.getText().equals(n)) passwordVisible.setText(n); });
-        passwordVisible.textProperty().addListener((obs, o, n) -> { if (!passwordField  .getText().equals(n)) passwordField  .setText(n); });
+        passwordField  .textProperty().addListener((obs,o,n)->{ if(!passwordVisible.getText().equals(n)) passwordVisible.setText(n); });
+        passwordVisible.textProperty().addListener((obs,o,n)->{ if(!passwordField  .getText().equals(n)) passwordField  .setText(n); });
 
-        // Initial state: passwordField visible, passwordVisible hidden
         passwordVisible.setVisible(false);
         passwordVisible.setManaged(false);
         btnTogglePassword.setText("👁");
 
-        // Load saved credentials
         loadSavedCredentials();
     }
 
-    // ─── Eye Toggle ───────────────────────────────────────────────
     @FXML
     public void handleTogglePassword(ActionEvent event) {
         passwordShown = !passwordShown;
         if (passwordShown) {
             passwordVisible.setText(passwordField.getText());
-            passwordField   .setVisible(false); passwordField   .setManaged(false);
-            passwordVisible .setVisible(true);  passwordVisible .setManaged(true);
+            passwordField  .setVisible(false); passwordField  .setManaged(false);
+            passwordVisible.setVisible(true);  passwordVisible.setManaged(true);
             btnTogglePassword.setText("🙈");
             passwordVisible.requestFocus();
             passwordVisible.positionCaret(passwordVisible.getText().length());
         } else {
             passwordField.setText(passwordVisible.getText());
-            passwordVisible .setVisible(false); passwordVisible .setManaged(false);
-            passwordField   .setVisible(true);  passwordField   .setManaged(true);
+            passwordVisible.setVisible(false); passwordVisible.setManaged(false);
+            passwordField  .setVisible(true);  passwordField  .setManaged(true);
             btnTogglePassword.setText("👁");
             passwordField.requestFocus();
             passwordField.positionCaret(passwordField.getText().length());
         }
     }
 
-    // ─── Tab Toggle ───────────────────────────────────────────────
     @FXML public void handleStaffTab(ActionEvent event) { selectedRole = "staff"; setActiveTab("Staff"); }
     @FXML public void handleAdminTab(ActionEvent event) { selectedRole = "admin"; setActiveTab("Admin"); }
 
     private void setActiveTab(String role) {
-        String on  = "-fx-background-color: #8B0000; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-background-radius: 6; -fx-padding: 8 36;";
-        String off = "-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 13px; -fx-background-radius: 6; -fx-padding: 8 36;";
+        String on  = "-fx-background-color:#8B0000;-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:13px;-fx-background-radius:6;-fx-padding:8 36;";
+        String off = "-fx-background-color:transparent;-fx-text-fill:#888;-fx-font-size:13px;-fx-background-radius:6;-fx-padding:8 36;";
         staffTab.setStyle(role.equals("Staff") ? on : off);
         adminTab.setStyle(role.equals("Admin") ? on : off);
+        // ← Update the portal label dynamically
+        if (lblPortalType != null)
+            lblPortalType.setText(role.equals("Admin") ? "Admin Portal" : "Staff Portal");
     }
 
-    // ─── Login ────────────────────────────────────────────────────
     @FXML
     public void handleLogin(ActionEvent event) {
         String username = usernameField.getText().trim();
         String password = passwordShown ? passwordVisible.getText().trim() : passwordField.getText().trim();
 
         if (username.isEmpty() || password.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Missing Fields", "Please enter your username and password.");
+            showAlert(Alert.AlertType.WARNING,"Missing Fields","Please enter your username and password.");
             return;
         }
 
         User user = userDAO.login(username, password, selectedRole);
         if (user != null) {
-            // Save or clear credentials based on Remember Me
             if (rememberMe.isSelected()) saveCredentials(username, selectedRole);
             else                         clearCredentials();
-
             redirectToDashboard(event, user);
         } else {
-            showAlert(Alert.AlertType.ERROR, "Login Failed",
+            showAlert(Alert.AlertType.ERROR,"Login Failed",
                     "Invalid username or password for " + selectedRole + " account.\nPlease try again.");
-            passwordField.clear();
-            passwordVisible.clear();
+            passwordField.clear(); passwordVisible.clear();
         }
     }
 
-    // ─── Remember Me ─────────────────────────────────────────────
     private void saveCredentials(String username, String role) {
         Properties props = new Properties();
-        props.setProperty("username",    username);
-        props.setProperty("role",        role);
-        props.setProperty("rememberMe",  "true");
+        props.setProperty("username",   username);
+        props.setProperty("role",       role);
+        props.setProperty("rememberMe", "true");
         try (FileOutputStream fos = new FileOutputStream(PREFS_FILE)) {
             props.store(fos, "Login Preferences");
-        } catch (IOException e) {
-            System.out.println("Could not save preferences: " + e.getMessage());
-        }
+        } catch (IOException e) { System.out.println("Could not save preferences: " + e.getMessage()); }
     }
 
     private void clearCredentials() {
-        File f = new File(PREFS_FILE);
-        if (f.exists()) f.delete();
+        File f = new File(PREFS_FILE); if (f.exists()) f.delete();
     }
 
     private void loadSavedCredentials() {
-        File f = new File(PREFS_FILE);
-        if (!f.exists()) return;
+        File f = new File(PREFS_FILE); if (!f.exists()) return;
         Properties props = new Properties();
         try (FileInputStream fis = new FileInputStream(f)) {
             props.load(fis);
@@ -149,16 +126,12 @@ public class LoginController implements Initializable {
                 String savedRole = props.getProperty("role",     "staff");
                 usernameField.setText(savedUser);
                 rememberMe.setSelected(true);
-                // Switch to saved role tab
                 selectedRole = savedRole;
                 setActiveTab(savedRole.equals("admin") ? "Admin" : "Staff");
             }
-        } catch (IOException e) {
-            System.out.println("Could not load preferences: " + e.getMessage());
-        }
+        } catch (IOException e) { System.out.println("Could not load preferences: " + e.getMessage()); }
     }
 
-    // ─── Redirect ─────────────────────────────────────────────────
     private void redirectToDashboard(ActionEvent event, User user) {
         try {
             String fxmlPath = selectedRole.equals("admin")
@@ -166,20 +139,30 @@ public class LoginController implements Initializable {
                     : "/main/resources/fxml/StaffDashboard.fxml";
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Parent root = loader.load();
+
+            if (selectedRole.equals("admin")) {
+                AdminDashboardController ctrl = loader.getController();
+                ctrl.setCurrentUser(user);
+            } else {
+                StaffDashboardController ctrl = loader.getController();
+                ctrl.setCurrentUser(user);
+            }
+
             Stage stage = (Stage) usernameField.getScene().getWindow();
             stage.setScene(new Scene(root, 1280, 720));
-            stage.setTitle(selectedRole.equals("admin") ? "Pass Slip System - Admin Dashboard" : "Pass Slip System - Staff Dashboard");
+            stage.setTitle(selectedRole.equals("admin")
+                    ? "Pass Slip System - Admin Dashboard"
+                    : "Pass Slip System - Staff Dashboard");
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Navigation Error", "Could not load Dashboard.");
+            showAlert(Alert.AlertType.ERROR,"Navigation Error","Could not load Dashboard.");
         }
     }
 
     @FXML public void handleSignUp(ActionEvent event) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/resources/fxml/Register.fxml"));
-            Parent root = loader.load();
+            Parent root = FXMLLoader.load(getClass().getResource("/main/resources/fxml/Register.fxml"));
             Stage stage = (Stage) usernameField.getScene().getWindow();
             stage.setScene(new Scene(root, 1280, 720));
             stage.setTitle("Register");
@@ -188,7 +171,7 @@ public class LoginController implements Initializable {
     }
 
     @FXML public void handleForgotPassword(ActionEvent event) {
-        showAlert(Alert.AlertType.INFORMATION, "Forgot Password", "Please contact your system administrator to reset your password.");
+        showAlert(Alert.AlertType.INFORMATION,"Forgot Password","Please contact your system administrator to reset your password.");
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {

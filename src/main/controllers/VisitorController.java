@@ -65,10 +65,8 @@ public class VisitorController implements Initializable {
         if (lblAdminRole != null) lblAdminRole.setText(role);
     }
 
-    @FXML
-    private void handleNotification() {
-        if (notifHelper == null)
-            notifHelper = new NotificationHelper(btnNotification, NotificationHelper.Role.ADMIN);
+    @FXML private void handleNotification() {
+        if (notifHelper == null) notifHelper = new NotificationHelper(btnNotification, NotificationHelper.Role.ADMIN);
         notifHelper.toggle();
     }
 
@@ -80,103 +78,71 @@ public class VisitorController implements Initializable {
     }
 
     private void setupColumns() {
-        colId     .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getRequestId()));
-        colName   .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getVisitorName()));
-        colCompany.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getCompany()));
-        colPurpose.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getPurpose()));
-        colTimeOut.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getFormattedTimeOut()));
-        colTimeIn .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getFormattedTimeIn()));
-        colHost   .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getHostEmployee()));
-        colStatus .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStatus()));
-        colStatus.setCellFactory(col -> new TableCell<>() {
-            @Override protected void updateItem(String val, boolean empty) {
-                super.updateItem(val, empty);
-                if (empty||val==null){setGraphic(null);return;}
+        colId     .setCellValueFactory(c->new SimpleStringProperty(c.getValue().getRequestId()));
+        colName   .setCellValueFactory(c->new SimpleStringProperty(c.getValue().getVisitorName()));
+        colCompany.setCellValueFactory(c->new SimpleStringProperty(c.getValue().getCompany()));
+        colPurpose.setCellValueFactory(c->new SimpleStringProperty(c.getValue().getPurpose()));
+        colTimeOut.setCellValueFactory(c->new SimpleStringProperty(c.getValue().getFormattedTimeOut()));
+        colTimeIn .setCellValueFactory(c->new SimpleStringProperty(c.getValue().getFormattedTimeIn()));
+        colHost   .setCellValueFactory(c->new SimpleStringProperty(c.getValue().getHostEmployee()));
+        colStatus .setCellValueFactory(c->new SimpleStringProperty(c.getValue().getStatus()));
+        colStatus.setCellFactory(col->new TableCell<>(){
+            @Override protected void updateItem(String val,boolean empty){
+                super.updateItem(val,empty);if(empty||val==null){setGraphic(null);return;}
                 Label lbl=new Label(val);
                 if(val.equalsIgnoreCase("Approved"))lbl.setStyle("-fx-text-fill:#2EAA5A;-fx-font-weight:bold;");
                 else if(val.equalsIgnoreCase("Rejected"))lbl.setStyle("-fx-text-fill:#E53935;-fx-font-weight:bold;");
                 else lbl.setStyle("-fx-text-fill:#E6A817;-fx-font-weight:bold;");
-                setGraphic(lbl);setText(null);
-            }
+                setGraphic(lbl);setText(null);}
         });
     }
 
     private void setupActionColumn() {
-        colActions.setCellFactory(col -> new TableCell<>() {
-            final Button btnView    = new Button("👁");
-            final Button btnApprove = new Button("✔");
-            final Button btnReject  = new Button("✖");
-            final HBox   box        = new HBox(4, btnView, btnApprove, btnReject);
-            {
-                box.setAlignment(Pos.CENTER);
-                btnView   .setStyle("-fx-background-color:transparent;-fx-text-fill:#1565C0;-fx-font-size:14px;-fx-cursor:hand;-fx-padding:2 5;");
-                btnApprove.setStyle("-fx-background-color:transparent;-fx-text-fill:#2EAA5A;-fx-font-size:14px;-fx-cursor:hand;-fx-padding:2 5;");
-                btnReject .setStyle("-fx-background-color:transparent;-fx-text-fill:#E53935;-fx-font-size:14px;-fx-cursor:hand;-fx-padding:2 5;");
-                btnView   .setOnAction(e -> showDetails(getTableView().getItems().get(getIndex())));
-                btnApprove.setOnAction(e -> approveVisitor(getTableView().getItems().get(getIndex())));
-                btnReject .setOnAction(e -> rejectVisitor(getTableView().getItems().get(getIndex())));
-            }
-            @Override protected void updateItem(String val, boolean empty) {
-                super.updateItem(val, empty);
-                if (empty){setGraphic(null);return;}
-                Visitor v=getTableView().getItems().get(getIndex());
-                boolean pending="Pending".equalsIgnoreCase(v.getStatus());
-                btnApprove.setVisible(pending);btnReject.setVisible(pending);setGraphic(box);
-            }
+        colActions.setCellFactory(col->new TableCell<>(){
+            final Button btnView=new Button("👁");final Button btnApprove=new Button("✔");final Button btnReject=new Button("✖");
+            final HBox box=new HBox(4,btnView,btnApprove,btnReject);
+            {box.setAlignment(Pos.CENTER);btnView.setStyle("-fx-background-color:transparent;-fx-text-fill:#1565C0;-fx-font-size:14px;-fx-cursor:hand;-fx-padding:2 5;");btnApprove.setStyle("-fx-background-color:transparent;-fx-text-fill:#2EAA5A;-fx-font-size:14px;-fx-cursor:hand;-fx-padding:2 5;");btnReject.setStyle("-fx-background-color:transparent;-fx-text-fill:#E53935;-fx-font-size:14px;-fx-cursor:hand;-fx-padding:2 5;");
+            btnView.setOnAction(e->showDetails(getTableView().getItems().get(getIndex())));btnApprove.setOnAction(e->approveVisitor(getTableView().getItems().get(getIndex())));btnReject.setOnAction(e->rejectVisitor(getTableView().getItems().get(getIndex())));}
+            @Override protected void updateItem(String val,boolean empty){super.updateItem(val,empty);if(empty){setGraphic(null);return;}Visitor v=getTableView().getItems().get(getIndex());boolean pending="Pending".equalsIgnoreCase(v.getStatus());btnApprove.setVisible(pending);btnReject.setVisible(pending);setGraphic(box);}
         });
     }
 
     private void loadData() {
-        masterList.clear();
-        List<Visitor> rows = dao.getAllVisitors();
-        if (rows != null) masterList.addAll(rows);
-        refreshStats(); applyFilters();
+        masterList.clear();List<Visitor> rows=dao.getAllVisitors();if(rows!=null)masterList.addAll(rows);refreshStats();applyFilters();
     }
 
     private void refreshStats() {
-        lblPending .setText(String.valueOf(dao.countPending()));
-        lblApproved.setText(String.valueOf(dao.countApproved()));
-        lblRejected.setText(String.valueOf(dao.countRejected()));
-        lblActive  .setText(String.valueOf(dao.countActiveToday()));
+        lblPending.setText(String.valueOf(dao.countPending()));lblApproved.setText(String.valueOf(dao.countApproved()));
+        lblRejected.setText(String.valueOf(dao.countRejected()));lblActive.setText(String.valueOf(dao.countActiveToday()));
     }
 
-    @FXML private void handleSearch() { applyFilters(); }
-    @FXML private void handleFilter() { applyFilters(); }
-
-    private void applyFilters() {
-        String kw = txtSearch.getText().toLowerCase().trim();
-        String status = cmbFilter.getValue();
-        filteredList.setPredicate(v -> {
-            boolean matchSt = "All".equals(status)||v.getStatus().equalsIgnoreCase(status);
-            boolean matchKw = kw.isEmpty()||v.getVisitorName().toLowerCase().contains(kw)||v.getCompany().toLowerCase().contains(kw)||v.getPurpose().toLowerCase().contains(kw)||v.getRequestId().toLowerCase().contains(kw);
-            return matchSt&&matchKw;
-        });
+    @FXML private void handleSearch(){applyFilters();}
+    @FXML private void handleFilter(){applyFilters();}
+    private void applyFilters(){
+        String kw=txtSearch.getText().toLowerCase().trim();String status=cmbFilter.getValue();
+        filteredList.setPredicate(v->{boolean matchSt="All".equals(status)||v.getStatus().equalsIgnoreCase(status);boolean matchKw=kw.isEmpty()||v.getVisitorName().toLowerCase().contains(kw)||v.getCompany().toLowerCase().contains(kw)||v.getPurpose().toLowerCase().contains(kw)||v.getRequestId().toLowerCase().contains(kw);return matchSt&&matchKw;});
     }
 
     @FXML
     private void handleNewVisitor() {
-        Stage dialog = new Stage();
-        dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.initStyle(StageStyle.UNDECORATED);
-        VBox root = new VBox();
-        root.setStyle("-fx-background-color:white;-fx-background-radius:12;-fx-border-radius:12;-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.2),16,0,0,4);");
-        root.setPrefWidth(640);
-        HBox titleBar = new HBox(); titleBar.setAlignment(Pos.CENTER_LEFT); titleBar.setPadding(new Insets(18,20,14,20)); titleBar.setStyle("-fx-border-color:#f0f0f0;-fx-border-width:0 0 1 0;");
-        Label lblTitle = new Label("New Visitor Request"); lblTitle.setFont(Font.font("System",FontWeight.BOLD,15)); HBox.setHgrow(lblTitle,Priority.ALWAYS);
-        Button btnClose = new Button("✕"); btnClose.setStyle("-fx-background-color:transparent;-fx-text-fill:#888;-fx-font-size:14px;-fx-cursor:hand;-fx-border-width:0;"); btnClose.setOnAction(e->dialog.close());
+        Stage dialog=new Stage();dialog.initModality(Modality.APPLICATION_MODAL);dialog.initStyle(StageStyle.UNDECORATED);
+        VBox root=new VBox();root.setStyle("-fx-background-color:white;-fx-background-radius:12;-fx-border-radius:12;-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.2),16,0,0,4);");root.setPrefWidth(640);
+        HBox titleBar=new HBox();titleBar.setAlignment(Pos.CENTER_LEFT);titleBar.setPadding(new Insets(18,20,14,20));titleBar.setStyle("-fx-border-color:#f0f0f0;-fx-border-width:0 0 1 0;");
+        Label lblTitle=new Label("New Visitor Request");lblTitle.setFont(Font.font("System",FontWeight.BOLD,15));HBox.setHgrow(lblTitle,Priority.ALWAYS);
+        Button btnClose=new Button("✕");btnClose.setStyle("-fx-background-color:transparent;-fx-text-fill:#888;-fx-font-size:14px;-fx-cursor:hand;-fx-border-width:0;");btnClose.setOnAction(e->dialog.close());
         titleBar.getChildren().addAll(lblTitle,btnClose);
-        GridPane grid = new GridPane(); grid.setHgap(14); grid.setVgap(10); grid.setPadding(new Insets(18,20,10,20));
-        ColumnConstraints c1=new ColumnConstraints(); c1.setPercentWidth(50); ColumnConstraints c2=new ColumnConstraints(); c2.setPercentWidth(50); grid.getColumnConstraints().addAll(c1,c2);
-        TextField txtVisitorName=styledField("e.g. Juan Dela Cruz"); TextField txtCompany=styledField("e.g. PUP Santa Rosa");
-        TextField txtContact=styledField("e.g. 09171234567"); TextField txtEmail=styledField("e.g. juan@email.com"); TextField txtHost=styledField("e.g. Justin Gian");
-        TextArea txtPurpose=new TextArea(); txtPurpose.setPromptText("Enter purpose of visit"); txtPurpose.setPrefRowCount(3); txtPurpose.setStyle(fieldStyle()); txtPurpose.setWrapText(true);
+        GridPane grid=new GridPane();grid.setHgap(14);grid.setVgap(10);grid.setPadding(new Insets(18,20,10,20));
+        ColumnConstraints c1=new ColumnConstraints();c1.setPercentWidth(50);ColumnConstraints c2=new ColumnConstraints();c2.setPercentWidth(50);grid.getColumnConstraints().addAll(c1,c2);
+        TextField txtVisitorName=styledField("e.g. Juan Dela Cruz");TextField txtCompany=styledField("e.g. PUP Santa Rosa");
+        TextField txtContact=styledField("e.g. 09171234567");TextField txtEmail=styledField("e.g. juan@email.com");TextField txtHost=styledField("e.g. Justin Gian");
+        TextArea txtPurpose=new TextArea();txtPurpose.setPromptText("Enter purpose of visit");txtPurpose.setPrefRowCount(3);txtPurpose.setStyle(fieldStyle());txtPurpose.setWrapText(true);
         txtContact.textProperty().addListener((obs,old,nw)->{if(!nw.matches("[0-9+\\-\\s]*"))txtContact.setText(old);});
-        DatePicker datePicker=new DatePicker(LocalDate.now()); datePicker.setMaxWidth(Double.MAX_VALUE); datePicker.setStyle("-fx-font-size:12.5px;");
+        DatePicker datePicker=new DatePicker(LocalDate.now());datePicker.setMaxWidth(Double.MAX_VALUE);datePicker.setStyle("-fx-font-size:12.5px;");
         datePicker.setDayCellFactory(pk->new DateCell(){@Override public void updateItem(LocalDate date,boolean empty){super.updateItem(date,empty);setDisable(empty||date.isBefore(LocalDate.now()));}});
-        LocalTime[] selTimeIn={LocalTime.of(8,0)}; LocalTime[] selTimeOut={LocalTime.of(17,0)};
-        Button btnTimeIn=timePickerBtn(selTimeIn[0]); btnTimeIn.setOnAction(e->{LocalTime p=TimePickerDialog.show(dialog,selTimeIn[0]);if(p!=null){selTimeIn[0]=p;btnTimeIn.setText("🕐  "+p.format(TIME_FMT));}});
-        Button btnTimeOut=timePickerBtn(selTimeOut[0]); btnTimeOut.setOnAction(e->{LocalTime p=TimePickerDialog.show(dialog,selTimeOut[0]);if(p!=null){selTimeOut[0]=p;btnTimeOut.setText("🕐  "+p.format(TIME_FMT));}});
-        Label lblError=new Label(""); lblError.setStyle("-fx-text-fill:#dc3545;-fx-font-size:11px;"); lblError.setWrapText(true);
+        LocalTime[] selTimeIn={LocalTime.of(8,0)};LocalTime[] selTimeOut={LocalTime.of(17,0)};
+        Button btnTimeIn=timePickerBtn(selTimeIn[0]);btnTimeIn.setOnAction(e->{LocalTime p=TimePickerDialog.show(dialog,selTimeIn[0]);if(p!=null){selTimeIn[0]=p;btnTimeIn.setText("🕐  "+p.format(TIME_FMT));}});
+        Button btnTimeOut=timePickerBtn(selTimeOut[0]);btnTimeOut.setOnAction(e->{LocalTime p=TimePickerDialog.show(dialog,selTimeOut[0]);if(p!=null){selTimeOut[0]=p;btnTimeOut.setText("🕐  "+p.format(TIME_FMT));}});
+        Label lblError=new Label("");lblError.setStyle("-fx-text-fill:#dc3545;-fx-font-size:11px;");lblError.setWrapText(true);
         grid.add(labelFor("Visitor Name *"),0,0);grid.add(labelFor("Company/Organization"),1,0);grid.add(txtVisitorName,0,1);grid.add(txtCompany,1,1);
         grid.add(labelFor("Contact Number *"),0,2);grid.add(labelFor("Email Address *"),1,2);grid.add(txtContact,0,3);grid.add(txtEmail,1,3);
         grid.add(labelFor("Host Employee *"),0,4);grid.add(labelFor("Visit Date *"),1,4);grid.add(txtHost,0,5);grid.add(datePicker,1,5);
@@ -201,7 +167,16 @@ public class VisitorController implements Initializable {
             if(!PHONE_PATTERN.matcher(txtContact.getText().trim()).matches()){highlight(txtContact);lblError.setText("Invalid contact number.");return;}
             if(!selTimeOut[0].isAfter(selTimeIn[0])){lblError.setText("Time Out must be after Time In.");return;}
             LocalDateTime dtTimeOut=LocalDateTime.of(datePicker.getValue(),selTimeOut[0]);
-            Visitor v=new Visitor(txtVisitorName.getText().trim(),txtCompany.getText().trim(),txtPurpose.getText().trim(),dtTimeOut,txtHost.getText().trim());
+            // ✅ 7-parameter constructor — includes email and contact
+            Visitor v=new Visitor(
+                txtVisitorName.getText().trim(),
+                txtCompany.getText().trim(),
+                txtPurpose.getText().trim(),
+                dtTimeOut,
+                txtHost.getText().trim(),
+                txtEmail.getText().trim(),
+                txtContact.getText().trim()
+            );
             if(dao.addVisitor(v)){dialog.close();showInfo("Visitor request submitted!");loadData();}
             else lblError.setText("Failed to submit.");
         });
@@ -216,19 +191,16 @@ public class VisitorController implements Initializable {
     private String fieldStyle(){return "-fx-background-color:white;-fx-border-color:#e0c0c0;-fx-border-radius:6;-fx-background-radius:6;-fx-padding:7 10;-fx-font-size:12.5px;";}
     private Label labelFor(String t){Label lbl=new Label(t);lbl.setStyle("-fx-font-size:12px;-fx-text-fill:#333;-fx-font-weight:bold;");return lbl;}
 
-    private void showDetails(Visitor v){Alert a=new Alert(Alert.AlertType.INFORMATION);a.setTitle("Visitor Details");a.setHeaderText(v.getRequestId());a.setContentText("Name: "+v.getVisitorName()+"\nCompany: "+v.getCompany()+"\nPurpose: "+v.getPurpose()+"\nTime Out: "+v.getFormattedTimeOut()+"\nTime In: "+v.getFormattedTimeIn()+"\nHost: "+v.getHostEmployee()+"\nStatus: "+v.getStatus());a.showAndWait();}
+    private void showDetails(Visitor v){Alert a=new Alert(Alert.AlertType.INFORMATION);a.setTitle("Visitor Details");a.setHeaderText(v.getRequestId());a.setContentText("Name: "+v.getVisitorName()+"\nCompany: "+v.getCompany()+"\nPurpose: "+v.getPurpose()+"\nTime Out: "+v.getFormattedTimeOut()+"\nHost: "+v.getHostEmployee()+"\nEmail: "+v.getEmail()+"\nStatus: "+v.getStatus());a.showAndWait();}
     private void approveVisitor(Visitor v){Optional<ButtonType> res=new Alert(Alert.AlertType.CONFIRMATION,"Approve "+v.getVisitorName()+"?",ButtonType.OK,ButtonType.CANCEL).showAndWait();if(res.isPresent()&&res.get()==ButtonType.OK){if(dao.updateStatus(v.getVisitorId(),"Approved")){v.setStatus("Approved");tblVisitors.refresh();refreshStats();showInfo(v.getVisitorName()+" approved!");}else showError("Failed.");}}
     private void rejectVisitor(Visitor v){Optional<ButtonType> res=new Alert(Alert.AlertType.CONFIRMATION,"Reject "+v.getVisitorName()+"?",ButtonType.OK,ButtonType.CANCEL).showAndWait();if(res.isPresent()&&res.get()==ButtonType.OK){if(dao.updateStatus(v.getVisitorId(),"Rejected")){v.setStatus("Rejected");tblVisitors.refresh();refreshStats();showInfo(v.getVisitorName()+" rejected.");}else showError("Failed.");}}
 
-    @FXML private void handleNavDashboard() { goTo("/main/resources/fxml/AdminDashboard.fxml",   "Dashboard");          }
-    @FXML private void handleNavPassSlip()  { goTo("/main/resources/fxml/PassSlipIssuance.fxml", "Pass Slip Issuance"); }
-    @FXML private void handleNavVisitor()   { /* already here */ }
-    @FXML private void handleNavReports()   { goTo("/main/resources/fxml/Reports.fxml",          "Reports");            }
-    @FXML private void handleNavUserMgmt()  { goTo("/main/resources/fxml/UserManagement.fxml",   "User Management");    }
-    @FXML private void handleLogout() {
-        Optional<ButtonType> res=new Alert(Alert.AlertType.CONFIRMATION,"Are you sure you want to logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();
-        if(res.isPresent()&&res.get()==ButtonType.OK)goTo("/main/resources/fxml/Login.fxml","Login");
-    }
+    @FXML private void handleNavDashboard(){goTo("/main/resources/fxml/AdminDashboard.fxml","Dashboard");}
+    @FXML private void handleNavPassSlip() {goTo("/main/resources/fxml/PassSlipIssuance.fxml","Pass Slip Issuance");}
+    @FXML private void handleNavVisitor()  {/* already here */}
+    @FXML private void handleNavReports()  {goTo("/main/resources/fxml/Reports.fxml","Reports");}
+    @FXML private void handleNavUserMgmt() {goTo("/main/resources/fxml/UserManagement.fxml","User Management");}
+    @FXML private void handleLogout(){Optional<ButtonType> res=new Alert(Alert.AlertType.CONFIRMATION,"Logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();if(res.isPresent()&&res.get()==ButtonType.OK)goTo("/main/resources/fxml/Login.fxml","Login");}
     private void goTo(String fxml,String title){try{FXMLLoader loader=new FXMLLoader(getClass().getResource(fxml));Parent root=loader.load();Stage stage=(Stage)tblVisitors.getScene().getWindow();double w=stage.getWidth(),h=stage.getHeight();stage.setTitle(title);stage.setScene(new Scene(root));stage.setWidth(w);stage.setHeight(h);}catch(IOException e){showError("Screen not available:\n"+fxml);}}
     private void showInfo(String msg){Alert a=new Alert(Alert.AlertType.INFORMATION);a.setTitle("Success");a.setHeaderText(null);a.setContentText(msg);a.showAndWait();}
     private void showError(String msg){Alert a=new Alert(Alert.AlertType.ERROR);a.setTitle("Error");a.setHeaderText(null);a.setContentText(msg);a.showAndWait();}
