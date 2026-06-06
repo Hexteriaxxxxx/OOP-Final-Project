@@ -44,6 +44,15 @@
                    style="-fx-background-color: #F5F5F5; -fx-border-color: #D0D0D0;
                           -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 9 14; -fx-text-fill: #666;"/>
 
+        <!-- Category -->
+        <Label text="Category *"
+               style="-fx-font-size: 12px; -fx-text-fill: #555; -fx-font-weight: bold;"/>
+        <ComboBox fx:id="cmbCategory" promptText="Select category..." maxWidth="Infinity"
+                  onAction="#handleCategoryChange"
+                  style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
+                         -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 4 10;
+                         -fx-font-size: 12.5px;"/>
+
         <!-- Purpose -->
         <Label text="Purpose *"
                style="-fx-font-size: 12px; -fx-text-fill: #555; -fx-font-weight: bold;"/>

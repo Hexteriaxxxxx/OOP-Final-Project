@@ -16,7 +16,6 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
-
 import dao.ActivityLogDAO;
 import dao.PassSlipDAO;
 import models.ActivityLog;
@@ -33,7 +32,7 @@ public class AdminDashboardController implements Initializable {
     @FXML private Label  lblSidebarUser, lblSidebarRole, lblWelcome;
     @FXML private Label  lblPendingCount, lblApprovedCount, lblRejectedCount, lblActiveCount;
     @FXML private Label  lblTotalRequests, lblApprovalRate, lblActiveNow;
-    @FXML private Button btnDashboard, btnPassSlip, btnVisitor, btnReports, btnUserMgmt;
+    @FXML private Button btnDashboard, btnPassSlip, btnReports, btnUserMgmt;
     @FXML private Button btnNotification;
     @FXML private TableView<PassSlip>            tblPassSlips;
     @FXML private TableColumn<PassSlip, Integer> colRequestId;
@@ -65,8 +64,7 @@ public class AdminDashboardController implements Initializable {
         }
     }
 
-    @FXML
-    private void handleNotification() {
+    @FXML private void handleNotification() {
         if (notifHelper == null)
             notifHelper = new NotificationHelper(btnNotification, NotificationHelper.Role.ADMIN);
         notifHelper.toggle();
@@ -133,20 +131,16 @@ public class AdminDashboardController implements Initializable {
             masterList.setAll(all);
             filteredList = new FilteredList<>(masterList, p -> true);
             tblPassSlips.setItems(filteredList);
-
             long pending  = all.stream().filter(p -> "Pending" .equalsIgnoreCase(p.getStatus())).count();
             long approved = all.stream().filter(p -> "Approved".equalsIgnoreCase(p.getStatus())).count();
             long rejected = all.stream().filter(p -> "Rejected".equalsIgnoreCase(p.getStatus())).count();
-
             lblPendingCount .setText(String.valueOf(pending));
             lblApprovedCount.setText(String.valueOf(approved));
             lblRejectedCount.setText(String.valueOf(rejected));
             lblActiveCount  .setText(String.valueOf(approved));
-
-            List<PassSlip> today       = passSlipDAO.getTodayPassSlips();
-            long todayApproved         = today.stream().filter(p -> "Approved".equalsIgnoreCase(p.getStatus())).count();
-            int  approvalRate          = today.isEmpty() ? 0 : (int)((todayApproved*100)/today.size());
-
+            List<PassSlip> today = passSlipDAO.getTodayPassSlips();
+            long todayApproved   = today.stream().filter(p -> "Approved".equalsIgnoreCase(p.getStatus())).count();
+            int  approvalRate    = today.isEmpty() ? 0 : (int)((todayApproved*100)/today.size());
             lblTotalRequests.setText(String.valueOf(today.size()));
             lblApprovalRate .setText(approvalRate + "%");
             lblActiveNow    .setText(String.valueOf(approved));
@@ -164,10 +158,10 @@ public class AdminDashboardController implements Initializable {
             }
             for (ActivityLog log : logs) {
                 HBox row = new HBox(8); row.setAlignment(Pos.CENTER_LEFT);
-                Circle dot     = new Circle(4, Color.web("#8B0000"));
-                VBox   textBox = new VBox(1);
-                Label  lblAction = new Label(log.getAction());
-                Label  lblTime   = new Label(log.getFormattedTimestamp());
+                Circle dot = new Circle(4, Color.web("#8B0000"));
+                VBox textBox = new VBox(1);
+                Label lblAction = new Label(log.getAction());
+                Label lblTime   = new Label(log.getFormattedTimestamp());
                 lblAction.setStyle("-fx-font-size: 11px; -fx-text-fill: #333;");
                 lblTime  .setStyle("-fx-font-size: 10px; -fx-text-fill: #999;");
                 textBox.getChildren().addAll(lblAction, lblTime);
@@ -195,8 +189,7 @@ public class AdminDashboardController implements Initializable {
         });
     }
 
-    @FXML
-    private void handleCreatePassSlip() {
+    @FXML private void handleCreatePassSlip() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/resources/fxml/CreatePassSlip.fxml"));
             Parent root = loader.load();
@@ -212,16 +205,22 @@ public class AdminDashboardController implements Initializable {
 
     private void handleViewPassSlip(PassSlip ps) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
-        a.setTitle("Pass Slip Details"); a.setHeaderText("Request ID: " + ps.getSlipId());
-        a.setContentText("Employee: " + ps.getEmpName() + "\nDepartment: " + ps.getDepartment() +
-                "\nPurpose: " + ps.getReason() + "\nTime Out: " + ps.getFormattedTimeOut() +
-                "\nTime In: " + ps.getFormattedTimeIn() + "\nStatus: " + ps.getStatus());
+        a.setTitle("Pass Slip Details"); a.setHeaderText("Request ID: PS-" + ps.getSlipId());
+        a.setContentText(
+            "Employee  : " + ps.getEmpName() +
+            "\nDepartment: " + ps.getDepartment() +
+            "\nCategory  : " + ps.getCategory() +
+            "\nPurpose   : " + ps.getReason() +
+            "\nTime Out  : " + ps.getFormattedTimeOut() +
+            "\nTime In   : " + ps.getFormattedTimeIn() +
+            "\nStatus    : " + ps.getStatus());
         a.showAndWait();
     }
 
     private void handleApprovePassSlip(PassSlip ps) {
         Alert c = new Alert(Alert.AlertType.CONFIRMATION);
-        c.setTitle("Approve"); c.setHeaderText("Approve request #" + ps.getSlipId() + "?"); c.setContentText("Employee: " + ps.getEmpName());
+        c.setTitle("Approve"); c.setHeaderText("Approve request #" + ps.getSlipId() + "?");
+        c.setContentText("Employee: " + ps.getEmpName());
         c.showAndWait().ifPresent(r -> { if (r==ButtonType.OK) {
             if (passSlipDAO.updatePassSlipStatus(ps.getSlipId(), "Approved")) {
                 activityLogDAO.logActivity(ps.getEmpId(), "Pass slip #" + ps.getSlipId() + " approved", currentUser!=null?currentUser.getUsername():"Admin");
@@ -232,7 +231,8 @@ public class AdminDashboardController implements Initializable {
 
     private void handleRejectPassSlip(PassSlip ps) {
         Alert c = new Alert(Alert.AlertType.CONFIRMATION);
-        c.setTitle("Reject"); c.setHeaderText("Reject request #" + ps.getSlipId() + "?"); c.setContentText("Employee: " + ps.getEmpName());
+        c.setTitle("Reject"); c.setHeaderText("Reject request #" + ps.getSlipId() + "?");
+        c.setContentText("Employee: " + ps.getEmpName());
         c.showAndWait().ifPresent(r -> { if (r==ButtonType.OK) {
             if (passSlipDAO.updatePassSlipStatus(ps.getSlipId(), "Rejected")) {
                 activityLogDAO.logActivity(ps.getEmpId(), "Pass slip #" + ps.getSlipId() + " rejected", currentUser!=null?currentUser.getUsername():"Admin");
@@ -243,27 +243,26 @@ public class AdminDashboardController implements Initializable {
 
     @FXML private void handleNavDashboard()      { setActiveNav(btnDashboard); }
     @FXML private void handleNavPassSlip()       { setActiveNav(btnPassSlip);  navigateTo("/main/resources/fxml/PassSlipIssuance.fxml","Pass Slip Issuance"); }
-    @FXML private void handleNavVisitor()        { setActiveNav(btnVisitor);   navigateTo("/main/resources/fxml/Visitor.fxml","Visitor Module"); }
     @FXML private void handleNavReports()        { setActiveNav(btnReports);   navigateTo("/main/resources/fxml/Reports.fxml","Reports"); }
     @FXML private void handleNavUserManagement() { setActiveNav(btnUserMgmt);  navigateTo("/main/resources/fxml/UserManagement.fxml","User Management"); }
 
     private void setActiveNav(Button active) {
         String on  = "-fx-background-color: rgba(255,255,255,0.22); -fx-text-fill: white; -fx-font-size: 12.5px; -fx-font-weight: bold; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12; -fx-background-radius: 8; -fx-cursor: hand; -fx-border-width: 0;";
         String off = "-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12.5px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12; -fx-border-width: 0; -fx-cursor: hand;";
-        for (Button btn : new Button[]{btnDashboard,btnPassSlip,btnVisitor,btnReports,btnUserMgmt})
+        for (Button btn : new Button[]{btnDashboard, btnPassSlip, btnReports, btnUserMgmt})
             if (btn!=null) btn.setStyle(off);
         if (active!=null) active.setStyle(on);
     }
 
-    @FXML
-    private void handleLogout() {
-        Alert c = new Alert(Alert.AlertType.CONFIRMATION); c.setTitle("Logout"); c.setHeaderText("Are you sure you want to logout?");
+    @FXML private void handleLogout() {
+        Alert c = new Alert(Alert.AlertType.CONFIRMATION);
+        c.setTitle("Logout"); c.setHeaderText("Are you sure you want to logout?");
         c.showAndWait().ifPresent(r -> { if (r==ButtonType.OK) {
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/resources/fxml/Login.fxml"));
                 Parent root = loader.load();
                 Stage stage = (Stage) lblSidebarUser.getScene().getWindow();
-                stage.setScene(new Scene(root)); stage.setTitle("Employee Pass Slip System - Login"); stage.show();
+                stage.setScene(new Scene(root)); stage.setTitle("Pass Slip Issuance System"); stage.show();
             } catch (IOException e) { System.out.println("Logout Error: " + e.getMessage()); }
         }});
     }

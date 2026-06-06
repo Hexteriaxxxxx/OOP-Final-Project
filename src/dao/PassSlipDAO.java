@@ -11,27 +11,29 @@ import java.util.List;
 public class PassSlipDAO {
 
     public boolean createPassSlip(PassSlip passSlip) {
-        String sql = "INSERT INTO \"Pass_slip\" (emp_id, reason, time_out, time_in, issued_by, status) VALUES (?, ?, ?, ?, ?, 'Pending')";
+        String sql = "INSERT INTO \"Pass_slip\" (emp_id, reason, category, time_out, time_in, issued_by, status) VALUES (?, ?, ?, ?, ?, ?, 'Pending')";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, passSlip.getEmpId());
             stmt.setString(2, passSlip.getReason());
-            stmt.setTimestamp(3, Timestamp.valueOf(passSlip.getTimeOut()));
-            if (passSlip.getTimeIn() != null) stmt.setTimestamp(4, Timestamp.valueOf(passSlip.getTimeIn()));
-            else stmt.setNull(4, Types.TIMESTAMP);
-            stmt.setInt(5, passSlip.getIssuedBy());
+            stmt.setString(3, passSlip.getCategory() != null ? passSlip.getCategory() : "Official Business");
+            stmt.setTimestamp(4, Timestamp.valueOf(passSlip.getTimeOut()));
+            if (passSlip.getTimeIn() != null) stmt.setTimestamp(5, Timestamp.valueOf(passSlip.getTimeIn()));
+            else stmt.setNull(5, Types.TIMESTAMP);
+            stmt.setInt(6, passSlip.getIssuedBy());
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) { System.out.println("Create pass slip error: " + e.getMessage()); return false; }
     }
 
     public boolean issuePassSlip(PassSlip passSlip) {
-        String sql = "INSERT INTO \"Pass_slip\" (emp_id, reason, time_out, issued_by, status) VALUES (?, ?, ?, ?, 'Pending')";
+        String sql = "INSERT INTO \"Pass_slip\" (emp_id, reason, category, time_out, issued_by, status) VALUES (?, ?, ?, ?, ?, 'Pending')";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, passSlip.getEmpId());
             stmt.setString(2, passSlip.getReason());
-            stmt.setTimestamp(3, Timestamp.valueOf(passSlip.getTimeOut()));
-            stmt.setInt(4, passSlip.getIssuedBy());
+            stmt.setString(3, passSlip.getCategory() != null ? passSlip.getCategory() : "Official Business");
+            stmt.setTimestamp(4, Timestamp.valueOf(passSlip.getTimeOut()));
+            stmt.setInt(5, passSlip.getIssuedBy());
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) { System.out.println("Issue pass slip error: " + e.getMessage()); return false; }
     }
@@ -59,7 +61,8 @@ public class PassSlipDAO {
 
     public List<PassSlip> getAllPassSlips() {
         List<PassSlip> slips = new ArrayList<>();
-        String sql = "SELECT ps.*, e.name AS emp_name, e.department FROM \"Pass_slip\" ps JOIN \"Employee\" e ON ps.emp_id = e.emp_id ORDER BY ps.time_out DESC";
+        String sql = "SELECT ps.*, e.name AS emp_name, e.department FROM \"Pass_slip\" ps " +
+                     "JOIN \"Employee\" e ON ps.emp_id = e.emp_id ORDER BY ps.time_out DESC";
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -70,7 +73,9 @@ public class PassSlipDAO {
 
     public List<PassSlip> getTodayPassSlips() {
         List<PassSlip> slips = new ArrayList<>();
-        String sql = "SELECT ps.*, e.name AS emp_name, e.department FROM \"Pass_slip\" ps JOIN \"Employee\" e ON ps.emp_id = e.emp_id WHERE DATE(ps.time_out) = CURRENT_DATE ORDER BY ps.time_out DESC";
+        String sql = "SELECT ps.*, e.name AS emp_name, e.department FROM \"Pass_slip\" ps " +
+                     "JOIN \"Employee\" e ON ps.emp_id = e.emp_id " +
+                     "WHERE DATE(ps.time_out) = CURRENT_DATE ORDER BY ps.time_out DESC";
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -81,7 +86,9 @@ public class PassSlipDAO {
 
     public List<PassSlip> getActivePassSlips() {
         List<PassSlip> slips = new ArrayList<>();
-        String sql = "SELECT ps.*, e.name AS emp_name, e.department FROM \"Pass_slip\" ps JOIN \"Employee\" e ON ps.emp_id = e.emp_id WHERE ps.status = 'Approved' ORDER BY ps.time_out DESC";
+        String sql = "SELECT ps.*, e.name AS emp_name, e.department FROM \"Pass_slip\" ps " +
+                     "JOIN \"Employee\" e ON ps.emp_id = e.emp_id " +
+                     "WHERE ps.status = 'Approved' ORDER BY ps.time_out DESC";
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -114,12 +121,20 @@ public class PassSlipDAO {
         slip.setEmpName   (rs.getString("emp_name"));
         slip.setDepartment(rs.getString("department"));
         slip.setReason    (rs.getString("reason"));
-        slip.setTimeOut   (rs.getTimestamp("time_out").toLocalDateTime());
-        Timestamp timeIn = rs.getTimestamp("time_in");
-        if (timeIn != null) slip.setTimeIn(timeIn.toLocalDateTime());
-        slip.setDuration  (rs.getString("duration"));
         slip.setIssuedBy  (rs.getInt   ("issued_by"));
         slip.setStatus    (rs.getString("status"));
+        // category — fallback to "Official Business" if null (old records)
+        try {
+            String cat = rs.getString("category");
+            slip.setCategory(cat != null ? cat : "Official Business");
+        } catch (SQLException ignored) {
+            slip.setCategory("Official Business");
+        }
+        Timestamp timeOut = rs.getTimestamp("time_out");
+        if (timeOut != null) slip.setTimeOut(timeOut.toLocalDateTime());
+        Timestamp timeIn = rs.getTimestamp("time_in");
+        if (timeIn != null) slip.setTimeIn(timeIn.toLocalDateTime());
+        slip.setDuration(rs.getString("duration"));
         return slip;
     }
 }
