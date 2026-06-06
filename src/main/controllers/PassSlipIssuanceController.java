@@ -30,7 +30,7 @@ import java.util.ResourceBundle;
 
 public class PassSlipIssuanceController implements Initializable {
 
-    @FXML private Button btnDashboard, btnPassSlip, btnVisitor, btnReports, btnUserMgmt;
+    @FXML private Button btnDashboard, btnPassSlip, btnReports, btnUserMgmt;
     @FXML private Button btnNotification;
     @FXML private Label  lblAdminName, lblAdminRole;
     @FXML private Label  lblTotalApproved, lblTodayApproved, lblDownloaded, lblPrinted;
@@ -62,8 +62,7 @@ public class PassSlipIssuanceController implements Initializable {
         if (lblAdminRole != null) lblAdminRole.setText(role);
     }
 
-    @FXML
-    private void handleNotifications() {
+    @FXML private void handleNotifications() {
         if (notifHelper == null)
             notifHelper = new NotificationHelper(btnNotification, NotificationHelper.Role.ADMIN);
         notifHelper.toggle();
@@ -78,13 +77,13 @@ public class PassSlipIssuanceController implements Initializable {
     }
 
     private void setupColumns() {
-        colId       .setCellValueFactory(c -> new SimpleStringProperty("PS-" + String.format("%04d", c.getValue().getSlipId())));
-        colName     .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getEmpName()));
-        colDept     .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getDepartment()));
-        colPurpose  .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getReason()));
-        colTimeOut  .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getFormattedTimeOut()));
-        colTimeIn   .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getFormattedTimeIn()));
-        colDate     .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getTimeOut() != null ? c.getValue().getTimeOut().format(DATE_FMT) : ""));
+        colId        .setCellValueFactory(c -> new SimpleStringProperty("PS-" + String.format("%04d", c.getValue().getSlipId())));
+        colName      .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getEmpName()));
+        colDept      .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getDepartment()));
+        colPurpose   .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getReason()));
+        colTimeOut   .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getFormattedTimeOut()));
+        colTimeIn    .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getFormattedTimeIn()));
+        colDate      .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getTimeOut() != null ? c.getValue().getTimeOut().format(DATE_FMT) : ""));
         colApprovedBy.setCellValueFactory(c -> new SimpleStringProperty("User #" + c.getValue().getIssuedBy()));
     }
 
@@ -103,9 +102,7 @@ public class PassSlipIssuanceController implements Initializable {
                 btnPrint   .setOnAction(e -> handlePrint(getTableView().getItems().get(getIndex())));
                 btnView    .setOnAction(e -> showDetails(getTableView().getItems().get(getIndex())));
             }
-            @Override protected void updateItem(String val, boolean empty) {
-                super.updateItem(val, empty); setGraphic(empty ? null : box);
-            }
+            @Override protected void updateItem(String val, boolean empty) { super.updateItem(val, empty); setGraphic(empty ? null : box); }
         });
     }
 
@@ -140,36 +137,35 @@ public class PassSlipIssuanceController implements Initializable {
         });
     }
 
-    @FXML
-    private void handleDownloadAll() {
-        if (filteredList.isEmpty()) { showError("No records to download."); return; }
-        FileChooser chooser = new FileChooser();
-        chooser.setInitialFileName("PassSlips_All.csv");
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files","*.csv"));
-        File file = chooser.showSaveDialog(tblSlips.getScene().getWindow());
-        if (file != null) {
-            try (FileWriter fw = new FileWriter(file)) {
+    @FXML private void handleDownloadAll() {
+        if (filteredList.isEmpty()) { showError("No records."); return; }
+        FileChooser fc = new FileChooser();
+        fc.setInitialFileName("PassSlips_All.csv");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files","*.csv"));
+        File f = fc.showSaveDialog(tblSlips.getScene().getWindow());
+        if (f != null) {
+            try (FileWriter fw = new FileWriter(f)) {
                 fw.write("Slip ID,Name,Department,Purpose,Time Out,Time In,Duration,Status\n");
                 for (PassSlip ps : filteredList)
                     fw.write(String.format("PS-%04d,%s,%s,%s,%s,%s,%s,%s\n", ps.getSlipId(), ps.getEmpName(), ps.getDepartment(), ps.getReason(), ps.getFormattedTimeOut(), ps.getFormattedTimeIn(), ps.getDuration()!=null?ps.getDuration():"", ps.getStatus()));
                 downloadCount += filteredList.size(); refreshStats();
                 showInfo("Downloaded " + filteredList.size() + " record(s).");
-            } catch (IOException e) { showError("Download failed: " + e.getMessage()); }
+            } catch (IOException e) { showError("Failed: " + e.getMessage()); }
         }
     }
 
     private void handleDownload(PassSlip ps) {
-        FileChooser chooser = new FileChooser();
-        chooser.setInitialFileName("PassSlip_" + ps.getSlipId() + ".csv");
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files","*.csv"));
-        File file = chooser.showSaveDialog(tblSlips.getScene().getWindow());
-        if (file != null) {
-            try (FileWriter fw = new FileWriter(file)) {
+        FileChooser fc = new FileChooser();
+        fc.setInitialFileName("PassSlip_" + ps.getSlipId() + ".csv");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files","*.csv"));
+        File f = fc.showSaveDialog(tblSlips.getScene().getWindow());
+        if (f != null) {
+            try (FileWriter fw = new FileWriter(f)) {
                 fw.write("Slip ID,Name,Department,Purpose,Time Out,Time In,Duration,Status\n");
                 fw.write(String.format("PS-%04d,%s,%s,%s,%s,%s,%s,%s\n", ps.getSlipId(), ps.getEmpName(), ps.getDepartment(), ps.getReason(), ps.getFormattedTimeOut(), ps.getFormattedTimeIn(), ps.getDuration()!=null?ps.getDuration():"", ps.getStatus()));
                 downloadCount++; refreshStats();
-                showInfo("Downloaded: " + file.getPath());
-            } catch (IOException e) { showError("Download failed: " + e.getMessage()); }
+                showInfo("Downloaded: " + f.getPath());
+            } catch (IOException e) { showError("Failed: " + e.getMessage()); }
         }
     }
 
@@ -200,15 +196,14 @@ public class PassSlipIssuanceController implements Initializable {
                 "Status     : " + ps.getStatus() + "\n====================================";
     }
 
-    @FXML private void handleNavDashboard() { goTo("/main/resources/fxml/AdminDashboard.fxml",   "Dashboard");          }
-    @FXML private void handleNavPassSlip()  { /* already here */ }
-    @FXML private void handleNavVisitor()   { goTo("/main/resources/fxml/Visitor.fxml",          "Visitor Module");     }
-    @FXML private void handleNavReports()   { goTo("/main/resources/fxml/Reports.fxml",          "Reports");            }
-    @FXML private void handleNavUserMgmt()  { goTo("/main/resources/fxml/UserManagement.fxml",   "User Management");    }
+    @FXML private void handleNavDashboard() { goTo("/main/resources/fxml/AdminDashboard.fxml",  "Dashboard");       }
+    @FXML private void handleNavPassSlip()  { /* already here */                                                     }
+    @FXML private void handleNavReports()   { goTo("/main/resources/fxml/Reports.fxml",         "Reports");         }
+    @FXML private void handleNavUserMgmt()  { goTo("/main/resources/fxml/UserManagement.fxml",  "User Management"); }
 
     @FXML private void handleLogout() {
-        Optional<ButtonType> res = new Alert(Alert.AlertType.CONFIRMATION,"Are you sure you want to logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();
-        if (res.isPresent()&&res.get()==ButtonType.OK) goTo("/main/resources/fxml/Login.fxml","Login");
+        Optional<ButtonType> res = new Alert(Alert.AlertType.CONFIRMATION,"Logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();
+        if (res.isPresent() && res.get() == ButtonType.OK) goTo("/main/resources/fxml/Login.fxml","Login");
     }
 
     private void goTo(String fxml, String title) {

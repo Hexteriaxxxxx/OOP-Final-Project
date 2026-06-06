@@ -33,7 +33,7 @@ public class StaffDashboardController implements Initializable {
     @FXML private Label  lblWelcome, lblUserName, lblUserRole;
     @FXML private Label  lblPending, lblApproved, lblRejected, lblActive;
     @FXML private Label  lblTotalRequests, lblApprovalRate, lblActiveNow;
-    @FXML private Button btnDashboard, btnPassSlip, btnVisitor, btnReports;
+    @FXML private Button btnDashboard, btnPassSlip, btnReports;
     @FXML private Button btnNotification;
     @FXML private TextField        txtSearch;
     @FXML private ComboBox<String> cmbFilter;
@@ -65,15 +65,14 @@ public class StaffDashboardController implements Initializable {
         startAutoRefresh();
     }
 
-    @FXML
-    private void handleNotification() {
+    @FXML private void handleNotification() {
         if (notifHelper == null)
             notifHelper = new NotificationHelper(btnNotification, NotificationHelper.Role.STAFF);
         notifHelper.toggle();
     }
 
     private void setupFilterCombo() {
-        cmbFilter.setItems(FXCollections.observableArrayList("All","Pending","Approved","Rejected","Active"));
+        cmbFilter.setItems(FXCollections.observableArrayList("All","Pending","Approved","Rejected"));
         cmbFilter.setValue("All");
     }
 
@@ -218,17 +217,18 @@ public class StaffDashboardController implements Initializable {
 
     @FXML public void handleDashboard()        { setActiveButton(btnDashboard); refreshDashboard(); }
     @FXML public void handlePassSlipIssuance() { setActiveButton(btnPassSlip);  navigateToStaff("/main/resources/fxml/StaffPassSlipIssuance.fxml","Pass Slip Issuance"); }
-    @FXML public void handleVisitorModule()    { setActiveButton(btnVisitor);   navigateToStaff("/main/resources/fxml/StaffVisitorModule.fxml","Visitor Module"); }
     @FXML public void handleReports()          { setActiveButton(btnReports);   navigateToStaff("/main/resources/fxml/StaffReports.fxml","Reports"); }
 
     private void handleViewPassSlip(PassSlip slip) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setTitle("Pass Slip Details"); a.setHeaderText("Slip ID: PS-" + slip.getSlipId());
-        a.setContentText("Employee : " + slip.getEmpName() + "\nDepartment: " + slip.getDepartment() + "\nPurpose   : " + slip.getReason() + "\nTime Out  : " + slip.getFormattedTimeOut() + "\nTime In   : " + slip.getFormattedTimeIn() + "\nStatus    : " + slip.getStatus());
+        a.setContentText("Employee  : " + slip.getEmpName() + "\nDepartment: " + slip.getDepartment() +
+                "\nCategory  : " + slip.getCategory() +
+                "\nPurpose   : " + slip.getReason() + "\nTime Out  : " + slip.getFormattedTimeOut() +
+                "\nTime In   : " + slip.getFormattedTimeIn() + "\nStatus    : " + slip.getStatus());
         a.showAndWait();
     }
 
-    // Navigate to staff screens AND pass session info
     private void navigateToStaff(String fxmlPath, String title) {
         try {
             stopAutoRefresh();
@@ -238,7 +238,6 @@ public class StaffDashboardController implements Initializable {
             String username = currentUser != null ? currentUser.getUsername() : "Staff";
             String role     = currentUser != null ? currentUser.getRole()     : "Staff";
             if (ctrl instanceof StaffPassSlipController) ((StaffPassSlipController)ctrl).initSession(username, role);
-            else if (ctrl instanceof StaffVisitorController) ((StaffVisitorController)ctrl).initSession(username, role);
             else if (ctrl instanceof StaffReportsController) ((StaffReportsController)ctrl).initSession(username, role);
             Stage stage = (Stage) tblPassSlips.getScene().getWindow();
             stage.setScene(new Scene(root)); stage.setTitle(title + " – Pass Slip System"); stage.show();
@@ -256,7 +255,7 @@ public class StaffDashboardController implements Initializable {
     }
 
     private void setActiveButton(Button active) {
-        for (Button btn : new Button[]{btnDashboard,btnPassSlip,btnVisitor,btnReports})
+        for (Button btn : new Button[]{btnDashboard, btnPassSlip, btnReports})
             if (btn != null) btn.getStyleClass().remove("nav-btn-active");
         if (active != null && !active.getStyleClass().contains("nav-btn-active"))
             active.getStyleClass().add("nav-btn-active");

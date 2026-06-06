@@ -8,22 +8,17 @@
             fx:controller="main.controllers.PassSlipIssuanceController"
             prefWidth="1100" prefHeight="760"
             style="-fx-background-color: #f9fafb;">
-
     <left>
         <VBox prefWidth="160" minWidth="160" style="-fx-background-color: #8B0000;">
             <VBox style="-fx-padding: 14 12 14 12; -fx-border-color: rgba(255,255,255,0.15); -fx-border-width: 0 0 1 0;">
                 <HBox alignment="CENTER_LEFT" spacing="8">
                     <Label text="🛡" style="-fx-text-fill: white; -fx-font-size: 18px;"/>
-                    <VBox>
-                        <Label text="Pass Slip" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/>
-                        <Label text="Issuance System" style="-fx-text-fill: rgba(255,255,255,0.65); -fx-font-size: 10px;"/>
-                    </VBox>
+                    <VBox><Label text="Pass Slip" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/><Label text="Issuance System" style="-fx-text-fill: rgba(255,255,255,0.65); -fx-font-size: 10px;"/></VBox>
                 </HBox>
             </VBox>
             <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 6 0 0 0;">
                 <Button fx:id="btnDashboard" text="  ⊞  Dashboard"          maxWidth="Infinity" onAction="#handleNavDashboard" style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12.5px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12; -fx-border-width: 0; -fx-cursor: hand;"/>
                 <Button fx:id="btnPassSlip"  text="  📋  Pass Slip Issuance" maxWidth="Infinity" onAction="#handleNavPassSlip"  style="-fx-background-color: rgba(255,255,255,0.18); -fx-text-fill: white; -fx-font-size: 12.5px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12; -fx-border-width: 0; -fx-cursor: hand;"/>
-                <Button fx:id="btnVisitor"   text="  👤  Visitor Module"     maxWidth="Infinity" onAction="#handleNavVisitor"   style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12.5px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12; -fx-border-width: 0; -fx-cursor: hand;"/>
                 <Button fx:id="btnReports"   text="  📊  Reports"            maxWidth="Infinity" onAction="#handleNavReports"   style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12.5px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12; -fx-border-width: 0; -fx-cursor: hand;"/>
                 <Button fx:id="btnUserMgmt"  text="  👥  User Management"    maxWidth="Infinity" onAction="#handleNavUserMgmt"  style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12.5px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12; -fx-border-width: 0; -fx-cursor: hand;"/>
             </VBox>
@@ -34,7 +29,6 @@
             </VBox>
         </VBox>
     </left>
-
     <center>
         <VBox style="-fx-background-color: white;">
             <HBox alignment="CENTER_LEFT" style="-fx-padding: 14 20 12 20; -fx-border-color: #e8e8e8; -fx-border-width: 0 0 1 0;">
@@ -42,25 +36,14 @@
                     <Label text="Pass Slip Issuance" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1a1a1a;"/>
                     <Label text="Approved pass slips ready for download" style="-fx-font-size: 12px; -fx-text-fill: #888;"/>
                 </VBox>
-                <Button fx:id="btnNotification" text="🔔" onAction="#handleNotifications"
-                        style="-fx-background-color: transparent; -fx-font-size: 18px; -fx-text-fill: #888; -fx-cursor: hand; -fx-border-width: 0; -fx-padding: 4;"/>
+                <Button fx:id="btnNotification" text="🔔" onAction="#handleNotifications" style="-fx-background-color: transparent; -fx-font-size: 18px; -fx-text-fill: #888; -fx-cursor: hand; -fx-border-width: 0; -fx-padding: 4;"/>
             </HBox>
-
             <HBox spacing="12" style="-fx-padding: 14 20 0 20;">
-                <VBox HBox.hgrow="ALWAYS" style="-fx-background-color: #f8f8f8; -fx-background-radius: 10; -fx-padding: 12 14; -fx-border-color: #ececec; -fx-border-radius: 10; -fx-border-width: 1;">
-                    <HBox alignment="CENTER_LEFT"><VBox HBox.hgrow="ALWAYS"><Label text="Total Approved" style="-fx-font-size: 11px; -fx-text-fill: #888;"/><Label fx:id="lblTotalApproved" text="0" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1D9E75;"/></VBox><Label text="✅" style="-fx-font-size: 22px;"/></HBox>
-                </VBox>
-                <VBox HBox.hgrow="ALWAYS" style="-fx-background-color: #f8f8f8; -fx-background-radius: 10; -fx-padding: 12 14; -fx-border-color: #ececec; -fx-border-radius: 10; -fx-border-width: 1;">
-                    <HBox alignment="CENTER_LEFT"><VBox HBox.hgrow="ALWAYS"><Label text="Today's Approved" style="-fx-font-size: 11px; -fx-text-fill: #888;"/><Label fx:id="lblTodayApproved" text="0" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #E6A817;"/></VBox><Label text="📅" style="-fx-font-size: 22px;"/></HBox>
-                </VBox>
-                <VBox HBox.hgrow="ALWAYS" style="-fx-background-color: #f8f8f8; -fx-background-radius: 10; -fx-padding: 12 14; -fx-border-color: #ececec; -fx-border-radius: 10; -fx-border-width: 1;">
-                    <HBox alignment="CENTER_LEFT"><VBox HBox.hgrow="ALWAYS"><Label text="Downloaded" style="-fx-font-size: 11px; -fx-text-fill: #888;"/><Label fx:id="lblDownloaded" text="0" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #185FA5;"/></VBox><Label text="⬇" style="-fx-font-size: 22px;"/></HBox>
-                </VBox>
-                <VBox HBox.hgrow="ALWAYS" style="-fx-background-color: #f8f8f8; -fx-background-radius: 10; -fx-padding: 12 14; -fx-border-color: #ececec; -fx-border-radius: 10; -fx-border-width: 1;">
-                    <HBox alignment="CENTER_LEFT"><VBox HBox.hgrow="ALWAYS"><Label text="Printed" style="-fx-font-size: 11px; -fx-text-fill: #888;"/><Label fx:id="lblPrinted" text="0" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #E67E22;"/></VBox><Label text="🖨" style="-fx-font-size: 22px;"/></HBox>
-                </VBox>
+                <VBox HBox.hgrow="ALWAYS" style="-fx-background-color: #f8f8f8; -fx-background-radius: 10; -fx-padding: 12 14; -fx-border-color: #ececec; -fx-border-radius: 10; -fx-border-width: 1;"><HBox alignment="CENTER_LEFT"><VBox HBox.hgrow="ALWAYS"><Label text="Total Approved" style="-fx-font-size: 11px; -fx-text-fill: #888;"/><Label fx:id="lblTotalApproved" text="0" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1D9E75;"/></VBox><Label text="✅" style="-fx-font-size: 22px;"/></HBox></VBox>
+                <VBox HBox.hgrow="ALWAYS" style="-fx-background-color: #f8f8f8; -fx-background-radius: 10; -fx-padding: 12 14; -fx-border-color: #ececec; -fx-border-radius: 10; -fx-border-width: 1;"><HBox alignment="CENTER_LEFT"><VBox HBox.hgrow="ALWAYS"><Label text="Today's Approved" style="-fx-font-size: 11px; -fx-text-fill: #888;"/><Label fx:id="lblTodayApproved" text="0" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #E6A817;"/></VBox><Label text="📅" style="-fx-font-size: 22px;"/></HBox></VBox>
+                <VBox HBox.hgrow="ALWAYS" style="-fx-background-color: #f8f8f8; -fx-background-radius: 10; -fx-padding: 12 14; -fx-border-color: #ececec; -fx-border-radius: 10; -fx-border-width: 1;"><HBox alignment="CENTER_LEFT"><VBox HBox.hgrow="ALWAYS"><Label text="Downloaded" style="-fx-font-size: 11px; -fx-text-fill: #888;"/><Label fx:id="lblDownloaded" text="0" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #185FA5;"/></VBox><Label text="⬇" style="-fx-font-size: 22px;"/></HBox></VBox>
+                <VBox HBox.hgrow="ALWAYS" style="-fx-background-color: #f8f8f8; -fx-background-radius: 10; -fx-padding: 12 14; -fx-border-color: #ececec; -fx-border-radius: 10; -fx-border-width: 1;"><HBox alignment="CENTER_LEFT"><VBox HBox.hgrow="ALWAYS"><Label text="Printed" style="-fx-font-size: 11px; -fx-text-fill: #888;"/><Label fx:id="lblPrinted" text="0" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #E67E22;"/></VBox><Label text="🖨" style="-fx-font-size: 22px;"/></HBox></VBox>
             </HBox>
-
             <VBox spacing="10" VBox.vgrow="ALWAYS" style="-fx-padding: 14 20 20 20;">
                 <VBox spacing="10" VBox.vgrow="ALWAYS" style="-fx-background-color: #f8f8f8; -fx-background-radius: 10; -fx-padding: 14; -fx-border-color: #ececec; -fx-border-radius: 10; -fx-border-width: 1;">
                     <HBox alignment="CENTER_LEFT" spacing="10">
@@ -68,17 +51,13 @@
                             <Label text="Approved Pass Slip Requests" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
                             <Label fx:id="lblApprovedCount" text="0 approved requests" style="-fx-font-size: 11px; -fx-text-fill: #888;"/>
                         </VBox>
-                        <Button text="⬇  Download All" onAction="#handleDownloadAll"
-                                style="-fx-background-color: #1D9E75; -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 6 14; -fx-background-radius: 20; -fx-border-width: 0; -fx-cursor: hand;"/>
+                        <Button text="⬇  Download All" onAction="#handleDownloadAll" style="-fx-background-color: #1D9E75; -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 6 14; -fx-background-radius: 20; -fx-border-width: 0; -fx-cursor: hand;"/>
                     </HBox>
                     <HBox spacing="8" alignment="CENTER_LEFT">
-                        <TextField fx:id="txtSearch" promptText="🔍  Search..." onKeyReleased="#handleSearch" HBox.hgrow="ALWAYS"
-                                   style="-fx-background-color: white; -fx-border-color: #ddd; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 7 12; -fx-font-size: 12.5px;"/>
-                        <ComboBox fx:id="cmbFilter" prefWidth="150" onAction="#handleFilter"
-                                  style="-fx-background-radius: 20; -fx-border-color: #ddd; -fx-background-color: white;"/>
+                        <TextField fx:id="txtSearch" promptText="🔍  Search..." onKeyReleased="#handleSearch" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-border-color: #ddd; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 7 12; -fx-font-size: 12.5px;"/>
+                        <ComboBox fx:id="cmbFilter" prefWidth="150" onAction="#handleFilter" style="-fx-background-radius: 20; -fx-border-color: #ddd; -fx-background-color: white;"/>
                     </HBox>
-                    <TableView fx:id="tblSlips" VBox.vgrow="ALWAYS" minHeight="300"
-                               style="-fx-background-color: white; -fx-border-color: #e8e8e8;">
+                    <TableView fx:id="tblSlips" VBox.vgrow="ALWAYS" minHeight="300" style="-fx-background-color: white; -fx-border-color: #e8e8e8;">
                         <columns>
                             <TableColumn fx:id="colId"         text="Pass Slip ID" prefWidth="95"/>
                             <TableColumn fx:id="colName"       text="Name"         prefWidth="95"/>

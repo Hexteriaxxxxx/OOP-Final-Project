@@ -17,7 +17,6 @@
             <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 6 0 0 0;">
                 <Button text="  ⊞  Dashboard"          maxWidth="Infinity" onAction="#handleNavDashboard" style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12.5px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12; -fx-border-width: 0; -fx-cursor: hand;"/>
                 <Button text="  📋  Pass Slip Issuance" maxWidth="Infinity" onAction="#handleNavPassSlip"  style="-fx-background-color: rgba(255,255,255,0.18); -fx-text-fill: white; -fx-font-size: 12.5px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12; -fx-border-width: 0; -fx-cursor: hand;"/>
-                <Button text="  👤  Visitor Module"     maxWidth="Infinity" onAction="#handleNavVisitor"   style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12.5px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12; -fx-border-width: 0; -fx-cursor: hand;"/>
                 <Button text="  📊  Reports"            maxWidth="Infinity" onAction="#handleNavReports"   style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12.5px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12; -fx-border-width: 0; -fx-cursor: hand;"/>
             </VBox>
             <VBox style="-fx-padding: 12 12 12 12; -fx-border-color: rgba(255,255,255,0.15); -fx-border-width: 1 0 0 0;">

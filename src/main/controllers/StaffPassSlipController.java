@@ -62,8 +62,7 @@ public class StaffPassSlipController implements Initializable {
         if (lblStaffRole != null) lblStaffRole.setText(this.sessionRole);
     }
 
-    @FXML
-    private void handleNotification() {
+    @FXML private void handleNotification() {
         if (notifHelper == null)
             notifHelper = new NotificationHelper(btnNotification, NotificationHelper.Role.STAFF);
         notifHelper.toggle();
@@ -91,58 +90,127 @@ public class StaffPassSlipController implements Initializable {
         colActions.setCellFactory(col->new TableCell<>(){
             final Button btnDownload=new Button("⬇ Download"); final Button btnPrint=new Button("🖨"); final Button btnView=new Button("👁");
             final HBox box=new HBox(4,btnDownload,btnPrint,btnView);
-            {box.setAlignment(Pos.CENTER);btnDownload.setStyle("-fx-background-color:#8B0000;-fx-text-fill:white;-fx-font-size:11px;-fx-padding:5 10;-fx-cursor:hand;-fx-background-radius:5;");btnPrint.setStyle("-fx-background-color:transparent;-fx-text-fill:#E67E22;-fx-font-size:15px;-fx-cursor:hand;-fx-padding:2 5;");btnView.setStyle("-fx-background-color:transparent;-fx-text-fill:#1565C0;-fx-font-size:15px;-fx-cursor:hand;-fx-padding:2 5;");
-            btnDownload.setOnAction(e->handleDownload(getTableView().getItems().get(getIndex())));btnPrint.setOnAction(e->handlePrint(getTableView().getItems().get(getIndex())));btnView.setOnAction(e->showDetails(getTableView().getItems().get(getIndex())));}
+            {box.setAlignment(Pos.CENTER);
+            btnDownload.setStyle("-fx-background-color:#8B0000;-fx-text-fill:white;-fx-font-size:11px;-fx-padding:5 10;-fx-cursor:hand;-fx-background-radius:5;");
+            btnPrint.setStyle("-fx-background-color:transparent;-fx-text-fill:#E67E22;-fx-font-size:15px;-fx-cursor:hand;-fx-padding:2 5;");
+            btnView.setStyle("-fx-background-color:transparent;-fx-text-fill:#1565C0;-fx-font-size:15px;-fx-cursor:hand;-fx-padding:2 5;");
+            btnDownload.setOnAction(e->handleDownload(getTableView().getItems().get(getIndex())));
+            btnPrint.setOnAction(e->handlePrint(getTableView().getItems().get(getIndex())));
+            btnView.setOnAction(e->showDetails(getTableView().getItems().get(getIndex())));}
             @Override protected void updateItem(String val,boolean empty){super.updateItem(val,empty);setGraphic(empty?null:box);}
         });
     }
 
     private void loadData() {
         masterList.clear();
-        List<PassSlip> all=passSlipDAO.getAllPassSlips();
-        if(all!=null)all.stream().filter(ps->"Approved".equalsIgnoreCase(ps.getStatus())).forEach(masterList::add);
-        refreshStats();applyFilters();
+        List<PassSlip> all = passSlipDAO.getAllPassSlips();
+        if (all != null) all.stream().filter(ps -> "Approved".equalsIgnoreCase(ps.getStatus())).forEach(masterList::add);
+        refreshStats(); applyFilters();
     }
 
     private void refreshStats() {
-        int total=masterList.size();
-        long todayCount=masterList.stream().filter(ps->ps.getTimeOut()!=null&&ps.getTimeOut().format(DATE_FMT).equals(java.time.LocalDate.now().format(DATE_FMT))).count();
-        lblTotalApproved.setText(String.valueOf(total));lblTodayApproved.setText(String.valueOf(todayCount));lblDownloaded.setText(String.valueOf(downloadCount));lblPrinted.setText(String.valueOf(printCount));lblApprovedCount.setText(total+" approved requests");
+        int total = masterList.size();
+        long todayCount = masterList.stream().filter(ps -> ps.getTimeOut() != null && ps.getTimeOut().format(DATE_FMT).equals(java.time.LocalDate.now().format(DATE_FMT))).count();
+        lblTotalApproved.setText(String.valueOf(total));
+        lblTodayApproved.setText(String.valueOf(todayCount));
+        lblDownloaded.setText(String.valueOf(downloadCount));
+        lblPrinted.setText(String.valueOf(printCount));
+        lblApprovedCount.setText(total + " approved requests");
     }
 
-    @FXML private void handleSearch(){applyFilters();}
-    @FXML private void handleFilter(){applyFilters();}
-    private void applyFilters(){String kw=txtSearch.getText().toLowerCase().trim();String dept=cmbFilter.getValue();filteredList.setPredicate(ps->{boolean matchDept="All Departments".equals(dept)||ps.getDepartment().equalsIgnoreCase(dept);boolean matchKw=kw.isEmpty()||ps.getEmpName().toLowerCase().contains(kw)||ps.getDepartment().toLowerCase().contains(kw)||ps.getReason().toLowerCase().contains(kw)||String.valueOf(ps.getSlipId()).contains(kw);return matchDept&&matchKw;});}
+    @FXML private void handleSearch() { applyFilters(); }
+    @FXML private void handleFilter() { applyFilters(); }
 
-    @FXML private void handleDownloadAll(){if(filteredList.isEmpty()){showError("No records.");return;}FileChooser fc=new FileChooser();fc.setInitialFileName("PassSlips_All.csv");fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV","*.csv"));File f=fc.showSaveDialog(tblSlips.getScene().getWindow());if(f!=null){try(FileWriter fw=new FileWriter(f)){fw.write("Slip ID,Name,Department,Purpose,Time Out,Time In,Duration,Status\n");for(PassSlip ps:filteredList)fw.write(String.format("PS-%04d,%s,%s,%s,%s,%s,%s,%s\n",ps.getSlipId(),ps.getEmpName(),ps.getDepartment(),ps.getReason(),ps.getFormattedTimeOut(),ps.getFormattedTimeIn(),ps.getDuration()!=null?ps.getDuration():"",ps.getStatus()));downloadCount+=filteredList.size();refreshStats();showInfo("Downloaded "+filteredList.size()+" record(s).");}catch(IOException e){showError("Failed: "+e.getMessage());}}}
-    private void handleDownload(PassSlip ps){FileChooser fc=new FileChooser();fc.setInitialFileName("PassSlip_"+ps.getSlipId()+".csv");fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV","*.csv"));File f=fc.showSaveDialog(tblSlips.getScene().getWindow());if(f!=null){try(FileWriter fw=new FileWriter(f)){fw.write("Slip ID,Name,Department,Purpose,Time Out,Time In,Duration,Status\n");fw.write(String.format("PS-%04d,%s,%s,%s,%s,%s,%s,%s\n",ps.getSlipId(),ps.getEmpName(),ps.getDepartment(),ps.getReason(),ps.getFormattedTimeOut(),ps.getFormattedTimeIn(),ps.getDuration()!=null?ps.getDuration():"",ps.getStatus()));downloadCount++;refreshStats();showInfo("Downloaded: "+f.getPath());}catch(IOException e){showError("Failed: "+e.getMessage());}}}
-    private void handlePrint(PassSlip ps){Label lbl=new Label(buildText(ps));lbl.setStyle("-fx-font-family:'Courier New';-fx-font-size:13px;-fx-padding:20;");PrinterJob job=PrinterJob.createPrinterJob();if(job!=null&&job.showPrintDialog(tblSlips.getScene().getWindow())){if(job.printPage(lbl)){job.endJob();printCount++;refreshStats();showInfo("Sent to printer.");}else showError("Printing failed.");}else if(job==null)showError("No printer found.");}
-    private void showDetails(PassSlip ps){Alert a=new Alert(Alert.AlertType.INFORMATION);a.setTitle("Pass Slip Details");a.setHeaderText("PS-"+String.format("%04d",ps.getSlipId()));a.setContentText(buildText(ps));a.showAndWait();}
-    private String buildText(PassSlip ps){return "====================================\n       EMPLOYEE PASS SLIP\n====================================\nSlip ID    : PS-"+String.format("%04d",ps.getSlipId())+"\nName       : "+ps.getEmpName()+"\nDepartment : "+ps.getDepartment()+"\nPurpose    : "+ps.getReason()+"\nTime Out   : "+ps.getFormattedTimeOut()+"\nTime In    : "+ps.getFormattedTimeIn()+"\nDuration   : "+(ps.getDuration()!=null?ps.getDuration():"—")+"\nStatus     : "+ps.getStatus()+"\n===================================="; }
+    private void applyFilters() {
+        String kw   = txtSearch.getText().toLowerCase().trim();
+        String dept = cmbFilter.getValue();
+        filteredList.setPredicate(ps -> {
+            boolean matchDept = "All Departments".equals(dept) || ps.getDepartment().equalsIgnoreCase(dept);
+            boolean matchKw   = kw.isEmpty() || ps.getEmpName().toLowerCase().contains(kw) || ps.getDepartment().toLowerCase().contains(kw) || ps.getReason().toLowerCase().contains(kw) || String.valueOf(ps.getSlipId()).contains(kw);
+            return matchDept && matchKw;
+        });
+    }
 
-    @FXML private void handleNavDashboard(){goTo("/main/resources/fxml/StaffDashboard.fxml","Dashboard",null);}
-    @FXML private void handleNavPassSlip(){/* already here */}
-    @FXML private void handleNavVisitor(){goTo("/main/resources/fxml/StaffVisitorModule.fxml","Visitor Module",null);}
-    @FXML private void handleNavReports(){goTo("/main/resources/fxml/StaffReports.fxml","Reports",null);}
-    @FXML private void handleLogout(){Optional<ButtonType> res=new Alert(Alert.AlertType.CONFIRMATION,"Logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();if(res.isPresent()&&res.get()==ButtonType.OK)goTo("/main/resources/fxml/Login.fxml","Login",null);}
+    @FXML private void handleDownloadAll() {
+        if (filteredList.isEmpty()) { showError("No records."); return; }
+        FileChooser fc = new FileChooser();
+        fc.setInitialFileName("PassSlips_All.csv");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV","*.csv"));
+        File f = fc.showSaveDialog(tblSlips.getScene().getWindow());
+        if (f != null) {
+            try (FileWriter fw = new FileWriter(f)) {
+                fw.write("Slip ID,Name,Department,Purpose,Time Out,Time In,Duration,Status\n");
+                for (PassSlip ps : filteredList)
+                    fw.write(String.format("PS-%04d,%s,%s,%s,%s,%s,%s,%s\n", ps.getSlipId(), ps.getEmpName(), ps.getDepartment(), ps.getReason(), ps.getFormattedTimeOut(), ps.getFormattedTimeIn(), ps.getDuration() != null ? ps.getDuration() : "", ps.getStatus()));
+                downloadCount += filteredList.size(); refreshStats();
+                showInfo("Downloaded " + filteredList.size() + " record(s).");
+            } catch (IOException e) { showError("Failed: " + e.getMessage()); }
+        }
+    }
 
-    private void goTo(String fxml, String title, String user) {
+    private void handleDownload(PassSlip ps) {
+        FileChooser fc = new FileChooser();
+        fc.setInitialFileName("PassSlip_" + ps.getSlipId() + ".csv");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV","*.csv"));
+        File f = fc.showSaveDialog(tblSlips.getScene().getWindow());
+        if (f != null) {
+            try (FileWriter fw = new FileWriter(f)) {
+                fw.write("Slip ID,Name,Department,Purpose,Time Out,Time In,Duration,Status\n");
+                fw.write(String.format("PS-%04d,%s,%s,%s,%s,%s,%s,%s\n", ps.getSlipId(), ps.getEmpName(), ps.getDepartment(), ps.getReason(), ps.getFormattedTimeOut(), ps.getFormattedTimeIn(), ps.getDuration() != null ? ps.getDuration() : "", ps.getStatus()));
+                downloadCount++; refreshStats(); showInfo("Downloaded: " + f.getPath());
+            } catch (IOException e) { showError("Failed: " + e.getMessage()); }
+        }
+    }
+
+    private void handlePrint(PassSlip ps) {
+        Label lbl = new Label(buildText(ps));
+        lbl.setStyle("-fx-font-family:'Courier New';-fx-font-size:13px;-fx-padding:20;");
+        PrinterJob job = PrinterJob.createPrinterJob();
+        if (job != null && job.showPrintDialog(tblSlips.getScene().getWindow())) {
+            if (job.printPage(lbl)) { job.endJob(); printCount++; refreshStats(); showInfo("Sent to printer."); }
+            else showError("Printing failed.");
+        } else if (job == null) showError("No printer found.");
+    }
+
+    private void showDetails(PassSlip ps) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setTitle("Pass Slip Details"); a.setHeaderText("PS-" + String.format("%04d", ps.getSlipId()));
+        a.setContentText(buildText(ps)); a.showAndWait();
+    }
+
+    private String buildText(PassSlip ps) {
+        return "====================================\n       EMPLOYEE PASS SLIP\n====================================\n" +
+               "Slip ID    : PS-" + String.format("%04d", ps.getSlipId()) + "\n" +
+               "Name       : " + ps.getEmpName() + "\n" +
+               "Department : " + ps.getDepartment() + "\n" +
+               "Category   : " + ps.getCategory() + "\n" +
+               "Purpose    : " + ps.getReason() + "\n" +
+               "Time Out   : " + ps.getFormattedTimeOut() + "\n" +
+               "Time In    : " + ps.getFormattedTimeIn() + "\n" +
+               "Duration   : " + (ps.getDuration() != null ? ps.getDuration() : "—") + "\n" +
+               "Status     : " + ps.getStatus() + "\n====================================";
+    }
+
+    @FXML private void handleNavDashboard() { goTo("/main/resources/fxml/StaffDashboard.fxml","Dashboard"); }
+    @FXML private void handleNavPassSlip()  { /* already here */ }
+    @FXML private void handleNavReports()   { goTo("/main/resources/fxml/StaffReports.fxml","Reports"); }
+    @FXML private void handleLogout() {
+        Optional<ButtonType> res = new Alert(Alert.AlertType.CONFIRMATION,"Logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();
+        if (res.isPresent() && res.get() == ButtonType.OK) goTo("/main/resources/fxml/Login.fxml","Login");
+    }
+
+    private void goTo(String fxml, String title) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
             Parent root = loader.load();
-            // Pass session to next screen
             Object ctrl = loader.getController();
-            if (ctrl instanceof StaffVisitorController) ((StaffVisitorController)ctrl).initSession(sessionUser, sessionRole);
-            else if (ctrl instanceof StaffReportsController) ((StaffReportsController)ctrl).initSession(sessionUser, sessionRole);
-            else if (ctrl instanceof StaffDashboardController) {
-                // handled by setCurrentUser
-            }
-            Stage stage=(Stage)tblSlips.getScene().getWindow();
-            double w=stage.getWidth(),h=stage.getHeight();
-            stage.setTitle(title);stage.setScene(new Scene(root));stage.setWidth(w);stage.setHeight(h);
-        } catch(IOException e){showError("Screen not available:\n"+fxml);}
+            if (ctrl instanceof StaffReportsController) ((StaffReportsController)ctrl).initSession(sessionUser, sessionRole);
+            Stage stage = (Stage) tblSlips.getScene().getWindow();
+            double w = stage.getWidth(), h = stage.getHeight();
+            stage.setTitle(title); stage.setScene(new Scene(root)); stage.setWidth(w); stage.setHeight(h);
+        } catch (IOException e) { showError("Screen not available:\n" + fxml); }
     }
 
-    private void showInfo(String msg){Alert a=new Alert(Alert.AlertType.INFORMATION);a.setTitle("Success");a.setHeaderText(null);a.setContentText(msg);a.showAndWait();}
-    private void showError(String msg){Alert a=new Alert(Alert.AlertType.ERROR);a.setTitle("Error");a.setHeaderText(null);a.setContentText(msg);a.showAndWait();}
+    private void showInfo(String msg) { Alert a=new Alert(Alert.AlertType.INFORMATION);a.setTitle("Success");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }
+    private void showError(String msg) { Alert a=new Alert(Alert.AlertType.ERROR);a.setTitle("Error");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }
 }

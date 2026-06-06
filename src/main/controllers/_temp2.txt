@@ -1,3 +1,0 @@
-            <Label fx:id="lblPortalType" text="Staff Portal"
-                   style="-fx-font-size: 11px; -fx-text-fill: #aaa;"
-                   alignment="CENTER" maxWidth="Infinity"/>

@@ -1,8 +1,0 @@
-                <HBox spacing="8" alignment="CENTER_LEFT">
-                    <Label text="Filter by:" style="-fx-font-size: 12px; -fx-text-fill: #666; -fx-padding: 0 4 0 0;"/>
-                    <Button fx:id="btnFilterToday" text="Today"      onAction="#handleFilterToday" style="-fx-background-color:white;-fx-text-fill:#555;-fx-border-color:#ddd;-fx-border-width:1;-fx-background-radius:20;-fx-border-radius:20;-fx-font-size:12px;-fx-padding:5 14;-fx-cursor:hand;"/>
-                    <Button fx:id="btnFilterWeek"  text="This Week"  onAction="#handleFilterWeek"  style="-fx-background-color:white;-fx-text-fill:#555;-fx-border-color:#ddd;-fx-border-width:1;-fx-background-radius:20;-fx-border-radius:20;-fx-font-size:12px;-fx-padding:5 14;-fx-cursor:hand;"/>
-                    <Button fx:id="btnFilterMonth" text="This Month" onAction="#handleFilterMonth" style="-fx-background-color:white;-fx-text-fill:#555;-fx-border-color:#ddd;-fx-border-width:1;-fx-background-radius:20;-fx-border-radius:20;-fx-font-size:12px;-fx-padding:5 14;-fx-cursor:hand;"/>
-                    <Button fx:id="btnFilterAll"   text="All"        onAction="#handleFilterAll"   style="-fx-background-color:#8B0000;-fx-text-fill:white;-fx-border-width:0;-fx-background-radius:20;-fx-border-radius:20;-fx-font-size:12px;-fx-padding:5 14;-fx-cursor:hand;-fx-font-weight:bold;"/>
-                    <Button fx:id="btnFilterDate"  text="Pick Date"  onAction="#handleFilterDate"  style="-fx-background-color:white;-fx-text-fill:#555;-fx-border-color:#ddd;-fx-border-width:1;-fx-background-radius:20;-fx-border-radius:20;-fx-font-size:12px;-fx-padding:5 14;-fx-cursor:hand;"/>
-                </HBox>
