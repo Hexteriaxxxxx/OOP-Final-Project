@@ -22,6 +22,7 @@ import models.ActivityLog;
 import models.PassSlip;
 import models.User;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
@@ -105,9 +106,9 @@ public class AdminDashboardController implements Initializable {
                 btnView   .setStyle("-fx-background-color: transparent; -fx-font-size: 13px; -fx-cursor: hand;");
                 btnApprove.setStyle("-fx-background-color: transparent; -fx-text-fill: #28a745; -fx-font-size: 13px; -fx-font-weight: bold; -fx-cursor: hand;");
                 btnReject .setStyle("-fx-background-color: transparent; -fx-text-fill: #dc3545; -fx-font-size: 13px; -fx-font-weight: bold; -fx-cursor: hand;");
-                btnView   .setOnAction(e -> handleViewPassSlip(getTableView().getItems().get(getIndex())));
+                btnView   .setOnAction(e -> handleViewPassSlip  (getTableView().getItems().get(getIndex())));
                 btnApprove.setOnAction(e -> handleApprovePassSlip(getTableView().getItems().get(getIndex())));
-                btnReject .setOnAction(e -> handleRejectPassSlip(getTableView().getItems().get(getIndex())));
+                btnReject .setOnAction(e -> handleRejectPassSlip (getTableView().getItems().get(getIndex())));
             }
             @Override protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
@@ -218,15 +219,46 @@ public class AdminDashboardController implements Initializable {
     }
 
     private void handleApprovePassSlip(PassSlip ps) {
-        Alert c = new Alert(Alert.AlertType.CONFIRMATION);
-        c.setTitle("Approve"); c.setHeaderText("Approve request #" + ps.getSlipId() + "?");
-        c.setContentText("Employee: " + ps.getEmpName());
-        c.showAndWait().ifPresent(r -> { if (r==ButtonType.OK) {
-            if (passSlipDAO.updatePassSlipStatus(ps.getSlipId(), "Approved")) {
-                activityLogDAO.logActivity(ps.getEmpId(), "Pass slip #" + ps.getSlipId() + " approved", currentUser!=null?currentUser.getUsername():"Admin");
-                showAlert(Alert.AlertType.INFORMATION,"Success","Pass slip approved."); loadDashboardData(); loadRecentActivity();
-            } else showAlert(Alert.AlertType.ERROR,"Error","Failed to approve.");
-        }});
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Approve Pass Slip");
+        confirm.setHeaderText("Approve request #" + ps.getSlipId() + "?");
+        confirm.setContentText("Employee: " + ps.getEmpName());
+        confirm.showAndWait().ifPresent(r -> {
+            if (r == ButtonType.OK) {
+                if (passSlipDAO.updatePassSlipStatus(ps.getSlipId(), "Approved")) {
+                    activityLogDAO.logActivity(ps.getEmpId(),
+                        "Pass slip #" + ps.getSlipId() + " approved",
+                        currentUser != null ? currentUser.getUsername() : "Admin");
+
+                    // ── Offer to print PDF immediately ──────────────
+                    Alert printPrompt = new Alert(Alert.AlertType.CONFIRMATION);
+                    printPrompt.setTitle("Print Pass Slip");
+                    printPrompt.setHeaderText("✅  Pass slip approved!");
+                    printPrompt.setContentText("Generate PDF pass slip for " + ps.getEmpName() + " now?");
+                    ButtonType btnPrint = new ButtonType("🖨  Print Now");
+                    ButtonType btnSkip  = new ButtonType("Skip");
+                    printPrompt.getButtonTypes().setAll(btnPrint, btnSkip);
+                    printPrompt.showAndWait().ifPresent(choice -> {
+                        if (choice == btnPrint) {
+                            String pdfPath = main.utils.PassSlipPdfGenerator.generateAndOpen(ps);
+                            if (pdfPath != null) {
+                                showAlert(Alert.AlertType.INFORMATION, "PDF Ready",
+                                    "Pass slip saved to Desktop:\n" + new File(pdfPath).getName() +
+                                    "\n\nThe PDF has been opened automatically — ready to print!");
+                            } else {
+                                showAlert(Alert.AlertType.WARNING, "PDF Failed",
+                                    "Could not generate PDF.\nMake sure Python + reportlab are installed:\n\n" +
+                                    "  pip install reportlab");
+                            }
+                        }
+                    });
+
+                    loadDashboardData(); loadRecentActivity();
+                } else {
+                    showAlert(Alert.AlertType.ERROR, "Error", "Failed to approve pass slip.");
+                }
+            }
+        });
     }
 
     private void handleRejectPassSlip(PassSlip ps) {
@@ -235,8 +267,10 @@ public class AdminDashboardController implements Initializable {
         c.setContentText("Employee: " + ps.getEmpName());
         c.showAndWait().ifPresent(r -> { if (r==ButtonType.OK) {
             if (passSlipDAO.updatePassSlipStatus(ps.getSlipId(), "Rejected")) {
-                activityLogDAO.logActivity(ps.getEmpId(), "Pass slip #" + ps.getSlipId() + " rejected", currentUser!=null?currentUser.getUsername():"Admin");
-                showAlert(Alert.AlertType.INFORMATION,"Done","Pass slip rejected."); loadDashboardData(); loadRecentActivity();
+                activityLogDAO.logActivity(ps.getEmpId(), "Pass slip #" + ps.getSlipId() + " rejected",
+                    currentUser!=null?currentUser.getUsername():"Admin");
+                showAlert(Alert.AlertType.INFORMATION,"Done","Pass slip rejected.");
+                loadDashboardData(); loadRecentActivity();
             } else showAlert(Alert.AlertType.ERROR,"Error","Failed to reject.");
         }});
     }

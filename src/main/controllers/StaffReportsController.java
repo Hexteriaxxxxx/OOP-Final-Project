@@ -172,18 +172,15 @@ public class StaffReportsController implements Initializable {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Export Report");
         String timestamp = LocalDateTime.now().format(DATE_FMT);
-
         if (isMonthlyTab) {
             chooser.setInitialFileName("MonthlyReport_" + timestamp + ".csv");
             chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
             File file = chooser.showSaveDialog(dailyTable.getScene().getWindow());
             if (file == null) return;
             try (FileWriter fw = new FileWriter(file)) {
-                fw.write("Month,Total Requests,Approved,Rejected,Pending,Visitors,Avg Duration\n");
+                fw.write("Month,Total Requests,Approved,Rejected,Pending,Pass Slips,Avg Duration\n");
                 for (ReportsController.MonthlyReport row : monthlyTable.getItems())
-                    fw.write(String.format("%s,%d,%d,%d,%d,%d,%s\n",
-                        csvEscape(row.getMonth()), row.getTotalRequests(), row.getApproved(),
-                        row.getRejected(), row.getPending(), row.getTotalVisitors(), csvEscape(row.getAvgDuration())));
+                    fw.write(String.format("%s,%d,%d,%d,%d,%d,%s\n", csvEscape(row.getMonth()), row.getTotalRequests(), row.getApproved(), row.getRejected(), row.getPending(), row.getTotalVisitors(), csvEscape(row.getAvgDuration())));
                 showSuccess("Monthly report exported!\n" + file.getAbsolutePath());
             } catch (IOException e) { showError("Export failed: " + e.getMessage()); }
         } else {
@@ -196,14 +193,7 @@ public class StaffReportsController implements Initializable {
                 fw.write("Request ID,Date,Employee Name,Department,Purpose,Time Out,Time In,Duration,Status\n");
                 DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                 for (PassSlip slip : filteredDailyData)
-                    fw.write(String.format("PS-%04d,%s,%s,%s,%s,%s,%s,%s,%s\n",
-                        slip.getSlipId(),
-                        slip.getTimeOut()!=null?slip.getTimeOut().toLocalDate().format(dateFmt):"",
-                        csvEscape(slip.getEmpName()), csvEscape(slip.getDepartment()), csvEscape(slip.getReason()),
-                        csvEscape(slip.getFormattedTimeOut()),
-                        slip.getTimeIn()!=null?csvEscape(slip.getFormattedTimeIn()):"",
-                        slip.getDuration()!=null?csvEscape(slip.getDuration()):"",
-                        csvEscape(slip.getStatus())));
+                    fw.write(String.format("PS-%04d,%s,%s,%s,%s,%s,%s,%s,%s\n", slip.getSlipId(), slip.getTimeOut()!=null?slip.getTimeOut().toLocalDate().format(dateFmt):"", csvEscape(slip.getEmpName()), csvEscape(slip.getDepartment()), csvEscape(slip.getReason()), csvEscape(slip.getFormattedTimeOut()), slip.getTimeIn()!=null?csvEscape(slip.getFormattedTimeIn()):"", slip.getDuration()!=null?csvEscape(slip.getDuration()):"", csvEscape(slip.getStatus())));
                 showSuccess("Daily report exported! " + filteredDailyData.size() + " record(s).\n" + file.getAbsolutePath());
             } catch (IOException e) { showError("Export failed: " + e.getMessage()); }
         }
@@ -211,17 +201,16 @@ public class StaffReportsController implements Initializable {
 
     private String csvEscape(String val) {
         if (val == null) return "";
-        if (val.contains(",") || val.contains("\"") || val.contains("\n"))
-            return "\"" + val.replace("\"", "\"\"") + "\"";
+        if (val.contains(",") || val.contains("\"") || val.contains("\n")) return "\"" + val.replace("\"", "\"\"") + "\"";
         return val;
     }
 
     private void showSuccess(String msg){Alert a=new Alert(Alert.AlertType.INFORMATION);a.setTitle("Export Successful");a.setHeaderText(null);a.setContentText(msg);a.showAndWait();}
     private void showError(String msg)  {Alert a=new Alert(Alert.AlertType.ERROR);a.setTitle("Export Failed");a.setHeaderText(null);a.setContentText(msg);a.showAndWait();}
 
+    // ── Navigation — NO visitor references ───────────────────────
     @FXML private void handleDashboard(){goTo("/main/resources/fxml/StaffDashboard.fxml","Dashboard");}
     @FXML private void handlePassSlip() {goTo("/main/resources/fxml/StaffPassSlipIssuance.fxml","Pass Slip");}
-    @FXML private void handleVisitor()  {goTo("/main/resources/fxml/StaffVisitorModule.fxml","Visitor Module");}
     @FXML private void handleLogout(){Optional<ButtonType> res=new Alert(Alert.AlertType.CONFIRMATION,"Logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();if(res.isPresent()&&res.get()==ButtonType.OK)goTo("/main/resources/fxml/Login.fxml","Login");}
 
     private void goTo(String fxml, String title) {
@@ -229,8 +218,7 @@ public class StaffReportsController implements Initializable {
             FXMLLoader loader=new FXMLLoader(getClass().getResource(fxml));
             Parent root=loader.load();
             Object ctrl=loader.getController();
-            if(ctrl instanceof StaffPassSlipController) ((StaffPassSlipController)ctrl).initSession(sessionUser,sessionRole);
-            else if(ctrl instanceof StaffVisitorController) ((StaffVisitorController)ctrl).initSession(sessionUser,sessionRole);
+            if (ctrl instanceof StaffPassSlipController) ((StaffPassSlipController)ctrl).initSession(sessionUser,sessionRole);
             Stage stage=(Stage)dailyTable.getScene().getWindow();
             double w=stage.getWidth(),h=stage.getHeight();
             stage.setTitle(title);stage.setScene(new Scene(root));stage.setWidth(w);stage.setHeight(h);
