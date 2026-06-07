@@ -1,0 +1,23 @@
+    // ── Preset handlers — compute Time In from Time Out ──────────
+
+    @FXML private void handlePreset30m()   { applyPreset(30,  "30 min");   }
+    @FXML private void handlePreset1h()    { applyPreset(60,  "1 hr");     }
+    @FXML private void handlePreset2h()    { applyPreset(120, "2 hrs");    }
+    @FXML private void handlePresetHalfDay(){ applyPreset(240,"Half day"); }
+
+    private void applyPreset(int minutes, String label) {
+        selectedTimeIn = selectedTimeOut.plusMinutes(minutes);
+        btnTimeIn.setText("🕐  " + selectedTimeIn.format(TIME_FMT) + "  (" + label + ")");
+        // Highlight active preset buttons
+        highlightPreset(label);
+        lblError.setText("");
+    }
+
+    private void highlightPreset(String active) {
+        String on  = "-fx-background-color: #8B0000; -fx-border-color: #8B0000; -fx-border-width: 1; -fx-border-radius: 20; -fx-background-radius: 20; -fx-font-size: 11px; -fx-padding: 4 10; -fx-cursor: hand; -fx-text-fill: white;";
+        String off = "-fx-background-color: white; -fx-border-color: #E8C0C0; -fx-border-width: 1; -fx-border-radius: 20; -fx-background-radius: 20; -fx-font-size: 11px; -fx-padding: 4 10; -fx-cursor: hand; -fx-text-fill: #8B0000;";
+        btn30min  .setStyle("30 min".equals(active)   ? on : off);
+        btn1hr    .setStyle("1 hr".equals(active)     ? on : off);
+        btn2hr    .setStyle("2 hrs".equals(active)    ? on : off);
+        btnHalfDay.setStyle("Half day".equals(active) ? on : off);
+    }

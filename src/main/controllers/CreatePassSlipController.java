@@ -14,8 +14,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -39,6 +37,7 @@ public class CreatePassSlipController implements Initializable {
     @FXML private TextArea         txtPurpose;
     @FXML private Button           btnTimeOut;
     @FXML private Button           btnTimeIn;
+    @FXML private Button           btn30min, btn1hr, btn2hr, btnHalfDay;
     @FXML private Label            lblError;
     @FXML private Button           btnCancel;
     @FXML private Button           btnSubmit;
@@ -79,16 +78,14 @@ public class CreatePassSlipController implements Initializable {
         lstSuggestions.setVisible(false);
         lstSuggestions.setManaged(false);
 
-        // ── Category dropdown ──
         cmbCategory.setItems(FXCollections.observableArrayList(
                 "Official Business", "Personal Reason", "Others"));
         cmbCategory.setValue("Official Business");
 
-        // ── Time buttons initial labels ──
         btnTimeOut.setText("🕐  " + selectedTimeOut.format(TIME_FMT));
         btnTimeIn .setText("🕐  " + selectedTimeIn .format(TIME_FMT));
 
-        // ── Autocomplete ──
+        // Autocomplete
         txtEmployee.textProperty().addListener((obs, oldVal, newVal) -> {
             selectedEmployee = null;
             txtDepartment.setText("");
@@ -117,83 +114,120 @@ public class CreatePassSlipController implements Initializable {
         });
     }
 
-    // ── Category change — show waiver if Personal Reason or Others ──
-    @FXML
-    private void handleCategoryChange() {
+    // ── Category change ──────────────────────────────────────────
+    @FXML private void handleCategoryChange() {
         String cat = cmbCategory.getValue();
-        waiverAgreed = false; // Reset waiver agreement when category changes
+        waiverAgreed = false;
         if ("Personal Reason".equals(cat) || "Others".equals(cat)) {
             showWaiverDialog(cat);
         }
     }
 
+    // ── Time Out — manual picker (existing) ──────────────────────
+    @FXML private void handlePickTimeOut() {
+        Stage owner = (Stage) btnTimeOut.getScene().getWindow();
+        LocalTime picked = TimePickerDialog.show(owner, selectedTimeOut);
+        if (picked != null) {
+            selectedTimeOut = picked;
+            btnTimeOut.setText("🕐  " + picked.format(TIME_FMT));
+            // Reset preset highlights since time out changed
+            resetPresetHighlights();
+        }
+    }
+
+    // ── Time In — manual picker (existing) ───────────────────────
+    @FXML private void handlePickTimeIn() {
+        Stage owner = (Stage) btnTimeIn.getScene().getWindow();
+        LocalTime picked = TimePickerDialog.show(owner, selectedTimeIn);
+        if (picked != null) {
+            selectedTimeIn = picked;
+            btnTimeIn.setText("🕐  " + picked.format(TIME_FMT));
+            // Clear preset highlights since user picked manually
+            resetPresetHighlights();
+        }
+    }
+
+    // ── Quick Preset handlers ────────────────────────────────────
+    @FXML private void handlePreset30m()    { applyPreset(30,  "30 min");   }
+    @FXML private void handlePreset1h()     { applyPreset(60,  "1 hr");     }
+    @FXML private void handlePreset2h()     { applyPreset(120, "2 hrs");    }
+    @FXML private void handlePresetHalfDay(){ applyPreset(240, "Half day"); }
+
+    private void applyPreset(int minutes, String label) {
+        selectedTimeIn = selectedTimeOut.plusMinutes(minutes);
+        btnTimeIn.setText("🕐  " + selectedTimeIn.format(TIME_FMT) + "  (" + label + ")");
+        highlightPreset(label);
+        lblError.setText("");
+    }
+
+    private void highlightPreset(String active) {
+        String on  = "-fx-background-color: #8B0000; -fx-border-color: #8B0000; -fx-border-width: 1; " +
+                     "-fx-border-radius: 20; -fx-background-radius: 20; -fx-font-size: 11px; " +
+                     "-fx-padding: 4 10; -fx-cursor: hand; -fx-text-fill: white;";
+        String off = "-fx-background-color: white; -fx-border-color: #E8C0C0; -fx-border-width: 1; " +
+                     "-fx-border-radius: 20; -fx-background-radius: 20; -fx-font-size: 11px; " +
+                     "-fx-padding: 4 10; -fx-cursor: hand; -fx-text-fill: #8B0000;";
+        btn30min  .setStyle("30 min"  .equals(active) ? on : off);
+        btn1hr    .setStyle("1 hr"    .equals(active) ? on : off);
+        btn2hr    .setStyle("2 hrs"   .equals(active) ? on : off);
+        btnHalfDay.setStyle("Half day".equals(active) ? on : off);
+    }
+
+    private void resetPresetHighlights() {
+        String off = "-fx-background-color: white; -fx-border-color: #E8C0C0; -fx-border-width: 1; " +
+                     "-fx-border-radius: 20; -fx-background-radius: 20; -fx-font-size: 11px; " +
+                     "-fx-padding: 4 10; -fx-cursor: hand; -fx-text-fill: #8B0000;";
+        btn30min.setStyle(off); btn1hr.setStyle(off);
+        btn2hr.setStyle(off);   btnHalfDay.setStyle(off);
+    }
+
+    // ── Waiver dialog ────────────────────────────────────────────
     private void showWaiverDialog(String category) {
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.initStyle(StageStyle.UNDECORATED);
-        dialog.setTitle("Waiver Agreement");
 
         VBox root = new VBox(0);
         root.setStyle("-fx-background-color: white; -fx-background-radius: 12; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 16, 0, 0, 4);");
         root.setPrefWidth(500);
 
-        // Header
         VBox header = new VBox(4);
         header.setPadding(new Insets(18, 20, 14, 20));
         header.setStyle("-fx-background-color: #8B0000; -fx-background-radius: 12 12 0 0;");
         Label lblTitle = new Label("⚠  Waiver and Assumption of Risk");
         lblTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: white;");
-        Label lblSubtitle = new Label("Category: " + category);
-        lblSubtitle.setStyle("-fx-font-size: 11px; -fx-text-fill: rgba(255,255,255,0.8);");
-        header.getChildren().addAll(lblTitle, lblSubtitle);
+        Label lblSub = new Label("Category: " + category);
+        lblSub.setStyle("-fx-font-size: 11px; -fx-text-fill: rgba(255,255,255,0.8);");
+        header.getChildren().addAll(lblTitle, lblSub);
 
-        // Waiver text
         TextArea txtWaiver = new TextArea(WAIVER_FULL);
-        txtWaiver.setEditable(false);
-        txtWaiver.setWrapText(true);
-        txtWaiver.setPrefHeight(220);
-        txtWaiver.setStyle("-fx-background-color: #FFF9F9; -fx-border-color: #E8C0C0; " +
-                "-fx-border-width: 0; -fx-font-size: 12px; -fx-text-fill: #333; -fx-padding: 14;");
+        txtWaiver.setEditable(false); txtWaiver.setWrapText(true); txtWaiver.setPrefHeight(220);
+        txtWaiver.setStyle("-fx-background-color: #FFF9F9; -fx-border-width: 0; -fx-font-size: 12px; -fx-padding: 14;");
 
-        // Checkbox
-        CheckBox chkAgree = new CheckBox(
-                "I have read and fully understood the above waiver. " +
-                "I voluntarily agree to its terms and conditions.");
+        CheckBox chkAgree = new CheckBox("I have read and fully understood the above waiver. I voluntarily agree to its terms and conditions.");
         chkAgree.setWrapText(true);
-        chkAgree.setStyle("-fx-font-size: 12px; -fx-text-fill: #333; -fx-padding: 2 0 0 0;");
+        chkAgree.setStyle("-fx-font-size: 12px; -fx-text-fill: #333;");
         VBox checkWrapper = new VBox(chkAgree);
         checkWrapper.setPadding(new Insets(12, 20, 10, 20));
-        checkWrapper.setStyle("-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0; " +
-                "-fx-border-width: 1 0 0 0;");
+        checkWrapper.setStyle("-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0; -fx-border-width: 1 0 0 0;");
 
-        // Buttons
         HBox footer = new HBox(10);
         footer.setAlignment(Pos.CENTER_RIGHT);
         footer.setPadding(new Insets(12, 20, 16, 20));
         footer.setStyle("-fx-border-color: #e8e8e8; -fx-border-width: 1 0 0 0;");
 
         Button btnDecline = new Button("Decline");
-        btnDecline.setStyle("-fx-background-color: white; -fx-text-fill: #555; " +
-                "-fx-font-size: 12px; -fx-padding: 8 20; -fx-background-radius: 20; " +
-                "-fx-border-color: #ccc; -fx-border-radius: 20; -fx-cursor: hand;");
-        btnDecline.setOnAction(e -> {
-            // Revert to Official Business if declined
-            cmbCategory.setValue("Official Business");
-            waiverAgreed = false;
-            dialog.close();
-        });
+        btnDecline.setStyle("-fx-background-color: white; -fx-text-fill: #555; -fx-font-size: 12px; " +
+                "-fx-padding: 8 20; -fx-background-radius: 20; -fx-border-color: #ccc; -fx-border-radius: 20; -fx-cursor: hand;");
+        btnDecline.setOnAction(e -> { cmbCategory.setValue("Official Business"); waiverAgreed = false; dialog.close(); });
 
         Button btnAccept = new Button("✓  I Agree");
-        btnAccept.setStyle("-fx-background-color: #8B0000; -fx-text-fill: white; " +
-                "-fx-font-size: 12px; -fx-padding: 8 20; -fx-background-radius: 20; " +
-                "-fx-border-width: 0; -fx-cursor: hand;");
+        btnAccept.setStyle("-fx-background-color: #8B0000; -fx-text-fill: white; -fx-font-size: 12px; " +
+                "-fx-padding: 8 20; -fx-background-radius: 20; -fx-border-width: 0; -fx-cursor: hand;");
         btnAccept.setDisable(true);
         chkAgree.setOnAction(e -> btnAccept.setDisable(!chkAgree.isSelected()));
-        btnAccept.setOnAction(e -> {
-            waiverAgreed = true;
-            dialog.close();
-        });
+        btnAccept.setOnAction(e -> { waiverAgreed = true; dialog.close(); });
 
         footer.getChildren().addAll(btnDecline, btnAccept);
         root.getChildren().addAll(header, txtWaiver, checkWrapper, footer);
@@ -204,26 +238,6 @@ public class CreatePassSlipController implements Initializable {
         dialog.showAndWait();
     }
 
-    @FXML
-    private void handlePickTimeOut() {
-        Stage owner = (Stage) btnTimeOut.getScene().getWindow();
-        LocalTime picked = TimePickerDialog.show(owner, selectedTimeOut);
-        if (picked != null) {
-            selectedTimeOut = picked;
-            btnTimeOut.setText("🕐  " + picked.format(TIME_FMT));
-        }
-    }
-
-    @FXML
-    private void handlePickTimeIn() {
-        Stage owner = (Stage) btnTimeIn.getScene().getWindow();
-        LocalTime picked = TimePickerDialog.show(owner, selectedTimeIn);
-        if (picked != null) {
-            selectedTimeIn = picked;
-            btnTimeIn.setText("🕐  " + picked.format(TIME_FMT));
-        }
-    }
-
     private void hideSuggestions() {
         lstSuggestions.setVisible(false);
         lstSuggestions.setManaged(false);
@@ -231,11 +245,10 @@ public class CreatePassSlipController implements Initializable {
 
     public void setCurrentUserId(int userId) { this.currentUserId = userId; }
 
-    @FXML
-    private void handleSubmit() {
+    // ── Submit ───────────────────────────────────────────────────
+    @FXML private void handleSubmit() {
         lblError.setText("");
 
-        // Validations
         if (txtEmployee.getText().trim().isEmpty()) {
             lblError.setText("Please enter an employee name."); return;
         }
@@ -250,34 +263,31 @@ public class CreatePassSlipController implements Initializable {
         if (cmbCategory.getValue() == null || cmbCategory.getValue().isBlank()) {
             lblError.setText("Please select a category."); return;
         }
-        // Check waiver for Personal Reason or Others
         String category = cmbCategory.getValue();
         if (("Personal Reason".equals(category) || "Others".equals(category)) && !waiverAgreed) {
             lblError.setText("You must agree to the waiver for " + category + " pass slips.");
-            showWaiverDialog(category);
-            return;
+            showWaiverDialog(category); return;
         }
         if (txtPurpose.getText().trim().isEmpty()) {
             lblError.setText("Please enter a purpose."); return;
         }
         if (!selectedTimeIn.isAfter(selectedTimeOut)) {
-            lblError.setText("Time In must be after Time Out."); return;
+            lblError.setText("Expected Time In must be after Time Out."); return;
         }
 
         try {
             PassSlip ps = new PassSlip();
-            ps.setEmpId(selectedEmployee.getEmpId());
-            ps.setReason(txtPurpose.getText().trim());
+            ps.setEmpId   (selectedEmployee.getEmpId());
+            ps.setReason  (txtPurpose.getText().trim());
             ps.setCategory(category);
-            ps.setTimeOut(LocalDateTime.of(LocalDate.now(), selectedTimeOut));
-            ps.setTimeIn (LocalDateTime.of(LocalDate.now(), selectedTimeIn));
+            ps.setTimeOut (LocalDateTime.of(LocalDate.now(), selectedTimeOut));
+            ps.setTimeIn  (LocalDateTime.of(LocalDate.now(), selectedTimeIn));
             ps.setIssuedBy(currentUserId);
-            ps.setStatus("Pending");
+            ps.setStatus  ("Pending");
 
             if (passSlipDAO.createPassSlip(ps)) {
                 activityLogDAO.logActivity(selectedEmployee.getEmpId(),
-                        "Pass slip created for " + selectedEmployee.getName() +
-                        " [" + category + "]", "Admin");
+                        "Pass slip created for " + selectedEmployee.getName() + " [" + category + "]", "Admin");
                 showInfo("Pass slip submitted successfully!");
                 closeWindow();
             } else {

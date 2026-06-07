@@ -3,8 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.*?>
 
-<VBox xmlns="http://javafx.com/javafx/21"
-      xmlns:fx="http://javafx.com/fxml/1"
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="main.controllers.CreatePassSlipController"
       spacing="12" prefWidth="480"
       style="-fx-background-color: white; -fx-padding: 0 0 20 0; -fx-background-radius: 12;">
@@ -42,7 +41,8 @@
         <TextField fx:id="txtDepartment" promptText="Auto-filled when employee is selected"
                    editable="false"
                    style="-fx-background-color: #F5F5F5; -fx-border-color: #D0D0D0;
-                          -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 9 14; -fx-text-fill: #666;"/>
+                          -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 9 14;
+                          -fx-text-fill: #666;"/>
 
         <!-- Category -->
         <Label text="Category *"
@@ -57,7 +57,7 @@
         <Label text="Purpose *"
                style="-fx-font-size: 12px; -fx-text-fill: #555; -fx-font-weight: bold;"/>
         <TextArea fx:id="txtPurpose" promptText="Enter reason for pass slip"
-                  prefHeight="75" wrapText="true"
+                  prefHeight="70" wrapText="true"
                   style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
                          -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8 12;"/>
 
@@ -66,29 +66,49 @@
                style="-fx-font-size: 12px; -fx-text-fill: #555; -fx-font-weight: bold;"/>
         <TextField fx:id="txtDate" editable="false"
                    style="-fx-background-color: #F5F5F5; -fx-border-color: #D0D0D0;
-                          -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 9 14; -fx-text-fill: #666;"/>
+                          -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 9 14;
+                          -fx-text-fill: #666;"/>
 
-        <!-- Time Out and Time In -->
-        <HBox spacing="14">
-            <VBox HBox.hgrow="ALWAYS" spacing="6">
-                <Label text="Time Out *"
-                       style="-fx-font-size: 12px; -fx-text-fill: #555; -fx-font-weight: bold;"/>
-                <Button fx:id="btnTimeOut" onAction="#handlePickTimeOut" maxWidth="Infinity"
-                        style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
-                               -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 9 14;
-                               -fx-font-size: 12.5px; -fx-cursor: hand; -fx-text-fill: #333;
-                               -fx-alignment: CENTER_LEFT; -fx-border-width: 1;"/>
-            </VBox>
-            <VBox HBox.hgrow="ALWAYS" spacing="6">
-                <Label text="Time In *"
-                       style="-fx-font-size: 12px; -fx-text-fill: #555; -fx-font-weight: bold;"/>
-                <Button fx:id="btnTimeIn" onAction="#handlePickTimeIn" maxWidth="Infinity"
-                        style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
-                               -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 9 14;
-                               -fx-font-size: 12.5px; -fx-cursor: hand; -fx-text-fill: #333;
-                               -fx-alignment: CENTER_LEFT; -fx-border-width: 1;"/>
-            </VBox>
+        <!-- Time Out -->
+        <Label text="Time Out *"
+               style="-fx-font-size: 12px; -fx-text-fill: #555; -fx-font-weight: bold;"/>
+        <Button fx:id="btnTimeOut" onAction="#handlePickTimeOut" maxWidth="Infinity"
+                style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
+                       -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 9 14;
+                       -fx-font-size: 12.5px; -fx-cursor: hand; -fx-text-fill: #333;
+                       -fx-alignment: CENTER_LEFT; -fx-border-width: 1;"/>
+
+        <!-- Expected Time In with presets -->
+        <Label text="Expected Time In *"
+               style="-fx-font-size: 12px; -fx-text-fill: #555; -fx-font-weight: bold;"/>
+
+        <!-- Preset buttons -->
+        <HBox spacing="6" alignment="CENTER_LEFT">
+            <Label text="Quick:" style="-fx-font-size: 11px; -fx-text-fill: #888;"/>
+            <Button fx:id="btn30min"   text="30 min"   onAction="#handlePreset30m"
+                    style="-fx-background-color: white; -fx-border-color: #E8C0C0; -fx-border-width: 1;
+                           -fx-border-radius: 20; -fx-background-radius: 20; -fx-font-size: 11px;
+                           -fx-padding: 4 10; -fx-cursor: hand; -fx-text-fill: #8B0000;"/>
+            <Button fx:id="btn1hr"    text="1 hr"     onAction="#handlePreset1h"
+                    style="-fx-background-color: white; -fx-border-color: #E8C0C0; -fx-border-width: 1;
+                           -fx-border-radius: 20; -fx-background-radius: 20; -fx-font-size: 11px;
+                           -fx-padding: 4 10; -fx-cursor: hand; -fx-text-fill: #8B0000;"/>
+            <Button fx:id="btn2hr"    text="2 hrs"    onAction="#handlePreset2h"
+                    style="-fx-background-color: white; -fx-border-color: #E8C0C0; -fx-border-width: 1;
+                           -fx-border-radius: 20; -fx-background-radius: 20; -fx-font-size: 11px;
+                           -fx-padding: 4 10; -fx-cursor: hand; -fx-text-fill: #8B0000;"/>
+            <Button fx:id="btnHalfDay" text="Half day" onAction="#handlePresetHalfDay"
+                    style="-fx-background-color: white; -fx-border-color: #E8C0C0; -fx-border-width: 1;
+                           -fx-border-radius: 20; -fx-background-radius: 20; -fx-font-size: 11px;
+                           -fx-padding: 4 10; -fx-cursor: hand; -fx-text-fill: #8B0000;"/>
         </HBox>
+
+        <!-- Time In button (manual picker) -->
+        <Button fx:id="btnTimeIn" onAction="#handlePickTimeIn" maxWidth="Infinity"
+                style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
+                       -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 9 14;
+                       -fx-font-size: 12.5px; -fx-cursor: hand; -fx-text-fill: #333;
+                       -fx-alignment: CENTER_LEFT; -fx-border-width: 1;"/>
 
         <!-- Note -->
         <VBox style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
