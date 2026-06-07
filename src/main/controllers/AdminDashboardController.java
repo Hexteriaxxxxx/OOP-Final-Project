@@ -61,10 +61,14 @@ public class AdminDashboardController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // ── Init filteredList ONCE — never recreate, preserves active filter ──
+        // Init filteredList ONCE — never recreate it
         filteredList = new FilteredList<>(masterList, p -> true);
         tblPassSlips.setItems(filteredList);
-        setupTableColumns(); setupFilterComboBox(); loadDashboardData(); loadRecentActivity(); startOverdueChecker();
+        setupTableColumns();
+        setupFilterComboBox();
+        loadDashboardData();
+        loadRecentActivity();
+        startOverdueChecker();
     }
 
     public void setCurrentUser(User user) {
@@ -83,7 +87,10 @@ public class AdminDashboardController implements Initializable {
     }
 
     private void onOverdueDetected(List<PassSlip> overdueSlips) {
-        loadDashboardData(); loadRecentActivity();
+        // Refresh data first so Overdue status is in masterList
+        loadDashboardData();
+        loadRecentActivity();
+
         StringBuilder msg = new StringBuilder();
         msg.append("The following employee(s) have NOT returned on time:\n\n");
         for (PassSlip slip : overdueSlips) {
@@ -95,19 +102,23 @@ public class AdminDashboardController implements Initializable {
                .append("\n  Expected: ").append(expected)
                .append("  |  ").append(minsLate).append(" min(s) late\n\n");
         }
-        msg.append("Click 'View Overdue' to confirm their return in the dashboard.");
+        msg.append("Click 'View Overdue' to see them in the dashboard.");
+
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle("⚠  Overdue Pass Slips");
         alert.setHeaderText("⚠  " + overdueSlips.size() + " employee(s) have not returned on time!");
         alert.setContentText(msg.toString());
+
         ButtonType btnViewOverdue = new ButtonType("View Overdue", ButtonBar.ButtonData.OK_DONE);
         ButtonType btnDismiss     = new ButtonType("Dismiss",      ButtonBar.ButtonData.CANCEL_CLOSE);
         alert.getButtonTypes().setAll(btnViewOverdue, btnDismiss);
         alert.show();
+
         alert.resultProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == btnViewOverdue && cmbFilter != null) {
+                // Set filter to Overdue THEN reload — data already has Overdue records
                 cmbFilter.setValue("Overdue");
-                applyFilter();
+                loadDashboardData(); // reloads masterList and calls applyFilter with Overdue set
             }
         });
     }
@@ -181,9 +192,8 @@ public class AdminDashboardController implements Initializable {
     private void loadDashboardData() {
         try {
             List<PassSlip> all = passSlipDAO.getAllPassSlips();
-            // ── Only update masterList — filteredList stays linked, filter preserved ──
             masterList.setAll(all);
-            applyFilter(); // re-apply current filter with fresh data
+            applyFilter(); // Uses current cmbFilter value — preserves active filter
 
             long pending  = all.stream().filter(p -> "Pending" .equalsIgnoreCase(p.getStatus())).count();
             long approved = all.stream().filter(p -> "Approved".equalsIgnoreCase(p.getStatus())).count();
@@ -322,7 +332,7 @@ public class AdminDashboardController implements Initializable {
         }});
     }
 
-    // ── Record Return — Option B ──────────────────────────────────
+    // ── Record Return ─────────────────────────────────────────────
     private void handleRecordReturn(PassSlip ps) {
         final LocalDateTime now = LocalDateTime.now();
         final String durationOut = (ps.getTimeOut() != null)
@@ -363,6 +373,8 @@ public class AdminDashboardController implements Initializable {
                         "✅  " + ps.getEmpName() + " has been marked as RETURNED." +
                         "\nActual return  : " + now.format(TIME_FMT) +
                         "\nTotal duration : " + durationOut);
+                    // Reset filter to All after confirming return
+                    cmbFilter.setValue("All");
                     loadDashboardData(); loadRecentActivity();
                 } else {
                     showAlert(Alert.AlertType.ERROR, "Error", "Failed to record return. Please try again.");
