@@ -18,6 +18,7 @@ import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import dao.ActivityLogDAO;
 import dao.PassSlipDAO;
+import main.utils.OverdueCheckerService;
 import models.ActivityLog;
 import models.PassSlip;
 import models.User;
@@ -25,6 +26,7 @@ import models.User;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -44,16 +46,23 @@ public class AdminDashboardController implements Initializable {
     @FXML private ComboBox<String> cmbFilter;
     @FXML private VBox vboxRecentActivity;
 
-    private final PassSlipDAO    passSlipDAO    = new PassSlipDAO();
-    private final ActivityLogDAO activityLogDAO = new ActivityLogDAO();
+    private final PassSlipDAO      passSlipDAO      = new PassSlipDAO();
+    private final ActivityLogDAO   activityLogDAO   = new ActivityLogDAO();
     private final ObservableList<PassSlip> masterList = FXCollections.observableArrayList();
     private FilteredList<PassSlip> filteredList;
     private User currentUser;
     private NotificationHelper notifHelper;
+    private OverdueCheckerService overdueChecker;
+
+    private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("hh:mm a");
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        setupTableColumns(); setupFilterComboBox(); loadDashboardData(); loadRecentActivity();
+        setupTableColumns();
+        setupFilterComboBox();
+        loadDashboardData();
+        loadRecentActivity();
+        startOverdueChecker();
     }
 
     public void setCurrentUser(User user) {
@@ -63,6 +72,36 @@ public class AdminDashboardController implements Initializable {
             lblSidebarRole.setText(user.getRole());
             lblWelcome.setText("Welcome back, " + user.getUsername());
         }
+    }
+
+    // ── Overdue Checker ──────────────────────────────────────────
+    private void startOverdueChecker() {
+        overdueChecker = new OverdueCheckerService(this::onOverdueDetected);
+        overdueChecker.start();
+    }
+
+    private void onOverdueDetected(List<PassSlip> overdueSlips) {
+        // Refresh dashboard to show new Overdue statuses
+        loadDashboardData();
+        loadRecentActivity();
+
+        // Show alert for each newly overdue slip
+        StringBuilder msg = new StringBuilder();
+        msg.append("⚠  The following employee(s) have NOT returned on time:\n\n");
+        for (PassSlip slip : overdueSlips) {
+            String expected = slip.getTimeIn() != null
+                ? slip.getTimeIn().format(TIME_FMT) : "—";
+            msg.append("• ").append(slip.getEmpName())
+               .append(" (PS-").append(String.format("%04d", slip.getSlipId())).append(")")
+               .append(" — Expected: ").append(expected).append("\n");
+        }
+        msg.append("\nPlease verify their return.");
+
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("⚠  Overdue Pass Slips");
+        alert.setHeaderText("Employees have not returned on time!");
+        alert.setContentText(msg.toString());
+        alert.show(); // non-blocking
     }
 
     @FXML private void handleNotification() {
@@ -80,6 +119,7 @@ public class AdminDashboardController implements Initializable {
         colTimeIn    .setCellValueFactory(new PropertyValueFactory<>("formattedTimeIn"));
         colStatus    .setCellValueFactory(new PropertyValueFactory<>("status"));
 
+        // Status badge with Overdue styling
         colStatus.setCellFactory(col -> new TableCell<>() {
             @Override protected void updateItem(String status, boolean empty) {
                 super.updateItem(status, empty);
@@ -91,6 +131,8 @@ public class AdminDashboardController implements Initializable {
                     case "pending"  -> badge.setStyle(badge.getStyle() + "-fx-background-color: #FFF3CD; -fx-text-fill: #856404;");
                     case "approved" -> badge.setStyle(badge.getStyle() + "-fx-background-color: #D4EDDA; -fx-text-fill: #155724;");
                     case "rejected" -> badge.setStyle(badge.getStyle() + "-fx-background-color: #F8D7DA; -fx-text-fill: #721c24;");
+                    case "overdue"  -> badge.setStyle(badge.getStyle() + "-fx-background-color: #FF6B35; -fx-text-fill: white;");
+                    case "returned" -> badge.setStyle(badge.getStyle() + "-fx-background-color: #E2E3E5; -fx-text-fill: #383d41;");
                     default         -> badge.setStyle(badge.getStyle() + "-fx-background-color: #E2E3E5; -fx-text-fill: #383d41;");
                 }
                 setGraphic(badge); setText(null);
@@ -101,28 +143,34 @@ public class AdminDashboardController implements Initializable {
             final Button btnView    = new Button("👁");
             final Button btnApprove = new Button("✓");
             final Button btnReject  = new Button("✗");
-            final HBox   box        = new HBox(4, btnView, btnApprove, btnReject);
+            final Button btnReturn  = new Button("↩");
+            final HBox   box        = new HBox(4, btnView, btnApprove, btnReject, btnReturn);
             {
                 btnView   .setStyle("-fx-background-color: transparent; -fx-font-size: 13px; -fx-cursor: hand;");
                 btnApprove.setStyle("-fx-background-color: transparent; -fx-text-fill: #28a745; -fx-font-size: 13px; -fx-font-weight: bold; -fx-cursor: hand;");
                 btnReject .setStyle("-fx-background-color: transparent; -fx-text-fill: #dc3545; -fx-font-size: 13px; -fx-font-weight: bold; -fx-cursor: hand;");
+                btnReturn .setStyle("-fx-background-color: transparent; -fx-text-fill: #FF6B35; -fx-font-size: 13px; -fx-font-weight: bold; -fx-cursor: hand;");
+                btnReturn .setTooltip(new Tooltip("Record employee return"));
                 btnView   .setOnAction(e -> handleViewPassSlip  (getTableView().getItems().get(getIndex())));
                 btnApprove.setOnAction(e -> handleApprovePassSlip(getTableView().getItems().get(getIndex())));
                 btnReject .setOnAction(e -> handleRejectPassSlip (getTableView().getItems().get(getIndex())));
+                btnReturn .setOnAction(e -> handleRecordReturn   (getTableView().getItems().get(getIndex())));
             }
             @Override protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty) { setGraphic(null); return; }
                 PassSlip ps = getTableView().getItems().get(getIndex());
-                boolean isPending = "Pending".equalsIgnoreCase(ps.getStatus());
-                btnApprove.setVisible(isPending); btnReject.setVisible(isPending);
+                String status = ps.getStatus() != null ? ps.getStatus().toLowerCase() : "";
+                btnApprove.setVisible(status.equals("pending"));
+                btnReject .setVisible(status.equals("pending"));
+                btnReturn .setVisible(status.equals("approved") || status.equals("overdue"));
                 setGraphic(box);
             }
         });
     }
 
     private void setupFilterComboBox() {
-        cmbFilter.setItems(FXCollections.observableArrayList("All","Pending","Approved","Rejected","Returned"));
+        cmbFilter.setItems(FXCollections.observableArrayList("All","Pending","Approved","Overdue","Rejected","Returned"));
         cmbFilter.setValue("All");
     }
 
@@ -132,19 +180,24 @@ public class AdminDashboardController implements Initializable {
             masterList.setAll(all);
             filteredList = new FilteredList<>(masterList, p -> true);
             tblPassSlips.setItems(filteredList);
+
             long pending  = all.stream().filter(p -> "Pending" .equalsIgnoreCase(p.getStatus())).count();
             long approved = all.stream().filter(p -> "Approved".equalsIgnoreCase(p.getStatus())).count();
             long rejected = all.stream().filter(p -> "Rejected".equalsIgnoreCase(p.getStatus())).count();
+            long overdue  = all.stream().filter(p -> "Overdue" .equalsIgnoreCase(p.getStatus())).count();
+
+            // Show overdue count in rejected card (repurposed) or active card
             lblPendingCount .setText(String.valueOf(pending));
             lblApprovedCount.setText(String.valueOf(approved));
-            lblRejectedCount.setText(String.valueOf(rejected));
-            lblActiveCount  .setText(String.valueOf(approved));
+            lblRejectedCount.setText(overdue > 0 ? "⚠ " + overdue : String.valueOf(rejected));
+            lblActiveCount  .setText(String.valueOf(approved + overdue));
+
             List<PassSlip> today = passSlipDAO.getTodayPassSlips();
             long todayApproved   = today.stream().filter(p -> "Approved".equalsIgnoreCase(p.getStatus())).count();
             int  approvalRate    = today.isEmpty() ? 0 : (int)((todayApproved*100)/today.size());
             lblTotalRequests.setText(String.valueOf(today.size()));
             lblApprovalRate .setText(approvalRate + "%");
-            lblActiveNow    .setText(String.valueOf(approved));
+            lblActiveNow    .setText(String.valueOf(approved + overdue));
         } catch (Exception e) { System.out.println("Dashboard Error: " + e.getMessage()); }
     }
 
@@ -230,7 +283,6 @@ public class AdminDashboardController implements Initializable {
                         "Pass slip #" + ps.getSlipId() + " approved",
                         currentUser != null ? currentUser.getUsername() : "Admin");
 
-                    // ── Offer to print PDF immediately ──────────────
                     Alert printPrompt = new Alert(Alert.AlertType.CONFIRMATION);
                     printPrompt.setTitle("Print Pass Slip");
                     printPrompt.setHeaderText("✅  Pass slip approved!");
@@ -267,7 +319,8 @@ public class AdminDashboardController implements Initializable {
         c.setContentText("Employee: " + ps.getEmpName());
         c.showAndWait().ifPresent(r -> { if (r==ButtonType.OK) {
             if (passSlipDAO.updatePassSlipStatus(ps.getSlipId(), "Rejected")) {
-                activityLogDAO.logActivity(ps.getEmpId(), "Pass slip #" + ps.getSlipId() + " rejected",
+                activityLogDAO.logActivity(ps.getEmpId(),
+                    "Pass slip #" + ps.getSlipId() + " rejected",
                     currentUser!=null?currentUser.getUsername():"Admin");
                 showAlert(Alert.AlertType.INFORMATION,"Done","Pass slip rejected.");
                 loadDashboardData(); loadRecentActivity();
@@ -275,10 +328,43 @@ public class AdminDashboardController implements Initializable {
         }});
     }
 
+    // ── Record employee return ────────────────────────────────────
+    private void handleRecordReturn(PassSlip ps) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Record Return");
+        confirm.setHeaderText("Record return for " + ps.getEmpName() + "?");
+        confirm.setContentText(
+            "PS-" + String.format("%04d", ps.getSlipId()) +
+            "\nThis will mark the employee as returned at the current time.");
+        confirm.showAndWait().ifPresent(r -> {
+            if (r == ButtonType.OK) {
+                java.time.LocalDateTime now = java.time.LocalDateTime.now();
+                // Calculate duration
+                String duration = "—";
+                if (ps.getTimeOut() != null) {
+                    long mins = java.time.Duration.between(ps.getTimeOut(), now).toMinutes();
+                    duration = (mins / 60) + "h " + (mins % 60) + "m";
+                }
+                if (passSlipDAO.recordTimeIn(ps.getSlipId(), now, duration)) {
+                    activityLogDAO.logActivity(ps.getEmpId(),
+                        "Employee " + ps.getEmpName() + " returned — PS-" + ps.getSlipId(),
+                        currentUser != null ? currentUser.getUsername() : "Admin");
+                    showAlert(Alert.AlertType.INFORMATION, "Return Recorded",
+                        ps.getEmpName() + " has been marked as returned at " +
+                        now.format(DateTimeFormatter.ofPattern("hh:mm a")) +
+                        "\nDuration: " + duration);
+                    loadDashboardData(); loadRecentActivity();
+                } else {
+                    showAlert(Alert.AlertType.ERROR, "Error", "Failed to record return.");
+                }
+            }
+        });
+    }
+
     @FXML private void handleNavDashboard()      { setActiveNav(btnDashboard); }
-    @FXML private void handleNavPassSlip()       { setActiveNav(btnPassSlip);  navigateTo("/main/resources/fxml/PassSlipIssuance.fxml","Pass Slip Issuance"); }
-    @FXML private void handleNavReports()        { setActiveNav(btnReports);   navigateTo("/main/resources/fxml/Reports.fxml","Reports"); }
-    @FXML private void handleNavUserManagement() { setActiveNav(btnUserMgmt);  navigateTo("/main/resources/fxml/UserManagement.fxml","User Management"); }
+    @FXML private void handleNavPassSlip()       { setActiveNav(btnPassSlip);  stopOverdueChecker(); navigateTo("/main/resources/fxml/PassSlipIssuance.fxml","Pass Slip Issuance"); }
+    @FXML private void handleNavReports()        { setActiveNav(btnReports);   stopOverdueChecker(); navigateTo("/main/resources/fxml/Reports.fxml","Reports"); }
+    @FXML private void handleNavUserManagement() { setActiveNav(btnUserMgmt);  stopOverdueChecker(); navigateTo("/main/resources/fxml/UserManagement.fxml","User Management"); }
 
     private void setActiveNav(Button active) {
         String on  = "-fx-background-color: rgba(255,255,255,0.22); -fx-text-fill: white; -fx-font-size: 12.5px; -fx-font-weight: bold; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12; -fx-background-radius: 8; -fx-cursor: hand; -fx-border-width: 0;";
@@ -288,10 +374,15 @@ public class AdminDashboardController implements Initializable {
         if (active!=null) active.setStyle(on);
     }
 
+    private void stopOverdueChecker() {
+        if (overdueChecker != null) overdueChecker.stop();
+    }
+
     @FXML private void handleLogout() {
         Alert c = new Alert(Alert.AlertType.CONFIRMATION);
         c.setTitle("Logout"); c.setHeaderText("Are you sure you want to logout?");
         c.showAndWait().ifPresent(r -> { if (r==ButtonType.OK) {
+            stopOverdueChecker();
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/resources/fxml/Login.fxml"));
                 Parent root = loader.load();

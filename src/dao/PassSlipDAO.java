@@ -59,6 +59,46 @@ public class PassSlipDAO {
         } catch (SQLException e) { System.out.println("Record time-in error: " + e.getMessage()); return false; }
     }
 
+    /**
+     * Returns Approved slips where the expected time_in has already passed
+     * but the employee has not yet returned (status still 'Approved').
+     * These are newly overdue — not yet marked as 'Overdue'.
+     */
+    public List<PassSlip> getNewlyOverdueSlips() {
+        List<PassSlip> slips = new ArrayList<>();
+        String sql = "SELECT ps.*, e.name AS emp_name, e.department " +
+                     "FROM \"Pass_slip\" ps " +
+                     "JOIN \"Employee\" e ON ps.emp_id = e.emp_id " +
+                     "WHERE ps.status = 'Approved' " +
+                     "  AND ps.time_in IS NOT NULL " +
+                     "  AND ps.time_in < NOW() " +
+                     "ORDER BY ps.time_in ASC";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) slips.add(mapResultSet(rs));
+        } catch (SQLException e) { System.out.println("getNewlyOverdueSlips error: " + e.getMessage()); }
+        return slips;
+    }
+
+    /**
+     * Returns all currently overdue slips (for dashboard display).
+     */
+    public List<PassSlip> getOverdueSlips() {
+        List<PassSlip> slips = new ArrayList<>();
+        String sql = "SELECT ps.*, e.name AS emp_name, e.department " +
+                     "FROM \"Pass_slip\" ps " +
+                     "JOIN \"Employee\" e ON ps.emp_id = e.emp_id " +
+                     "WHERE ps.status = 'Overdue' " +
+                     "ORDER BY ps.time_in ASC";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) slips.add(mapResultSet(rs));
+        } catch (SQLException e) { System.out.println("getOverdueSlips error: " + e.getMessage()); }
+        return slips;
+    }
+
     public List<PassSlip> getAllPassSlips() {
         List<PassSlip> slips = new ArrayList<>();
         String sql = "SELECT ps.*, e.name AS emp_name, e.department FROM \"Pass_slip\" ps " +
@@ -105,6 +145,10 @@ public class PassSlipDAO {
         return countQuery("SELECT COUNT(*) FROM \"Pass_slip\" WHERE status = 'Approved'");
     }
 
+    public int countOverdueSlips() {
+        return countQuery("SELECT COUNT(*) FROM \"Pass_slip\" WHERE status = 'Overdue'");
+    }
+
     private int countQuery(String sql) {
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
@@ -123,7 +167,6 @@ public class PassSlipDAO {
         slip.setReason    (rs.getString("reason"));
         slip.setIssuedBy  (rs.getInt   ("issued_by"));
         slip.setStatus    (rs.getString("status"));
-        // category — fallback to "Official Business" if null (old records)
         try {
             String cat = rs.getString("category");
             slip.setCategory(cat != null ? cat : "Official Business");
