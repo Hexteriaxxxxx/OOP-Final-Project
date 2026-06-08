@@ -4,7 +4,7 @@ import dao.PassSlipDAO;
 import models.PassSlip;
 import javafx.application.Platform;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -12,22 +12,22 @@ import java.util.function.Consumer;
 
 /**
  * Background service that checks every 60 seconds for overdue pass slips.
- * A pass slip is OVERDUE when:
- *   - Status is 'Approved'
- *   - time_in (expected return) is not null AND is in the past
- *   - Employee has not yet returned (no actual time_in recorded)
  *
- * When overdue slips are found, it:
- *   1. Updates their status to 'Overdue' in the DB
- *   2. Calls the onOverdueFound callback on the JavaFX thread
+ * On FIRST run after start():
+ *   - Detects newly overdue (status='Approved' + time_in passed)
+ *   - ALSO includes existing 'Overdue' slips so they show in the alert
+ *
+ * On subsequent runs:
+ *   - Only newly overdue (to avoid spamming alerts for already-known slips)
  */
 public class OverdueCheckerService {
 
-    private static final long CHECK_INTERVAL_MS = 60_000; // every 60 seconds
+    private static final long CHECK_INTERVAL_MS = 60_000;
 
     private Timer timer;
     private final PassSlipDAO passSlipDAO = new PassSlipDAO();
-    private Consumer<List<PassSlip>> onOverdueFound;
+    private final Consumer<List<PassSlip>> onOverdueFound;
+    private boolean isFirstRun = true;
 
     public OverdueCheckerService(Consumer<List<PassSlip>> onOverdueFound) {
         this.onOverdueFound = onOverdueFound;
@@ -35,10 +35,11 @@ public class OverdueCheckerService {
 
     public void start() {
         if (timer != null) timer.cancel();
+        isFirstRun = true; // reset on every start
         timer = new Timer("OverdueChecker", true);
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override public void run() { checkOverdue(); }
-        }, 5_000, CHECK_INTERVAL_MS); // first check after 5 seconds
+        }, 5_000, CHECK_INTERVAL_MS);
         System.out.println("[OverdueChecker] Started — checking every 60 seconds");
     }
 
@@ -49,21 +50,43 @@ public class OverdueCheckerService {
 
     private void checkOverdue() {
         try {
-            List<PassSlip> overdueSlips = passSlipDAO.getNewlyOverdueSlips();
-            if (overdueSlips == null || overdueSlips.isEmpty()) return;
+            // 1. Detect new ones (status='Approved' with passed time_in)
+            List<PassSlip> newlyOverdue = passSlipDAO.getNewlyOverdueSlips();
+            if (newlyOverdue == null) newlyOverdue = new ArrayList<>();
 
-            System.out.println("[OverdueChecker] Found " + overdueSlips.size() + " overdue slip(s)");
-
-            // Mark as Overdue in DB
-            for (PassSlip slip : overdueSlips) {
-                passSlipDAO.updatePassSlipStatus(slip.getSlipId(), "Overdue");
-                System.out.println("[OverdueChecker] Marked OVERDUE: PS-" + slip.getSlipId()
-                    + " — " + slip.getEmpName());
+            // Mark new ones in DB
+            for (PassSlip slip : newlyOverdue) {
+                if (passSlipDAO.updatePassSlipStatus(slip.getSlipId(), "Overdue")) {
+                    System.out.println("[OverdueChecker] Marked OVERDUE: PS-" + slip.getSlipId()
+                        + " — " + slip.getEmpName());
+                }
             }
+
+            // 2. On first run, also include EXISTING Overdue slips so admin sees them
+            List<PassSlip> toNotify = new ArrayList<>(newlyOverdue);
+            if (isFirstRun) {
+                List<PassSlip> existing = passSlipDAO.getOverdueSlips();
+                if (existing != null) {
+                    // Add existing that aren't already in newlyOverdue (avoid duplicates)
+                    for (PassSlip ex : existing) {
+                        boolean alreadyIn = false;
+                        for (PassSlip ne : newlyOverdue) {
+                            if (ne.getSlipId() == ex.getSlipId()) { alreadyIn = true; break; }
+                        }
+                        if (!alreadyIn) toNotify.add(ex);
+                    }
+                }
+                isFirstRun = false;
+            }
+
+            if (toNotify.isEmpty()) return;
+
+            System.out.println("[OverdueChecker] Notifying " + toNotify.size() + " overdue slip(s)");
 
             // Notify on JavaFX thread
             if (onOverdueFound != null) {
-                Platform.runLater(() -> onOverdueFound.accept(overdueSlips));
+                final List<PassSlip> finalList = toNotify;
+                Platform.runLater(() -> onOverdueFound.accept(finalList));
             }
 
         } catch (Exception e) {

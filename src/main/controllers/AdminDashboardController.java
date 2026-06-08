@@ -30,6 +30,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class AdminDashboardController implements Initializable {
@@ -61,7 +62,6 @@ public class AdminDashboardController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Init filteredList ONCE — never recreate it
         filteredList = new FilteredList<>(masterList, p -> true);
         tblPassSlips.setItems(filteredList);
         setupTableColumns();
@@ -80,14 +80,12 @@ public class AdminDashboardController implements Initializable {
         }
     }
 
-    // ── Overdue Checker ──────────────────────────────────────────
     private void startOverdueChecker() {
         overdueChecker = new OverdueCheckerService(this::onOverdueDetected);
         overdueChecker.start();
     }
 
     private void onOverdueDetected(List<PassSlip> overdueSlips) {
-        // Refresh data first so Overdue status is in masterList
         loadDashboardData();
         loadRecentActivity();
 
@@ -112,15 +110,15 @@ public class AdminDashboardController implements Initializable {
         ButtonType btnViewOverdue = new ButtonType("View Overdue", ButtonBar.ButtonData.OK_DONE);
         ButtonType btnDismiss     = new ButtonType("Dismiss",      ButtonBar.ButtonData.CANCEL_CLOSE);
         alert.getButtonTypes().setAll(btnViewOverdue, btnDismiss);
-        alert.show();
 
-        alert.resultProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal == btnViewOverdue && cmbFilter != null) {
-                // Set filter to Overdue THEN reload — data already has Overdue records
-                cmbFilter.setValue("Overdue");
-                loadDashboardData(); // reloads masterList and calls applyFilter with Overdue set
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == btnViewOverdue) {
+            loadDashboardData();
+            if (cmbFilter != null) {
+                cmbFilter.getSelectionModel().select("Overdue");
+                applyFilter();
             }
-        });
+        }
     }
 
     @FXML private void handleNotification() {
@@ -158,14 +156,18 @@ public class AdminDashboardController implements Initializable {
             final Button btnView    = new Button("👁");
             final Button btnApprove = new Button("✓");
             final Button btnReject  = new Button("✗");
-            final Button btnReturn  = new Button("↩ Return");
-            final HBox   box        = new HBox(4, btnView, btnApprove, btnReject, btnReturn);
+            final Button btnReturn  = new Button("↩");
+            final HBox   box        = new HBox(6, btnView, btnApprove, btnReject, btnReturn);
             {
-                btnView   .setStyle("-fx-background-color: transparent; -fx-font-size: 13px; -fx-cursor: hand;");
-                btnApprove.setStyle("-fx-background-color: transparent; -fx-text-fill: #28a745; -fx-font-size: 13px; -fx-font-weight: bold; -fx-cursor: hand;");
-                btnReject .setStyle("-fx-background-color: transparent; -fx-text-fill: #dc3545; -fx-font-size: 13px; -fx-font-weight: bold; -fx-cursor: hand;");
-                btnReturn .setStyle("-fx-background-color: #FF6B35; -fx-text-fill: white; -fx-font-size: 11px; -fx-padding: 3 8; -fx-background-radius: 10; -fx-cursor: hand; -fx-border-width: 0;");
-                btnReturn.setTooltip(new Tooltip("Record employee return"));
+                box.setAlignment(Pos.CENTER_LEFT);
+                btnView   .setStyle("-fx-background-color: transparent; -fx-font-size: 14px; -fx-cursor: hand; -fx-padding: 2 4;");
+                btnApprove.setStyle("-fx-background-color: transparent; -fx-text-fill: #28a745; -fx-font-size: 15px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 2 4;");
+                btnReject .setStyle("-fx-background-color: transparent; -fx-text-fill: #dc3545; -fx-font-size: 15px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 2 4;");
+                btnReturn .setStyle("-fx-background-color: #FF6B35; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 3 10; -fx-background-radius: 12; -fx-cursor: hand; -fx-border-width: 0; -fx-font-weight: bold;");
+                btnView   .setTooltip(new Tooltip("View details"));
+                btnApprove.setTooltip(new Tooltip("Approve"));
+                btnReject .setTooltip(new Tooltip("Reject"));
+                btnReturn .setTooltip(new Tooltip("Record employee return"));
                 btnView   .setOnAction(e -> handleViewPassSlip  (getTableView().getItems().get(getIndex())));
                 btnApprove.setOnAction(e -> handleApprovePassSlip(getTableView().getItems().get(getIndex())));
                 btnReject .setOnAction(e -> handleRejectPassSlip (getTableView().getItems().get(getIndex())));
@@ -176,9 +178,12 @@ public class AdminDashboardController implements Initializable {
                 if (empty) { setGraphic(null); return; }
                 PassSlip ps   = getTableView().getItems().get(getIndex());
                 String status = ps.getStatus() != null ? ps.getStatus().toLowerCase() : "";
-                btnApprove.setVisible(status.equals("pending"));
-                btnReject .setVisible(status.equals("pending"));
-                btnReturn .setVisible(status.equals("approved") || status.equals("overdue"));
+                boolean isPending  = status.equals("pending");
+                boolean canReturn  = status.equals("approved") || status.equals("overdue");
+                // visible AND managed = shows AND takes space; both false = hidden completely
+                btnApprove.setVisible(isPending);  btnApprove.setManaged(isPending);
+                btnReject .setVisible(isPending);  btnReject .setManaged(isPending);
+                btnReturn .setVisible(canReturn);  btnReturn .setManaged(canReturn);
                 setGraphic(box);
             }
         });
@@ -193,7 +198,7 @@ public class AdminDashboardController implements Initializable {
         try {
             List<PassSlip> all = passSlipDAO.getAllPassSlips();
             masterList.setAll(all);
-            applyFilter(); // Uses current cmbFilter value — preserves active filter
+            applyFilter();
 
             long pending  = all.stream().filter(p -> "Pending" .equalsIgnoreCase(p.getStatus())).count();
             long approved = all.stream().filter(p -> "Approved".equalsIgnoreCase(p.getStatus())).count();
@@ -332,7 +337,6 @@ public class AdminDashboardController implements Initializable {
         }});
     }
 
-    // ── Record Return ─────────────────────────────────────────────
     private void handleRecordReturn(PassSlip ps) {
         final LocalDateTime now = LocalDateTime.now();
         final String durationOut = (ps.getTimeOut() != null)
@@ -373,7 +377,6 @@ public class AdminDashboardController implements Initializable {
                         "✅  " + ps.getEmpName() + " has been marked as RETURNED." +
                         "\nActual return  : " + now.format(TIME_FMT) +
                         "\nTotal duration : " + durationOut);
-                    // Reset filter to All after confirming return
                     cmbFilter.setValue("All");
                     loadDashboardData(); loadRecentActivity();
                 } else {
