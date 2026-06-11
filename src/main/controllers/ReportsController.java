@@ -6,15 +6,18 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import main.utils.SkeletonLoader;
 import models.PassSlip;
 
 import java.io.File;
@@ -36,6 +39,7 @@ public class ReportsController implements Initializable {
     @FXML private ToggleButton btnDailyLogs, btnMonthlyLogs;
     @FXML private VBox dailySection, monthlySection;
     @FXML private Button btnFilterToday, btnFilterWeek, btnFilterMonth, btnFilterAll, btnFilterDate;
+    @FXML private StackPane skeletonContainer;
     @FXML private TableView<PassSlip> dailyTable;
     @FXML private TableColumn<PassSlip, String> colRequestId, colDate, colEmpName, colDepartment, colPurpose, colTimeOut, colTimeIn, colDuration, colStatus;
     @FXML private TableView<MonthlyReport> monthlyTable;
@@ -62,15 +66,31 @@ public class ReportsController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setupDailyColumns(); setupMonthlyColumns(); setupFilterCombo();
-        loadAllData(); loadMonthlyData();
-        btnDailyLogs .setStyle(TOGGLE_ACTIVE);
-        btnMonthlyLogs.setStyle(TOGGLE_INACTIVE);
-        btnFilterToday.setStyle(DATE_INACTIVE);
-        btnFilterWeek .setStyle(DATE_INACTIVE);
-        btnFilterMonth.setStyle(DATE_INACTIVE);
-        btnFilterAll  .setStyle(DATE_INACTIVE);
-        btnFilterDate .setStyle(DATE_INACTIVE);
-        setActiveDateBtn(btnFilterAll);
+        filteredDailyData = new FilteredList<>(allData, p -> true);
+        dailyTable.setItems(filteredDailyData);
+        btnDailyLogs.setStyle(TOGGLE_ACTIVE);   btnMonthlyLogs.setStyle(TOGGLE_INACTIVE);
+        btnFilterAll.setStyle(DATE_ACTIVE);      btnFilterToday.setStyle(DATE_INACTIVE);
+        btnFilterWeek.setStyle(DATE_INACTIVE);   btnFilterMonth.setStyle(DATE_INACTIVE);
+        btnFilterDate.setStyle(DATE_INACTIVE);
+
+        // Skeleton then load
+        SkeletonLoader.show(skeletonContainer);
+        loadAllDataAsync();
+        loadMonthlyData();
+    }
+
+    private void loadAllDataAsync() {
+        Task<List<PassSlip>> task = new Task<>() {
+            @Override protected List<PassSlip> call() { return passSlipDAO.getAllPassSlips(); }
+        };
+        task.setOnSucceeded(e -> {
+            SkeletonLoader.hide(skeletonContainer);
+            List<PassSlip> slips = task.getValue();
+            allData.setAll(slips != null ? slips : List.of());
+            loadStatCards();
+        });
+        task.setOnFailed(e -> SkeletonLoader.hide(skeletonContainer));
+        new Thread(task, "ReportsLoader").start();
     }
 
     public void initSession(String username, String role) {
@@ -93,28 +113,29 @@ public class ReportsController implements Initializable {
         Stage owner = (Stage) dailyTable.getScene().getWindow();
         LocalDate picked = DatePickerDialog.show(owner, specificDate != null ? specificDate : LocalDate.now());
         if (picked != null) {
-            specificDate=picked; dateRange="Specific";
-            btnFilterDate.setText("📅  "+picked.format(DateTimeFormatter.ofPattern("MMM dd, yyyy")));
+            specificDate = picked; dateRange = "Specific";
+            btnFilterDate.setText("📅  " + picked.format(DateTimeFormatter.ofPattern("MMM dd, yyyy")));
             setActiveDateBtn(btnFilterDate); applyFilter();
         }
     }
 
     private void setActiveDateBtn(Button active) {
         for (Button btn : new Button[]{btnFilterToday,btnFilterWeek,btnFilterMonth,btnFilterAll,btnFilterDate})
-            btn.setStyle(btn==active ? DATE_ACTIVE : DATE_INACTIVE);
-        if (active != btnFilterDate && specificDate == null)
-            btnFilterDate.setText("Pick Date");
+            btn.setStyle(btn == active ? DATE_ACTIVE : DATE_INACTIVE);
+        if (active != btnFilterDate && specificDate == null) btnFilterDate.setText("Pick Date");
     }
 
     @FXML private void switchToDaily() {
         isMonthlyTab = false;
-        dailySection.setVisible(true);dailySection.setManaged(true);monthlySection.setVisible(false);monthlySection.setManaged(false);
-        btnDailyLogs.setStyle(TOGGLE_ACTIVE);btnMonthlyLogs.setStyle(TOGGLE_INACTIVE);
+        dailySection.setVisible(true); dailySection.setManaged(true);
+        monthlySection.setVisible(false); monthlySection.setManaged(false);
+        btnDailyLogs.setStyle(TOGGLE_ACTIVE); btnMonthlyLogs.setStyle(TOGGLE_INACTIVE);
     }
     @FXML private void switchToMonthly() {
         isMonthlyTab = true;
-        monthlySection.setVisible(true);monthlySection.setManaged(true);dailySection.setVisible(false);dailySection.setManaged(false);
-        btnMonthlyLogs.setStyle(TOGGLE_ACTIVE);btnDailyLogs.setStyle(TOGGLE_INACTIVE);
+        monthlySection.setVisible(true); monthlySection.setManaged(true);
+        dailySection.setVisible(false); dailySection.setManaged(false);
+        btnMonthlyLogs.setStyle(TOGGLE_ACTIVE); btnDailyLogs.setStyle(TOGGLE_INACTIVE);
         loadMonthlyData();
     }
 
@@ -144,120 +165,76 @@ public class ReportsController implements Initializable {
         colPending .setCellFactory(col->new TableCell<>(){@Override protected void updateItem(String i,boolean e){super.updateItem(i,e);setText(e||i==null?null:i);setStyle(e||i==null?"":"-fx-text-fill:#BA7517;-fx-font-weight:bold;");}});
     }
 
-    private void loadAllData() {
-        List<PassSlip> slips=passSlipDAO.getAllPassSlips();allData.setAll(slips!=null?slips:List.of());
-        filteredDailyData=new FilteredList<>(allData,p->true);dailyTable.setItems(filteredDailyData);loadStatCards();
-    }
-
     private void loadMonthlyData() {
         List<MonthlyReportDAO.MonthlyRow> rows = monthlyReportDAO.getMonthlyReports();
         ObservableList<MonthlyReport> data = FXCollections.observableArrayList();
-        if (rows.isEmpty()) {
-            monthlyTable.setPlaceholder(new Label("No monthly data available yet."));
-        } else {
-            for (MonthlyReportDAO.MonthlyRow row : rows)
-                data.add(new MonthlyReport(row.month, row.totalRequests, row.approved, row.rejected, row.pending, row.totalVisitors, row.avgDuration));
-        }
+        if (!rows.isEmpty()) for (MonthlyReportDAO.MonthlyRow row : rows) data.add(new MonthlyReport(row.month, row.totalRequests, row.approved, row.rejected, row.pending, row.totalVisitors, row.avgDuration));
         monthlyTable.setItems(data);
     }
 
     private void loadStatCards() {
-        long total=filteredDailyData!=null?filteredDailyData.size():allData.size();
-        long approved=(filteredDailyData!=null?filteredDailyData:allData).stream().filter(s->"approved".equalsIgnoreCase(s.getStatus())).count();
-        double rate=total==0?0.0:(double)approved/total*100;
-        lblTotalMonth.setText(String.valueOf(total));lblApprovedRate.setText(String.format("%.1f%%",rate));lblAvgDuration.setText("—");lblTotalVisitors.setText("0");
+        long total    = filteredDailyData != null ? filteredDailyData.size() : allData.size();
+        long approved = (filteredDailyData != null ? filteredDailyData : allData).stream().filter(s -> "approved".equalsIgnoreCase(s.getStatus())).count();
+        double rate   = total == 0 ? 0.0 : (double) approved / total * 100;
+        lblTotalMonth.setText(String.valueOf(total));
+        lblApprovedRate.setText(String.format("%.1f%%", rate));
+        lblAvgDuration.setText("—"); lblTotalVisitors.setText("0");
     }
 
-    private void setupFilterCombo(){filterStatus.setItems(FXCollections.observableArrayList("All","Approved","Pending","Rejected"));filterStatus.getSelectionModel().selectFirst();}
-    @FXML private void handleSearch(){applyFilter();}
-    @FXML private void handleFilter(){applyFilter();}
+    private void setupFilterCombo() { filterStatus.setItems(FXCollections.observableArrayList("All","Approved","Pending","Rejected")); filterStatus.getSelectionModel().selectFirst(); }
+    @FXML private void handleSearch() { applyFilter(); }
+    @FXML private void handleFilter() { applyFilter(); }
 
     private void applyFilter() {
-        String kw=searchField.getText()==null?"":searchField.getText().toLowerCase().trim();
-        String status=filterStatus.getValue(); LocalDate today=LocalDate.now();
-        filteredDailyData.setPredicate(slip->{
-            boolean matchDate=true;if(slip.getTimeOut()!=null){LocalDate sd=slip.getTimeOut().toLocalDate();matchDate=switch(dateRange){case"Today"->sd.equals(today);case"Week"->!sd.isBefore(today.minusDays(6))&&!sd.isAfter(today);case"Month"->sd.getMonth()==today.getMonth()&&sd.getYear()==today.getYear();case"Specific"->specificDate!=null&&sd.equals(specificDate);default->true;};}
-            boolean matchKw=kw.isEmpty()||slip.getEmpName().toLowerCase().contains(kw)||slip.getDepartment().toLowerCase().contains(kw)||slip.getReason().toLowerCase().contains(kw)||String.valueOf(slip.getSlipId()).contains(kw);
-            boolean matchSt=status==null||"All".equals(status)||slip.getStatus().equalsIgnoreCase(status);return matchDate&&matchKw&&matchSt;});
+        if (filteredDailyData == null) return;
+        String kw = searchField.getText() == null ? "" : searchField.getText().toLowerCase().trim();
+        String status = filterStatus.getValue(); LocalDate today = LocalDate.now();
+        filteredDailyData.setPredicate(slip -> {
+            boolean matchDate = true;
+            if (slip.getTimeOut() != null) { LocalDate sd = slip.getTimeOut().toLocalDate(); matchDate = switch(dateRange){case"Today"->sd.equals(today);case"Week"->!sd.isBefore(today.minusDays(6))&&!sd.isAfter(today);case"Month"->sd.getMonth()==today.getMonth()&&sd.getYear()==today.getYear();case"Specific"->specificDate!=null&&sd.equals(specificDate);default->true;}; }
+            boolean matchKw = kw.isEmpty() || slip.getEmpName().toLowerCase().contains(kw) || slip.getDepartment().toLowerCase().contains(kw) || slip.getReason().toLowerCase().contains(kw) || String.valueOf(slip.getSlipId()).contains(kw);
+            boolean matchSt = status == null || "All".equals(status) || slip.getStatus().equalsIgnoreCase(status);
+            return matchDate && matchKw && matchSt;
+        });
         loadStatCards();
     }
 
-    // ── Export CSV ───────────────────────────────────────────────
     @FXML
     private void handleExport() {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Export Report");
+        FileChooser chooser = new FileChooser(); chooser.setTitle("Export Report");
         String timestamp = LocalDateTime.now().format(DATE_FMT);
-
         if (isMonthlyTab) {
-            // Export Monthly Report
             chooser.setInitialFileName("MonthlyReport_" + timestamp + ".csv");
-            chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-            File file = chooser.showSaveDialog(dailyTable.getScene().getWindow());
-            if (file == null) return;
-
+            chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files","*.csv"));
+            File file = chooser.showSaveDialog(dailyTable.getScene().getWindow()); if (file == null) return;
             try (FileWriter fw = new FileWriter(file)) {
                 fw.write("Month,Total Requests,Approved,Rejected,Pending,Visitors,Avg Duration\n");
-                for (MonthlyReport row : monthlyTable.getItems()) {
-                    fw.write(String.format("%s,%d,%d,%d,%d,%d,%s\n",
-                        csvEscape(row.getMonth()), row.getTotalRequests(), row.getApproved(),
-                        row.getRejected(), row.getPending(), row.getTotalVisitors(),
-                        csvEscape(row.getAvgDuration())));
-                }
+                for (MonthlyReport row : monthlyTable.getItems()) fw.write(String.format("%s,%d,%d,%d,%d,%d,%s\n", csvEscape(row.getMonth()), row.getTotalRequests(), row.getApproved(), row.getRejected(), row.getPending(), row.getTotalVisitors(), csvEscape(row.getAvgDuration())));
                 showSuccess("Monthly report exported!\n" + file.getAbsolutePath());
-            } catch (IOException e) {
-                showError("Export failed: " + e.getMessage());
-            }
-
+            } catch (IOException e) { showError("Export failed: " + e.getMessage()); }
         } else {
-            // Export Daily Logs
-            if (filteredDailyData == null || filteredDailyData.isEmpty()) {
-                showError("No data to export.");
-                return;
-            }
+            if (filteredDailyData == null || filteredDailyData.isEmpty()) { showError("No data to export."); return; }
             chooser.setInitialFileName("DailyReport_" + timestamp + ".csv");
-            chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-            File file = chooser.showSaveDialog(dailyTable.getScene().getWindow());
-            if (file == null) return;
-
+            chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files","*.csv"));
+            File file = chooser.showSaveDialog(dailyTable.getScene().getWindow()); if (file == null) return;
             try (FileWriter fw = new FileWriter(file)) {
                 fw.write("Request ID,Date,Employee Name,Department,Purpose,Time Out,Time In,Duration,Status\n");
                 DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                for (PassSlip slip : filteredDailyData) {
-                    fw.write(String.format("PS-%04d,%s,%s,%s,%s,%s,%s,%s,%s\n",
-                        slip.getSlipId(),
-                        slip.getTimeOut() != null ? slip.getTimeOut().toLocalDate().format(dateFmt) : "",
-                        csvEscape(slip.getEmpName()),
-                        csvEscape(slip.getDepartment()),
-                        csvEscape(slip.getReason()),
-                        csvEscape(slip.getFormattedTimeOut()),
-                        slip.getTimeIn() != null ? csvEscape(slip.getFormattedTimeIn()) : "",
-                        slip.getDuration() != null ? csvEscape(slip.getDuration()) : "",
-                        csvEscape(slip.getStatus())));
-                }
+                for (PassSlip slip : filteredDailyData) fw.write(String.format("PS-%04d,%s,%s,%s,%s,%s,%s,%s,%s\n", slip.getSlipId(), slip.getTimeOut()!=null?slip.getTimeOut().toLocalDate().format(dateFmt):"", csvEscape(slip.getEmpName()), csvEscape(slip.getDepartment()), csvEscape(slip.getReason()), csvEscape(slip.getFormattedTimeOut()), slip.getTimeIn()!=null?csvEscape(slip.getFormattedTimeIn()):"", slip.getDuration()!=null?csvEscape(slip.getDuration()):"", csvEscape(slip.getStatus())));
                 showSuccess("Daily report exported! " + filteredDailyData.size() + " record(s).\n" + file.getAbsolutePath());
-            } catch (IOException e) {
-                showError("Export failed: " + e.getMessage());
-            }
+            } catch (IOException e) { showError("Export failed: " + e.getMessage()); }
         }
     }
 
-    private String csvEscape(String val) {
-        if (val == null) return "";
-        if (val.contains(",") || val.contains("\"") || val.contains("\n"))
-            return "\"" + val.replace("\"", "\"\"") + "\"";
-        return val;
-    }
-
+    private String csvEscape(String val) { if(val==null)return"";if(val.contains(",")||val.contains("\"")||val.contains("\n"))return"\""+val.replace("\"","\"\"")+"\"";return val; }
     private void showSuccess(String msg) { Alert a=new Alert(Alert.AlertType.INFORMATION);a.setTitle("Export Successful");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }
     private void showError(String msg)   { Alert a=new Alert(Alert.AlertType.ERROR);a.setTitle("Export Failed");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }
 
-    @FXML private void handleDashboard()      { goTo("/main/resources/fxml/AdminDashboard.fxml",   "Dashboard"); }
-    @FXML private void handlePassSlip()       { goTo("/main/resources/fxml/PassSlipIssuance.fxml", "Pass Slip"); }
-    @FXML private void handleVisitor()        { goTo("/main/resources/fxml/Visitor.fxml",          "Visitor Module"); }
-    @FXML private void handleUserManagement() { goTo("/main/resources/fxml/UserManagement.fxml",   "User Management"); }
-    @FXML private void handleLogout(){Optional<ButtonType> res=new Alert(Alert.AlertType.CONFIRMATION,"Logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();if(res.isPresent()&&res.get()==ButtonType.OK)goTo("/main/resources/fxml/Login.fxml","Login");}
-    private void goTo(String fxml,String title){try{FXMLLoader loader=new FXMLLoader(getClass().getResource(fxml));Parent root=loader.load();Stage stage=(Stage)dailyTable.getScene().getWindow();double w=stage.getWidth(),h=stage.getHeight();stage.setTitle(title);stage.setScene(new Scene(root));stage.setWidth(w);stage.setHeight(h);}catch(IOException e){new Alert(Alert.AlertType.ERROR,"Screen not available:\n"+fxml).showAndWait();}}
+    @FXML private void handleDashboard()      { goTo("/main/resources/fxml/AdminDashboard.fxml","Dashboard"); }
+    @FXML private void handlePassSlip()       { goTo("/main/resources/fxml/PassSlipIssuance.fxml","Pass Slip"); }
+    @FXML private void handleUserManagement() { goTo("/main/resources/fxml/UserManagement.fxml","User Management"); }
+    @FXML private void handleLogout()         { Optional<ButtonType> res=new Alert(Alert.AlertType.CONFIRMATION,"Logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();if(res.isPresent()&&res.get()==ButtonType.OK)goTo("/main/resources/fxml/Login.fxml","Login"); }
+    private void goTo(String fxml,String title) { try{FXMLLoader loader=new FXMLLoader(getClass().getResource(fxml));Parent root=loader.load();Stage stage=(Stage)dailyTable.getScene().getWindow();double w=stage.getWidth(),h=stage.getHeight();stage.setTitle(title);stage.setScene(new Scene(root));stage.setWidth(w);stage.setHeight(h);}catch(IOException e){new Alert(Alert.AlertType.ERROR,"Screen not available:\n"+fxml).showAndWait();} }
 
     public static class MonthlyReport {
         private final String month; private final int totalRequests,approved,rejected,pending,totalVisitors; private final String avgDuration;

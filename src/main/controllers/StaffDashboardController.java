@@ -3,6 +3,7 @@ package main.controllers;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -12,10 +13,12 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import dao.ActivityLogDAO;
 import dao.PassSlipDAO;
+import main.utils.SkeletonLoader;
 import models.ActivityLog;
 import models.PassSlip;
 import models.User;
@@ -35,9 +38,10 @@ public class StaffDashboardController implements Initializable {
     @FXML private Label  lblTotalRequests, lblApprovalRate, lblActiveNow;
     @FXML private Button btnDashboard, btnPassSlip, btnReports;
     @FXML private Button btnNotification;
-    @FXML private TextField        txtSearch;
-    @FXML private ComboBox<String> cmbFilter;
-    @FXML private TableView<PassSlip>           tblPassSlips;
+    @FXML private StackPane           skeletonContainer;
+    @FXML private TextField           txtSearch;
+    @FXML private ComboBox<String>    cmbFilter;
+    @FXML private TableView<PassSlip> tblPassSlips;
     @FXML private TableColumn<PassSlip, String> colRequestId, colName, colDepartment;
     @FXML private TableColumn<PassSlip, String> colPurpose, colTimeOut, colTimeIn, colStatus;
     @FXML private TableColumn<PassSlip, Void>   colActions;
@@ -45,7 +49,7 @@ public class StaffDashboardController implements Initializable {
 
     private final PassSlipDAO    passSlipDAO    = new PassSlipDAO();
     private final ActivityLogDAO activityLogDAO = new ActivityLogDAO();
-    private ObservableList<PassSlip> masterList = FXCollections.observableArrayList();
+    private final ObservableList<PassSlip> masterList = FXCollections.observableArrayList();
     private User currentUser;
     private Timer autoRefreshTimer;
     private NotificationHelper notifHelper;
@@ -61,13 +65,48 @@ public class StaffDashboardController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        setupFilterCombo(); setupTableColumns(); loadDashboardStats(); loadPassSlipRequests(); loadNotifications(); loadRecentActivity();
+        setupFilterCombo(); setupTableColumns();
+        tblPassSlips.setItems(masterList);
+        // Skeleton then load
+        SkeletonLoader.show(skeletonContainer);
+        loadDataAsync();
+        loadNotifications(); loadRecentActivity();
         startAutoRefresh();
     }
 
+    private void loadDataAsync() {
+        Task<List<PassSlip>> task = new Task<>() {
+            @Override protected List<PassSlip> call() { return passSlipDAO.getAllPassSlips(); }
+        };
+        task.setOnSucceeded(e -> {
+            SkeletonLoader.hide(skeletonContainer);
+            List<PassSlip> all = task.getValue();
+            masterList.setAll(all != null ? all : List.of());
+            updateStatCards(all != null ? all : List.of());
+        });
+        task.setOnFailed(e -> SkeletonLoader.hide(skeletonContainer));
+        new Thread(task, "StaffDashLoader").start();
+    }
+
+    private void updateStatCards(List<PassSlip> all) {
+        long pending  = all.stream().filter(s -> "Pending" .equalsIgnoreCase(s.getStatus())).count();
+        long approved = all.stream().filter(s -> "Approved".equalsIgnoreCase(s.getStatus())).count();
+        long rejected = all.stream().filter(s -> "Rejected".equalsIgnoreCase(s.getStatus())).count();
+        try { int active = passSlipDAO.countActiveSlips(); lblActive.setText(String.valueOf(active)); } catch (Exception ignored) {}
+        lblPending .setText(String.valueOf(pending));
+        lblApproved.setText(String.valueOf(approved));
+        lblRejected.setText(String.valueOf(rejected));
+        try {
+            List<PassSlip> today = passSlipDAO.getTodayPassSlips();
+            long approvedToday = today.stream().filter(s -> "Approved".equalsIgnoreCase(s.getStatus())).count();
+            int  rate = today.isEmpty() ? 0 : (int)((approvedToday*100.0)/today.size());
+            lblTotalRequests.setText(String.valueOf(today.size()));
+            lblApprovalRate .setText(rate + "%");
+        } catch (Exception ignored) {}
+    }
+
     @FXML private void handleNotification() {
-        if (notifHelper == null)
-            notifHelper = new NotificationHelper(btnNotification, NotificationHelper.Role.STAFF);
+        if (notifHelper == null) notifHelper = new NotificationHelper(btnNotification, NotificationHelper.Role.STAFF);
         notifHelper.toggle();
     }
 
@@ -84,7 +123,6 @@ public class StaffDashboardController implements Initializable {
         colTimeOut   .setCellValueFactory(new PropertyValueFactory<>("formattedTimeOut"));
         colTimeIn    .setCellValueFactory(new PropertyValueFactory<>("formattedTimeIn"));
         colStatus    .setCellValueFactory(new PropertyValueFactory<>("status"));
-
         colStatus.setCellFactory(col -> new TableCell<>() {
             @Override protected void updateItem(String status, boolean empty) {
                 super.updateItem(status, empty);
@@ -98,40 +136,12 @@ public class StaffDashboardController implements Initializable {
                 }
             }
         });
-
         colActions.setCellFactory(col -> new TableCell<>() {
             final Button viewBtn = new Button("👁");
-            { viewBtn.setStyle("-fx-background-color:transparent;-fx-cursor:hand;-fx-font-size:16px;"); viewBtn.setOnAction(e -> handleViewPassSlip(getTableView().getItems().get(getIndex()))); }
+            { viewBtn.setStyle("-fx-background-color:transparent;-fx-cursor:hand;-fx-font-size:16px;");
+              viewBtn.setOnAction(e -> handleViewPassSlip(getTableView().getItems().get(getIndex()))); }
             @Override protected void updateItem(Void item, boolean empty) { super.updateItem(item,empty); setGraphic(empty?null:viewBtn); }
         });
-    }
-
-    public void loadDashboardStats() {
-        try {
-            List<PassSlip> all = passSlipDAO.getAllPassSlips();
-            long pending  = all.stream().filter(s -> "PENDING" .equalsIgnoreCase(s.getStatus())).count();
-            long approved = all.stream().filter(s -> "APPROVED".equalsIgnoreCase(s.getStatus())).count();
-            long rejected = all.stream().filter(s -> "REJECTED".equalsIgnoreCase(s.getStatus())).count();
-            int  active   = passSlipDAO.countActiveSlips();
-            lblPending .setText(String.valueOf(pending));
-            lblApproved.setText(String.valueOf(approved));
-            lblRejected.setText(String.valueOf(rejected));
-            lblActive  .setText(String.valueOf(active));
-            List<PassSlip> today = passSlipDAO.getTodayPassSlips();
-            long approvedToday = today.stream().filter(s -> "APPROVED".equalsIgnoreCase(s.getStatus())).count();
-            int  rate = today.isEmpty() ? 0 : (int)((approvedToday*100.0)/today.size());
-            lblTotalRequests.setText(String.valueOf(today.size()));
-            lblApprovalRate .setText(rate + "%");
-            lblActiveNow    .setText(String.valueOf(active));
-        } catch (Exception e) { System.out.println("Stats error: " + e.getMessage()); }
-    }
-
-    public void loadPassSlipRequests() {
-        try {
-            List<PassSlip> slips = passSlipDAO.getAllPassSlips();
-            masterList = FXCollections.observableArrayList(slips);
-            tblPassSlips.setItems(masterList);
-        } catch (Exception e) { System.out.println("Pass slip error: " + e.getMessage()); }
     }
 
     private void loadNotifications() {
@@ -183,14 +193,18 @@ public class StaffDashboardController implements Initializable {
         }, 30_000, 30_000);
     }
 
-    public void refreshDashboard() { loadDashboardStats(); loadPassSlipRequests(); loadNotifications(); loadRecentActivity(); }
+    public void refreshDashboard() {
+        SkeletonLoader.show(skeletonContainer);
+        loadDataAsync();
+        loadNotifications(); loadRecentActivity();
+    }
 
     @FXML public void handleSearch() {
         String kw = txtSearch.getText().trim().toLowerCase();
         String filter = cmbFilter.getValue();
         tblPassSlips.setItems(masterList.filtered(slip -> {
-            boolean matchKw  = kw.isEmpty()||slip.getEmpName().toLowerCase().contains(kw)||String.valueOf(slip.getSlipId()).contains(kw)||slip.getDepartment().toLowerCase().contains(kw);
-            boolean matchF   = "All".equals(filter)||slip.getStatus().equalsIgnoreCase(filter);
+            boolean matchKw = kw.isEmpty()||slip.getEmpName().toLowerCase().contains(kw)||String.valueOf(slip.getSlipId()).contains(kw)||slip.getDepartment().toLowerCase().contains(kw);
+            boolean matchF  = "All".equals(filter)||slip.getStatus().equalsIgnoreCase(filter);
             return matchKw && matchF;
         }));
     }
@@ -222,10 +236,7 @@ public class StaffDashboardController implements Initializable {
     private void handleViewPassSlip(PassSlip slip) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setTitle("Pass Slip Details"); a.setHeaderText("Slip ID: PS-" + slip.getSlipId());
-        a.setContentText("Employee  : " + slip.getEmpName() + "\nDepartment: " + slip.getDepartment() +
-                "\nCategory  : " + slip.getCategory() +
-                "\nPurpose   : " + slip.getReason() + "\nTime Out  : " + slip.getFormattedTimeOut() +
-                "\nTime In   : " + slip.getFormattedTimeIn() + "\nStatus    : " + slip.getStatus());
+        a.setContentText("Employee  : " + slip.getEmpName() + "\nDepartment: " + slip.getDepartment() + "\nCategory  : " + slip.getCategory() + "\nPurpose   : " + slip.getReason() + "\nTime Out  : " + slip.getFormattedTimeOut() + "\nTime In   : " + slip.getFormattedTimeIn() + "\nStatus    : " + slip.getStatus());
         a.showAndWait();
     }
 
@@ -257,8 +268,7 @@ public class StaffDashboardController implements Initializable {
     private void setActiveButton(Button active) {
         for (Button btn : new Button[]{btnDashboard, btnPassSlip, btnReports})
             if (btn != null) btn.getStyleClass().remove("nav-btn-active");
-        if (active != null && !active.getStyleClass().contains("nav-btn-active"))
-            active.getStyleClass().add("nav-btn-active");
+        if (active != null && !active.getStyleClass().contains("nav-btn-active")) active.getStyleClass().add("nav-btn-active");
     }
 
     private void stopAutoRefresh() { if (autoRefreshTimer!=null){autoRefreshTimer.cancel();autoRefreshTimer=null;} }
