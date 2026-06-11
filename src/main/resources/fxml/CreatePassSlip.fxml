@@ -3,10 +3,9 @@
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.*?>
 
-<VBox xmlns="http://javafx.com/javafx/21"
-      xmlns:fx="http://javafx.com/fxml/1"
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="main.controllers.CreatePassSlipController"
-      spacing="14" prefWidth="460"
+      spacing="12" prefWidth="480"
       style="-fx-background-color: white; -fx-padding: 0 0 20 0; -fx-background-radius: 12;">
 
     <!-- Title Bar -->
@@ -20,49 +19,98 @@
     </HBox>
 
     <!-- Form Body -->
-    <VBox spacing="12" style="-fx-padding: 10 18 0 18;">
+    <VBox spacing="10" style="-fx-padding: 10 18 0 18;">
 
-        <Label text="Employee Name" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
-        <ComboBox fx:id="cmbEmployee" promptText="Enter employee name"
-                  maxWidth="Infinity"
-                  style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
-                         -fx-border-radius: 20; -fx-background-radius: 20;
-                         -fx-padding: 4 8;"/>
+        <!-- Employee Name -->
+        <Label text="Employee Name *"
+               style="-fx-font-size: 12px; -fx-text-fill: #555; -fx-font-weight: bold;"/>
+        <VBox spacing="0">
+            <TextField fx:id="txtEmployee" promptText="Type employee name..."
+                       style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
+                              -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 9 14;"/>
+            <ListView fx:id="lstSuggestions"
+                      style="-fx-background-color: white; -fx-border-color: #E8C0C0;
+                             -fx-border-width: 0 1 1 1; -fx-border-radius: 0 0 8 8;
+                             -fx-background-radius: 0 0 8 8; -fx-font-size: 12px;"
+                      prefHeight="0"/>
+        </VBox>
 
-        <Label text="Department" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
-        <TextField fx:id="txtDepartment" promptText=""
+        <!-- Department -->
+        <Label text="Department"
+               style="-fx-font-size: 12px; -fx-text-fill: #555; -fx-font-weight: bold;"/>
+        <TextField fx:id="txtDepartment" promptText="Auto-filled when employee is selected"
                    editable="false"
-                   style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
-                          -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 9 14;"/>
+                   style="-fx-background-color: #F5F5F5; -fx-border-color: #D0D0D0;
+                          -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 9 14;
+                          -fx-text-fill: #666;"/>
 
-        <Label text="Purpose" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
+        <!-- Category -->
+        <Label text="Category *"
+               style="-fx-font-size: 12px; -fx-text-fill: #555; -fx-font-weight: bold;"/>
+        <ComboBox fx:id="cmbCategory" promptText="Select category..." maxWidth="Infinity"
+                  onAction="#handleCategoryChange"
+                  style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
+                         -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 4 10;
+                         -fx-font-size: 12.5px;"/>
+
+        <!-- Purpose -->
+        <Label text="Purpose *"
+               style="-fx-font-size: 12px; -fx-text-fill: #555; -fx-font-weight: bold;"/>
         <TextArea fx:id="txtPurpose" promptText="Enter reason for pass slip"
-                  prefHeight="90" wrapText="true"
+                  prefHeight="70" wrapText="true"
                   style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
-                         -fx-border-radius: 12; -fx-background-radius: 12; -fx-padding: 8 12;"/>
+                         -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8 12;"/>
 
-        <Label text="Date" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
-        <TextField fx:id="txtDate" promptText=""
-                   editable="false"
-                   style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
-                          -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 9 14;"/>
+        <!-- Date -->
+        <Label text="Date"
+               style="-fx-font-size: 12px; -fx-text-fill: #555; -fx-font-weight: bold;"/>
+        <TextField fx:id="txtDate" editable="false"
+                   style="-fx-background-color: #F5F5F5; -fx-border-color: #D0D0D0;
+                          -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 9 14;
+                          -fx-text-fill: #666;"/>
 
-        <HBox spacing="12">
-            <VBox HBox.hgrow="ALWAYS" spacing="4">
-                <Label text="Time Out" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
-                <TextField fx:id="txtTimeOut" promptText=""
-                           style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
-                                  -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 9 14;"/>
-            </VBox>
-            <VBox HBox.hgrow="ALWAYS" spacing="4">
-                <Label text="Time In" style="-fx-font-size: 12px; -fx-text-fill: #555;"/>
-                <TextField fx:id="txtTimeIn" promptText=""
-                           style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
-                                  -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 9 14;"/>
-            </VBox>
+        <!-- Time Out -->
+        <Label text="Time Out *"
+               style="-fx-font-size: 12px; -fx-text-fill: #555; -fx-font-weight: bold;"/>
+        <Button fx:id="btnTimeOut" onAction="#handlePickTimeOut" maxWidth="Infinity"
+                style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
+                       -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 9 14;
+                       -fx-font-size: 12.5px; -fx-cursor: hand; -fx-text-fill: #333;
+                       -fx-alignment: CENTER_LEFT; -fx-border-width: 1;"/>
+
+        <!-- Expected Time In with presets -->
+        <Label text="Expected Time In *"
+               style="-fx-font-size: 12px; -fx-text-fill: #555; -fx-font-weight: bold;"/>
+
+        <!-- Preset buttons -->
+        <HBox spacing="6" alignment="CENTER_LEFT">
+            <Label text="Quick:" style="-fx-font-size: 11px; -fx-text-fill: #888;"/>
+            <Button fx:id="btn30min"   text="30 min"   onAction="#handlePreset30m"
+                    style="-fx-background-color: white; -fx-border-color: #E8C0C0; -fx-border-width: 1;
+                           -fx-border-radius: 20; -fx-background-radius: 20; -fx-font-size: 11px;
+                           -fx-padding: 4 10; -fx-cursor: hand; -fx-text-fill: #8B0000;"/>
+            <Button fx:id="btn1hr"    text="1 hr"     onAction="#handlePreset1h"
+                    style="-fx-background-color: white; -fx-border-color: #E8C0C0; -fx-border-width: 1;
+                           -fx-border-radius: 20; -fx-background-radius: 20; -fx-font-size: 11px;
+                           -fx-padding: 4 10; -fx-cursor: hand; -fx-text-fill: #8B0000;"/>
+            <Button fx:id="btn2hr"    text="2 hrs"    onAction="#handlePreset2h"
+                    style="-fx-background-color: white; -fx-border-color: #E8C0C0; -fx-border-width: 1;
+                           -fx-border-radius: 20; -fx-background-radius: 20; -fx-font-size: 11px;
+                           -fx-padding: 4 10; -fx-cursor: hand; -fx-text-fill: #8B0000;"/>
+            <Button fx:id="btnHalfDay" text="Half day" onAction="#handlePresetHalfDay"
+                    style="-fx-background-color: white; -fx-border-color: #E8C0C0; -fx-border-width: 1;
+                           -fx-border-radius: 20; -fx-background-radius: 20; -fx-font-size: 11px;
+                           -fx-padding: 4 10; -fx-cursor: hand; -fx-text-fill: #8B0000;"/>
         </HBox>
 
-        <!-- Note Box -->
+        <!-- Time In button (manual picker) -->
+        <Button fx:id="btnTimeIn" onAction="#handlePickTimeIn" maxWidth="Infinity"
+                style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
+                       -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 9 14;
+                       -fx-font-size: 12.5px; -fx-cursor: hand; -fx-text-fill: #333;
+                       -fx-alignment: CENTER_LEFT; -fx-border-width: 1;"/>
+
+        <!-- Note -->
         <VBox style="-fx-background-color: #FFF0F0; -fx-border-color: #E8C0C0;
                      -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10 12;">
             <Label text="Note: Pass slip request will be sent for approval. You will be notified once approved or rejected."
@@ -70,9 +118,9 @@
                    style="-fx-font-size: 11.5px; -fx-text-fill: #8B0000;"/>
         </VBox>
 
+        <!-- Error -->
         <Label fx:id="lblError" text=""
-               style="-fx-text-fill: #dc3545; -fx-font-size: 11px;"/>
-
+               style="-fx-text-fill: #dc3545; -fx-font-size: 11px;" wrapText="true"/>
     </VBox>
 
     <!-- Buttons -->
@@ -84,7 +132,7 @@
         <Button fx:id="btnSubmit" text="📋  Submit Request" onAction="#handleSubmit"
                 style="-fx-background-color: #8B0000; -fx-text-fill: white;
                        -fx-font-size: 12px; -fx-padding: 9 26; -fx-background-radius: 20;
-                       -fx-border-width: 0; -fx-cursor: hand; -fx-alignment: CENTER;"/>
+                       -fx-border-width: 0; -fx-cursor: hand;"/>
     </HBox>
 
 </VBox>

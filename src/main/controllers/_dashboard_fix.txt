@@ -1,0 +1,32 @@
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        // Initialize filteredList ONCE here — never recreate it
+        filteredList = new FilteredList<>(masterList, p -> true);
+        tblPassSlips.setItems(filteredList);
+        setupTableColumns(); setupFilterComboBox(); loadDashboardData(); loadRecentActivity(); startOverdueChecker();
+    }
+
+    private void loadDashboardData() {
+        try {
+            List<PassSlip> all = passSlipDAO.getAllPassSlips();
+            // Only update masterList — filteredList stays linked, filter preserved
+            masterList.setAll(all);
+            // Re-apply current filter so it reflects new data
+            applyFilter();
+
+            long pending  = all.stream().filter(p -> "Pending" .equalsIgnoreCase(p.getStatus())).count();
+            long approved = all.stream().filter(p -> "Approved".equalsIgnoreCase(p.getStatus())).count();
+            long rejected = all.stream().filter(p -> "Rejected".equalsIgnoreCase(p.getStatus())).count();
+            long overdue  = all.stream().filter(p -> "Overdue" .equalsIgnoreCase(p.getStatus())).count();
+            lblPendingCount .setText(String.valueOf(pending));
+            lblApprovedCount.setText(String.valueOf(approved));
+            lblRejectedCount.setText(overdue > 0 ? "⚠ " + overdue : String.valueOf(rejected));
+            lblActiveCount  .setText(String.valueOf(approved + overdue));
+            List<PassSlip> today = passSlipDAO.getTodayPassSlips();
+            long todayApproved   = today.stream().filter(p -> "Approved".equalsIgnoreCase(p.getStatus())).count();
+            int  approvalRate    = today.isEmpty() ? 0 : (int)((todayApproved*100)/today.size());
+            lblTotalRequests.setText(String.valueOf(today.size()));
+            lblApprovalRate .setText(approvalRate + "%");
+            lblActiveNow    .setText(String.valueOf(approved + overdue));
+        } catch (Exception e) { System.out.println("Dashboard Error: " + e.getMessage()); }
+    }

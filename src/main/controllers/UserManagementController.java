@@ -1,5 +1,7 @@
 package main.controllers;
 
+import dao.EmployeeDAO;
+import dao.UserDAO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -18,94 +20,74 @@ import models.Employee;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class UserManagementController implements Initializable {
 
-    @FXML private Label lblTotal;
-    @FXML private Label lblActive;
-    @FXML private Label lblInactive;
-    @FXML private Label lblAdmins;
-
+    @FXML private Label lblTotal, lblActive, lblInactive, lblAdmins;
     @FXML private TextField tfSearch;
     @FXML private ComboBox<String> cbFilter;
-
-    @FXML private TableView<Employee> tableEmployees;
+    @FXML private TableView<Employee>            tableEmployees;
     @FXML private TableColumn<Employee, Integer> colId;
-    @FXML private TableColumn<Employee, String>  colName;
-    @FXML private TableColumn<Employee, String>  colDept;
-    @FXML private TableColumn<Employee, String>  colPosition;
+    @FXML private TableColumn<Employee, String>  colName, colDept, colPosition;
     @FXML private TableColumn<Employee, Void>    colActions;
+    @FXML private Button btnNotification;
 
+    private final EmployeeDAO employeeDAO = new EmployeeDAO();
     private final ObservableList<Employee> masterList = FXCollections.observableArrayList();
     private FilteredList<Employee> filteredList;
+    private NotificationHelper notifHelper;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        masterList.addAll(
-                new Employee(1, "John Cruz",     "IT Department", "Senior Developer"),
-                new Employee(2, "Maria Santos",  "HR Department", "HR Manager"),
-                new Employee(3, "Robert Garcia", "Finance",       "Financial Analyst"),
-                new Employee(4, "Anna Reyes",    "Marketing",     "Marketing Head"),
-                new Employee(5, "David Lim",     "Operations",    "Operations Manager"),
-                new Employee(6, "Carlos Tan",    "Finance",       "Accountant")
-        );
-
+        loadEmployees();
         setupFilterCombo();
         setupTableColumns();
         setupSearch();
         refreshStats();
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  SETUP
-    // ─────────────────────────────────────────────────────────────
+    private void loadEmployees() {
+        masterList.clear();
+        List<Employee> employees = employeeDAO.getAllEmployees();
+        if (employees != null) masterList.addAll(employees);
+    }
+
+    @FXML
+    private void handleNotifications() {
+        if (notifHelper == null)
+            notifHelper = new NotificationHelper(btnNotification, NotificationHelper.Role.ADMIN);
+        notifHelper.toggle();
+    }
+
     private void setupFilterCombo() {
         cbFilter.setItems(FXCollections.observableArrayList(
-                "All Departments", "IT Department", "HR Department",
-                "Finance", "Marketing", "Operations"
-        ));
+                "All Departments","IT Department","HR Department","Finance","Marketing","Operations","Admin"));
         cbFilter.setValue("All Departments");
         cbFilter.setOnAction(e -> applyFilter());
     }
 
     private void setupTableColumns() {
-        colId.setCellValueFactory(new PropertyValueFactory<>("empId"));
-        colName.setCellValueFactory(new PropertyValueFactory<>("name"));
-        colDept.setCellValueFactory(new PropertyValueFactory<>("department"));
+        colId      .setCellValueFactory(new PropertyValueFactory<>("empId"));
+        colName    .setCellValueFactory(new PropertyValueFactory<>("name"));
+        colDept    .setCellValueFactory(new PropertyValueFactory<>("department"));
         colPosition.setCellValueFactory(new PropertyValueFactory<>("position"));
 
         colActions.setCellFactory(col -> new TableCell<>() {
-            private final Button btnEdit   = new Button("✏");
-            private final Button btnDelete = new Button("🗑");
-
+            final Button btnEdit   = new Button("✏");
+            final Button btnDelete = new Button("🗑");
             {
-                btnEdit.setStyle(
-                        "-fx-background-color: #dbeafe; -fx-text-fill: #1d4ed8;" +
-                                "-fx-background-radius: 5; -fx-cursor: hand;" +
-                                "-fx-min-width: 28px; -fx-min-height: 28px;");
-                btnDelete.setStyle(
-                        "-fx-background-color: #fee2e2; -fx-text-fill: #b91c1c;" +
-                                "-fx-background-radius: 5; -fx-cursor: hand;" +
-                                "-fx-min-width: 28px; -fx-min-height: 28px;");
-
-                btnEdit.setOnAction(e -> {
-                    Employee emp = getTableView().getItems().get(getIndex());
-                    openEditDialog(emp);
-                });
-                btnDelete.setOnAction(e -> {
-                    Employee emp = getTableView().getItems().get(getIndex());
-                    handleDelete(emp);
-                });
+                btnEdit  .setStyle("-fx-background-color:#dbeafe;-fx-text-fill:#1d4ed8;-fx-background-radius:5;-fx-cursor:hand;-fx-min-width:28px;-fx-min-height:28px;");
+                btnDelete.setStyle("-fx-background-color:#fee2e2;-fx-text-fill:#b91c1c;-fx-background-radius:5;-fx-cursor:hand;-fx-min-width:28px;-fx-min-height:28px;");
+                btnEdit  .setOnAction(e -> openEditDialog(getTableView().getItems().get(getIndex())));
+                btnDelete.setOnAction(e -> handleDelete(getTableView().getItems().get(getIndex())));
             }
-
-            @Override
-            protected void updateItem(Void item, boolean empty) {
+            @Override protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty) { setGraphic(null); return; }
-                HBox box = new HBox(6, btnEdit, btnDelete);
-                setGraphic(box);
+                setGraphic(new HBox(6, btnEdit, btnDelete));
             }
         });
 
@@ -114,94 +96,89 @@ public class UserManagementController implements Initializable {
     }
 
     private void setupSearch() {
-        tfSearch.textProperty().addListener((obs, oldVal, newVal) -> applyFilter());
+        tfSearch.textProperty().addListener((obs, o, n) -> applyFilter());
     }
 
     private void applyFilter() {
-        String query = tfSearch.getText() == null ? "" : tfSearch.getText().toLowerCase().trim();
+        String query = tfSearch.getText()==null?"":tfSearch.getText().toLowerCase().trim();
         String dept  = cbFilter.getValue();
-
         filteredList.setPredicate(emp -> {
             boolean matchSearch = query.isEmpty()
                     || String.valueOf(emp.getEmpId()).contains(query)
-                    || emp.getName().toLowerCase().contains(query)
+                    || emp.getName()      .toLowerCase().contains(query)
                     || emp.getDepartment().toLowerCase().contains(query)
-                    || emp.getPosition().toLowerCase().contains(query);
-
-            boolean matchDept = dept == null || dept.equals("All Departments")
-                    || emp.getDepartment().equals(dept);
-
+                    || emp.getPosition()  .toLowerCase().contains(query);
+            boolean matchDept = dept==null||dept.equals("All Departments")||emp.getDepartment().equalsIgnoreCase(dept);
             return matchSearch && matchDept;
         });
     }
 
     private void refreshStats() {
-        long total  = masterList.size();
-        long itHr   = masterList.stream()
-                .filter(e -> e.getDepartment().equals("IT Department")
-                        || e.getDepartment().equals("HR Department")).count();
-        long fin    = masterList.stream()
-                .filter(e -> e.getDepartment().equals("Finance")).count();
-        long others = masterList.stream()
-                .filter(e -> !e.getDepartment().equals("IT Department")
-                        && !e.getDepartment().equals("HR Department")
-                        && !e.getDepartment().equals("Finance")).count();
+        int total = masterList.size();
 
-        lblTotal.setText(String.valueOf(total));
-        lblActive.setText(String.valueOf(itHr));
-        lblInactive.setText(String.valueOf(fin));
-        lblAdmins.setText(String.valueOf(others));
+        // ✅ Meaningful stats based on actual data:
+        // Total Employees — all employees in DB
+        // With Pass Slip — employees who have at least one pass slip
+        // Departments — number of unique departments
+        // Positions — number of unique positions
+
+        long uniqueDepts = masterList.stream()
+                .map(Employee::getDepartment)
+                .filter(d -> d != null && !d.isBlank())
+                .distinct()
+                .count();
+
+        long uniquePositions = masterList.stream()
+                .map(Employee::getPosition)
+                .filter(p -> p != null && !p.isBlank())
+                .distinct()
+                .count();
+
+        long adminCount = masterList.stream()
+                .filter(e -> e.getPosition() != null &&
+                        (e.getPosition().toLowerCase().contains("admin") ||
+                         e.getPosition().toLowerCase().contains("director") ||
+                         e.getPosition().toLowerCase().contains("manager") ||
+                         e.getPosition().toLowerCase().contains("officer")))
+                .count();
+
+        lblTotal   .setText(String.valueOf(total));
+        lblActive  .setText(String.valueOf(uniqueDepts));
+        lblInactive.setText(String.valueOf(uniquePositions));
+        lblAdmins  .setText(String.valueOf(adminCount));
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  ADD / EDIT / DELETE
-    // ─────────────────────────────────────────────────────────────
     @FXML
     private void handleAddEmployee() {
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/main/resources/fxml/AddEmployee.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/resources/fxml/AddEmployee.fxml"));
             Parent root = loader.load();
-
             AddEmployeeController ctrl = loader.getController();
             ctrl.setMasterList(masterList);
             ctrl.setOnSaveCallback(this::refreshStats);
-
             Stage dialog = new Stage();
             dialog.initModality(Modality.APPLICATION_MODAL);
             dialog.initStyle(StageStyle.UNDECORATED);
-            dialog.setScene(new Scene(root));
+            dialog.setScene(new javafx.scene.Scene(root));
             ctrl.setDialogStage(dialog);
             dialog.showAndWait();
-
-        } catch (IOException ex) {
-            showError("Cannot open Add Employee dialog:\n" + ex.getMessage());
-        }
+        } catch (IOException ex) { showError("Cannot open Add Employee dialog:\n" + ex.getMessage()); }
     }
 
     private void openEditDialog(Employee emp) {
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/main/resources/fxml/EditEmployee.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/resources/fxml/EditEmployee.fxml"));
             Parent root = loader.load();
-
             EditEmployeeController ctrl = loader.getController();
             ctrl.setEmployee(emp);
-            ctrl.setOnSaveCallback(() -> {
-                tableEmployees.refresh();
-                refreshStats();
-            });
-
+            ctrl.setOnSaveCallback(() -> { tableEmployees.refresh(); refreshStats(); });
             Stage dialog = new Stage();
             dialog.initModality(Modality.APPLICATION_MODAL);
             dialog.initStyle(StageStyle.UNDECORATED);
-            dialog.setScene(new Scene(root));
+            dialog.setScene(new javafx.scene.Scene(root));
             ctrl.setDialogStage(dialog);
             dialog.showAndWait();
-
-        } catch (IOException ex) {
-            showError("Cannot open Edit Employee dialog:\n" + ex.getMessage());
-        }
+        } catch (IOException ex) { showError("Cannot open Edit Employee dialog:\n" + ex.getMessage()); }
     }
 
     private void handleDelete(Employee emp) {
@@ -209,71 +186,36 @@ public class UserManagementController implements Initializable {
         confirm.setTitle("Delete Employee");
         confirm.setHeaderText("Delete " + emp.getName() + "?");
         confirm.setContentText("This action cannot be undone.");
-
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            masterList.remove(emp);
-            refreshStats();
+            boolean deleted = employeeDAO.deleteEmployee(emp.getEmpId());
+            if (deleted) { masterList.remove(emp); refreshStats(); }
+            else showError("Failed to delete employee.");
         }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  NAV HANDLERS (FIXED)
-    // ─────────────────────────────────────────────────────────────
-    @FXML private void handleNavDashboard() {
-        goTo("/main/resources/fxml/AdminDashboard.fxml", "Dashboard");
-    }
-    @FXML private void handleNavPassSlip() {
-        goTo("/main/resources/fxml/PassSlipIssuance.fxml", "Pass Slip Issuance");
-    }
-    @FXML private void handleNavVisitor() {
-        goTo("/main/resources/fxml/Visitor.fxml", "Visitor Module");
-    }
-    @FXML private void handleNavReports() {
-        goTo("/main/resources/fxml/Reports.fxml", "Reports");
-    }
-    @FXML private void handleNavUserMgmt() { /* already here */ }
-    @FXML private void handleNotifications() { }
+    @FXML private void handleNavDashboard() { goTo("/main/resources/fxml/AdminDashboard.fxml",   "Dashboard");          }
+    @FXML private void handleNavPassSlip()  { goTo("/main/resources/fxml/PassSlipIssuance.fxml", "Pass Slip Issuance"); }
+    @FXML private void handleNavVisitor()   { goTo("/main/resources/fxml/Visitor.fxml",          "Visitor Module");     }
+    @FXML private void handleNavReports()   { goTo("/main/resources/fxml/Reports.fxml",          "Reports");            }
+    @FXML private void handleNavUserMgmt()  { /* already here */ }
 
-    @FXML
-    private void handleLogout() {
-        Optional<ButtonType> res = new Alert(
-                Alert.AlertType.CONFIRMATION,
-                "Are you sure you want to logout?",
-                ButtonType.OK, ButtonType.CANCEL)
-                .showAndWait();
-        if (res.isPresent() && res.get() == ButtonType.OK) {
-            goTo("/main/resources/fxml/Login.fxml", "Pass Slip System — Login");
-        }
+    @FXML private void handleLogout() {
+        Optional<ButtonType> res = new Alert(Alert.AlertType.CONFIRMATION,"Are you sure you want to logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();
+        if (res.isPresent()&&res.get()==ButtonType.OK) goTo("/main/resources/fxml/Login.fxml","Login");
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  NAVIGATION HELPER
-    // ─────────────────────────────────────────────────────────────
     private void goTo(String fxml, String title) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
             Parent root = loader.load();
             Stage stage = (Stage) tableEmployees.getScene().getWindow();
-            double w = stage.getWidth();
-            double h = stage.getHeight();
-            stage.setTitle(title);
-            stage.setScene(new Scene(root));
-            stage.setWidth(w);
-            stage.setHeight(h);
-        } catch (IOException e) {
-            showError("Screen not available:\n" + e.getMessage());
-        }
+            double w=stage.getWidth(), h=stage.getHeight();
+            stage.setTitle(title); stage.setScene(new Scene(root)); stage.setWidth(w); stage.setHeight(h);
+        } catch (IOException e) { showError("Screen not available:\n" + e.getMessage()); }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  HELPERS
-    // ─────────────────────────────────────────────────────────────
     private void showError(String msg) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        alert.showAndWait();
+        Alert a=new Alert(Alert.AlertType.ERROR);a.setTitle("Error");a.setHeaderText(null);a.setContentText(msg);a.showAndWait();
     }
 }

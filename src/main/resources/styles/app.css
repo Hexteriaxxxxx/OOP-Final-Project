@@ -1,0 +1,12 @@
+/* PUP Pass Slip System - Global Styles */
+
+/* Override default JavaFX button insets to allow proper border-radius */
+.button {
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+}
+
+.toggle-button {
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+}

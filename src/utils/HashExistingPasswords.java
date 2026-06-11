@@ -1,6 +1,7 @@
 package utils;
 
 import main.utils.DBConnection;
+import main.utils.PasswordUtils;
 import java.sql.*;
 
 public class HashExistingPasswords {
@@ -17,7 +18,6 @@ public class HashExistingPasswords {
                 int userId = rs.getInt("user_id");
                 String plainPassword = rs.getString("password");
 
-                // I-skip kung hashed na (base64 encoded, mahaba)
                 if (plainPassword.length() > 50) {
                     System.out.println("Skipping user_id " + userId + " - already hashed.");
                     continue;

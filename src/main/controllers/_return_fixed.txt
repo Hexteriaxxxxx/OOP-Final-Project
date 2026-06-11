@@ -1,0 +1,53 @@
+    // ── Record Return — Option B ──────────────────────────────────
+    private void handleRecordReturn(PassSlip ps) {
+        final LocalDateTime now = LocalDateTime.now();
+
+        // final — required for lambda capture
+        final String durationOut = (ps.getTimeOut() != null)
+            ? (Duration.between(ps.getTimeOut(), now).toMinutes() / 60) + "h "
+              + (Duration.between(ps.getTimeOut(), now).toMinutes() % 60) + "m"
+            : "—";
+
+        final String lateInfo = ("Overdue".equalsIgnoreCase(ps.getStatus()) && ps.getTimeIn() != null)
+            ? "\n⚠  Late by      : "
+              + (Duration.between(ps.getTimeIn(), now).toMinutes() / 60) + "h "
+              + (Duration.between(ps.getTimeIn(), now).toMinutes() % 60) + "m"
+            : "";
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirm Employee Return");
+        confirm.setHeaderText("Confirm return of " + ps.getEmpName() + "?");
+        confirm.setContentText(
+            "Pass Slip     :  PS-" + String.format("%04d", ps.getSlipId()) +
+            "\nDepartment    :  " + ps.getDepartment() +
+            "\nTime Out      :  " + ps.getFormattedTimeOut() +
+            "\nExpected In   :  " + ps.getFormattedTimeIn() +
+            "\nActual Return :  " + now.format(DATETIME_FMT) +
+            "\nTotal Duration:  " + durationOut +
+            lateInfo +
+            "\n\nHave you personally verified that\n" +
+            ps.getEmpName() + " has returned to the campus?");
+
+        ButtonType btnConfirm = new ButtonType("✅  Yes, Confirm Return", ButtonBar.ButtonData.OK_DONE);
+        ButtonType btnCancel  = new ButtonType("Cancel",                  ButtonBar.ButtonData.CANCEL_CLOSE);
+        confirm.getButtonTypes().setAll(btnConfirm, btnCancel);
+
+        confirm.showAndWait().ifPresent(r -> {
+            if (r == btnConfirm) {
+                if (passSlipDAO.recordTimeIn(ps.getSlipId(), now, durationOut)) {
+                    activityLogDAO.logActivity(ps.getEmpId(),
+                        "Return confirmed: " + ps.getEmpName() +
+                        " (PS-" + ps.getSlipId() + ") at " + now.format(TIME_FMT),
+                        currentUser != null ? currentUser.getUsername() : "Admin");
+                    showAlert(Alert.AlertType.INFORMATION, "Return Confirmed",
+                        "✅  " + ps.getEmpName() + " has been marked as RETURNED." +
+                        "\nActual return  : " + now.format(TIME_FMT) +
+                        "\nTotal duration : " + durationOut);
+                    loadDashboardData();
+                    loadRecentActivity();
+                } else {
+                    showAlert(Alert.AlertType.ERROR, "Error", "Failed to record return. Please try again.");
+                }
+            }
+        });
+    }

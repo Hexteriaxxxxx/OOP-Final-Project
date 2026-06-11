@@ -5,13 +5,13 @@
 *.ipr
 out/
 
-# Compiled Java
+# Compiled Java classes only
 *.class
-*.jar
 
-# Libraries - download separately, do not push
+# Libraries - gitignored by default EXCEPT PostgreSQL driver
 lib/
 libs/
+!lib/postgresql-42.7.3.jar
 
 # OS Files
 .DS_Store
@@ -26,6 +26,11 @@ mysql-connector*/
 
 # JavaFX SDK - download from gluonhq.com
 javafx-sdk*/
-# Environment variables
+
+# Environment / secrets - NEVER push these
 .env
+preferences.properties
 src/resources/config.properties
+
+# Python server config
+visitor_server_config.json

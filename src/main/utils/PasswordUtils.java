@@ -1,4 +1,4 @@
-package utils;
+package main.utils;
 
 import java.security.MessageDigest;
 import java.security.SecureRandom;
