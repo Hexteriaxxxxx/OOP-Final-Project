@@ -53,7 +53,6 @@
                                 <TextField fx:id="txtSearch" promptText="🔍  Search..." HBox.hgrow="ALWAYS" onKeyReleased="#handleSearch" style="-fx-background-color: white; -fx-border-color: #ddd; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 7 12; -fx-font-size: 12.5px;"/>
                                 <ComboBox fx:id="cmbFilter" prefWidth="110" onAction="#handleFilter" style="-fx-background-radius: 20; -fx-border-color: #ddd; -fx-background-color: white;"/>
                             </HBox>
-                            <!-- StackPane for skeleton overlay -->
                             <StackPane fx:id="skeletonContainer">
                                 <TableView fx:id="tblPassSlips"
                                            style="-fx-background-color: white; -fx-border-color: #e8e8e8;">
@@ -82,11 +81,21 @@
                                 <Label text="🕐  Recent Activity" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1a1a1a;"/>
                                 <VBox fx:id="activityContainer" spacing="6"><Label text="No recent activity." style="-fx-text-fill: #999; -fx-font-size: 12px;"/></VBox>
                             </VBox>
-                            <VBox spacing="8" style="-fx-background-color: #8B0000; -fx-background-radius: 10; -fx-padding: 12 14;">
+                            <!-- FIXED: Adjusted spacing in Today's Summary -->
+                            <VBox spacing="10" style="-fx-background-color: #8B0000; -fx-background-radius: 10; -fx-padding: 14 14 14 14;">
                                 <Label text="📅  Today's Summary" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/>
-                                <HBox alignment="CENTER_LEFT"><Label text="Total Requests" HBox.hgrow="ALWAYS" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12px;"/><Label fx:id="lblTotalRequests" text="0" style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/></HBox>
-                                <HBox alignment="CENTER_LEFT"><Label text="Approval Rate"  HBox.hgrow="ALWAYS" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12px;"/><Label fx:id="lblApprovalRate"  text="0%" style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/></HBox>
-                                <HBox alignment="CENTER_LEFT"><Label text="Active Now"     HBox.hgrow="ALWAYS" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12px;"/><Label fx:id="lblActiveNow"     text="0" style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/></HBox>
+                                <HBox alignment="CENTER_LEFT" style="-fx-padding: 4 0 0 0;">
+                                    <Label text="Total Requests:" HBox.hgrow="ALWAYS" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12px;"/>
+                                    <Label fx:id="lblTotalRequests" text="0" style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                                </HBox>
+                                <HBox alignment="CENTER_LEFT" style="-fx-padding: 4 0 0 0;">
+                                    <Label text="Approval Rate:" HBox.hgrow="ALWAYS" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12px;"/>
+                                    <Label fx:id="lblApprovalRate" text="0%" style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                                </HBox>
+                                <HBox alignment="CENTER_LEFT" style="-fx-padding: 4 0 0 0;">
+                                    <Label text="Active Now:" HBox.hgrow="ALWAYS" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12px;"/>
+                                    <Label fx:id="lblActiveNow" text="0" style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                                </HBox>
                             </VBox>
                         </VBox>
                     </HBox>
