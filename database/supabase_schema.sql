@@ -37,17 +37,21 @@ CREATE TABLE IF NOT EXISTS "Visitor" (
 );
 
 -- TABLE: Pass_slip
+-- NOTE: category column added (BUG 1 fix)
+-- NOTE: status CHECK includes 'Overdue' (BUG 2 fix)
 CREATE TABLE IF NOT EXISTS "Pass_slip" (
     slip_id     SERIAL PRIMARY KEY,
     emp_id      INT NOT NULL,
     reason      VARCHAR(255) NOT NULL,
+    category    VARCHAR(50) DEFAULT 'Official Business',
     time_out    TIMESTAMP NOT NULL,
     time_in     TIMESTAMP,
     duration    VARCHAR(50),
     issued_by   INT NOT NULL,
-    status      VARCHAR(20) DEFAULT 'Pending' CHECK (status IN ('Pending','Approved','Rejected','Returned')),
+    status      VARCHAR(20) DEFAULT 'Pending'
+                    CHECK (status IN ('Pending', 'Approved', 'Rejected', 'Returned', 'Overdue')),
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (emp_id) REFERENCES "Employee"(emp_id),
+    FOREIGN KEY (emp_id)    REFERENCES "Employee"(emp_id),
     FOREIGN KEY (issued_by) REFERENCES "User"(user_id)
 );
 

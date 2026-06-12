@@ -2,6 +2,8 @@ package main.controllers;
 
 import dao.MonthlyReportDAO;
 import dao.PassSlipDAO;
+import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -10,6 +12,7 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -17,6 +20,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import main.utils.SessionManager;
 import main.utils.SkeletonLoader;
 import models.PassSlip;
@@ -206,9 +210,47 @@ public class ReportsController implements Initializable {
     @FXML private void handleUserManagement() { goTo("/main/resources/fxml/UserManagement.fxml","User Management"); }
     @FXML private void handleLogout()         { Optional<ButtonType> res=new Alert(Alert.AlertType.CONFIRMATION,"Logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();if(res.isPresent()&&res.get()==ButtonType.OK){SessionManager.clear();goTo("/main/resources/fxml/Login.fxml","Login");} }
 
+    private StackPane createLoadingPane() {
+        StackPane root = new StackPane();
+        root.setStyle("-fx-background-color: #1a0808;");
+        VBox box = new VBox(16);
+        box.setAlignment(Pos.CENTER);
+        ProgressIndicator spinner = new ProgressIndicator();
+        spinner.setPrefSize(60, 60);
+        spinner.setStyle("-fx-progress-color: #8B0000;");
+        Label lbl = new Label("Loading...");
+        lbl.setStyle("-fx-text-fill: #cccccc; -fx-font-size: 14px; -fx-font-family: 'Segoe UI';");
+        box.getChildren().addAll(spinner, lbl);
+        root.getChildren().add(box);
+        return root;
+    }
+
     private void goTo(String fxml, String title) {
-        try { FXMLLoader loader=new FXMLLoader(getClass().getResource(fxml)); Parent root=loader.load(); Stage stage=(Stage)dailyTable.getScene().getWindow(); double w=stage.getWidth(),h=stage.getHeight(); stage.setTitle(title); stage.setScene(new Scene(root)); stage.setWidth(w); stage.setHeight(h); }
-        catch(IOException e){new Alert(Alert.AlertType.ERROR,"Screen not available:\n"+fxml).showAndWait();}
+        Stage stage = (Stage) dailyTable.getScene().getWindow();
+        Parent currentRoot = dailyTable.getScene().getRoot();
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(200), currentRoot);
+        fadeOut.setFromValue(1.0);
+        fadeOut.setToValue(0.0);
+        fadeOut.setOnFinished(ev -> {
+            double w = stage.getWidth(), h = stage.getHeight();
+            stage.setScene(new Scene(createLoadingPane(), w, h));
+            stage.setWidth(w); stage.setHeight(h);
+            PauseTransition pause = new PauseTransition(Duration.millis(400));
+            pause.setOnFinished(pev -> {
+                try {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
+                    Parent root = loader.load();
+                    root.setOpacity(0);
+                    stage.setTitle(title);
+                    stage.setScene(new Scene(root));
+                    stage.setWidth(w); stage.setHeight(h);
+                    FadeTransition fadeIn = new FadeTransition(Duration.millis(200), root);
+                    fadeIn.setFromValue(0); fadeIn.setToValue(1); fadeIn.play();
+                } catch (IOException e) { new Alert(Alert.AlertType.ERROR, "Screen not available:\n" + fxml).showAndWait(); }
+            });
+            pause.play();
+        });
+        fadeOut.play();
     }
 
     public static class MonthlyReport {

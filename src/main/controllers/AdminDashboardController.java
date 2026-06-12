@@ -1,6 +1,7 @@
 package main.controllers;
 
 import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -330,39 +331,57 @@ public class AdminDashboardController implements Initializable {
 
     @FXML private void handleLogout() {
         Alert c=new Alert(Alert.AlertType.CONFIRMATION); c.setTitle("Logout"); c.setHeaderText("Are you sure you want to logout?");
-        c.showAndWait().ifPresent(r -> { if(r==ButtonType.OK) { stopOverdueChecker();
-            try { FXMLLoader loader=new FXMLLoader(getClass().getResource("/main/resources/fxml/Login.fxml")); Parent root=loader.load(); Stage stage=(Stage)lblSidebarUser.getScene().getWindow();
-                  root.setOpacity(0); stage.setScene(new Scene(root)); stage.setTitle("Pass Slip Issuance System"); stage.show();
-                  FadeTransition ftLogout = new FadeTransition(Duration.millis(350), root); ftLogout.setFromValue(0); ftLogout.setToValue(1); ftLogout.play();
-            } catch(IOException e){System.out.println("Logout error: "+e.getMessage());}
-        }});
+        c.showAndWait().ifPresent(r -> { if(r==ButtonType.OK) { stopOverdueChecker(); navigateTo("/main/resources/fxml/Login.fxml","Pass Slip Issuance System"); }});
     }
 
-    // ── BUG 3 FIX: fade transition on every panel change ──────────
+    private StackPane createLoadingPane() {
+        StackPane root = new StackPane();
+        root.setStyle("-fx-background-color: #1a0808;");
+        VBox box = new VBox(16);
+        box.setAlignment(Pos.CENTER);
+        ProgressIndicator spinner = new ProgressIndicator();
+        spinner.setPrefSize(60, 60);
+        spinner.setStyle("-fx-progress-color: #8B0000;");
+        Label lbl = new Label("Loading...");
+        lbl.setStyle("-fx-text-fill: #cccccc; -fx-font-size: 14px; -fx-font-family: 'Segoe UI';");
+        box.getChildren().addAll(spinner, lbl);
+        root.getChildren().add(box);
+        return root;
+    }
+
     private void navigateTo(String fxmlPath, String title) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-            Parent root = loader.load();
-
-            // Pass current user info to the loaded controller
-            Object ctrl = loader.getController();
-            String username = currentUser != null ? currentUser.getUsername() : "Admin";
-            String role     = "Administrator";
-            if (ctrl instanceof ReportsController)        ((ReportsController)ctrl).initSession(username, role);
-            else if (ctrl instanceof PassSlipIssuanceController) ((PassSlipIssuanceController)ctrl).initSession(username, role);
-            else if (ctrl instanceof UserManagementController)   ((UserManagementController)ctrl).initSession(username, role);
-
-            Stage stage = (Stage) lblSidebarUser.getScene().getWindow();
+        Stage stage = (Stage) lblSidebarUser.getScene().getWindow();
+        Parent currentRoot = lblSidebarUser.getScene().getRoot();
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(200), currentRoot);
+        fadeOut.setFromValue(1.0);
+        fadeOut.setToValue(0.0);
+        fadeOut.setOnFinished(ev -> {
             double w = stage.getWidth(), h = stage.getHeight();
-
-            root.setOpacity(0);
-            stage.setScene(new Scene(root));
-            stage.setTitle(title);
+            stage.setScene(new Scene(createLoadingPane(), w, h));
             stage.setWidth(w); stage.setHeight(h);
-
-            FadeTransition ft = new FadeTransition(Duration.millis(250), root);
-            ft.setFromValue(0.0); ft.setToValue(1.0); ft.play();
-        } catch (IOException e) { showAlert(Alert.AlertType.ERROR, "Nav Error", "Cannot open " + title); }
+            PauseTransition pause = new PauseTransition(Duration.millis(400));
+            pause.setOnFinished(pev -> {
+                try {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+                    Parent root = loader.load();
+                    Object ctrl = loader.getController();
+                    String username = currentUser != null ? currentUser.getUsername() : "Admin";
+                    String role     = "Administrator";
+                    if (ctrl instanceof ReportsController)             ((ReportsController) ctrl).initSession(username, role);
+                    else if (ctrl instanceof PassSlipIssuanceController) ((PassSlipIssuanceController) ctrl).initSession(username, role);
+                    else if (ctrl instanceof UserManagementController)   ((UserManagementController) ctrl).initSession(username, role);
+                    root.setOpacity(0);
+                    stage.setScene(new Scene(root));
+                    stage.setTitle(title);
+                    stage.setWidth(w); stage.setHeight(h);
+                    stage.show();
+                    FadeTransition fadeIn = new FadeTransition(Duration.millis(200), root);
+                    fadeIn.setFromValue(0); fadeIn.setToValue(1); fadeIn.play();
+                } catch (IOException e) { showAlert(Alert.AlertType.ERROR, "Nav Error", "Cannot open " + title); }
+            });
+            pause.play();
+        });
+        fadeOut.play();
     }
 
     private void showAlert(Alert.AlertType type, String title, String msg) {

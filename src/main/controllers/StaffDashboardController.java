@@ -1,6 +1,7 @@
 package main.controllers;
 
 import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -9,6 +10,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -88,8 +90,8 @@ public class StaffDashboardController implements Initializable {
         tblPassSlips.setItems(masterList);
         tblPassSlips.setFixedCellSize(36);
         javafx.beans.binding.DoubleBinding tableHeight = javafx.beans.binding.Bindings.createDoubleBinding(
-            () -> 38 + Math.max(masterList.size(), 1) * 36.0 + 2,
-            masterList
+                () -> 38 + Math.max(masterList.size(), 1) * 36.0 + 2,
+                masterList
         );
         tblPassSlips.prefHeightProperty().bind(tableHeight);
         tblPassSlips.minHeightProperty().bind(tableHeight);
@@ -115,17 +117,33 @@ public class StaffDashboardController implements Initializable {
     }
 
     private void updateStatCards(List<PassSlip> all) {
+        java.time.LocalDate today = java.time.LocalDate.now();
+
         long pending  = all.stream().filter(s -> "Pending" .equalsIgnoreCase(s.getStatus())).count();
         long approved = all.stream().filter(s -> "Approved".equalsIgnoreCase(s.getStatus())).count();
         long rejected = all.stream().filter(s -> "Rejected".equalsIgnoreCase(s.getStatus())).count();
-        try { int active = passSlipDAO.countActiveSlips(); lblActive.setText(String.valueOf(active)); } catch (Exception ignored) {}
-        lblPending.setText(String.valueOf(pending)); lblApproved.setText(String.valueOf(approved)); lblRejected.setText(String.valueOf(rejected));
-        try {
-            List<PassSlip> today = passSlipDAO.getTodayPassSlips();
-            long approvedToday = today.stream().filter(s -> "Approved".equalsIgnoreCase(s.getStatus())).count();
-            int  rate = today.isEmpty() ? 0 : (int)((approvedToday*100.0)/today.size());
-            lblTotalRequests.setText(String.valueOf(today.size())); lblApprovalRate.setText(rate + "%");
-        } catch (Exception ignored) {}
+
+        // Derive today's stats from the already-loaded list — no extra DB call, no silent failures
+        long totalToday    = all.stream()
+                .filter(s -> s.getTimeOut() != null && s.getTimeOut().toLocalDate().equals(today))
+                .count();
+        long approvedToday = all.stream()
+                .filter(s -> s.getTimeOut() != null && s.getTimeOut().toLocalDate().equals(today)
+                             && "Approved".equalsIgnoreCase(s.getStatus()))
+                .count();
+        int rate = totalToday == 0 ? 0 : (int)((approvedToday * 100.0) / totalToday);
+
+        long active = 0;
+        try { active = passSlipDAO.countActiveSlips(); } catch (Exception ignored) {}
+
+        lblPending .setText(String.valueOf(pending));
+        lblApproved.setText(String.valueOf(approved));
+        lblRejected.setText(String.valueOf(rejected));
+        lblActive  .setText(String.valueOf(active));
+
+        lblTotalRequests.setText(String.valueOf(totalToday));
+        lblApprovalRate .setText(rate + "%");
+        if (lblActiveNow != null) lblActiveNow.setText(String.valueOf(active));
     }
 
     @FXML private void handleNotification() {
@@ -170,7 +188,7 @@ public class StaffDashboardController implements Initializable {
         colActions.setCellFactory(col -> new TableCell<>() {
             final Button viewBtn = new Button("👁");
             { viewBtn.setStyle("-fx-background-color:transparent;-fx-cursor:hand;-fx-font-size:16px;");
-              viewBtn.setOnAction(e -> handleViewPassSlip(getTableView().getItems().get(getIndex()))); }
+                viewBtn.setOnAction(e -> handleViewPassSlip(getTableView().getItems().get(getIndex()))); }
             @Override protected void updateItem(Void item, boolean empty) { super.updateItem(item,empty); setGraphic(empty?null:viewBtn); }
         });
     }
@@ -227,14 +245,20 @@ public class StaffDashboardController implements Initializable {
         loadNotifications(); loadRecentActivity();
     }
 
+    // ── BUG 3 FIX: null-safe checks on empName and department ──
     @FXML public void handleSearch() {
-        String kw=txtSearch.getText().trim().toLowerCase(); String filter=cmbFilter.getValue();
+        String kw = txtSearch.getText().trim().toLowerCase();
+        String filter = cmbFilter.getValue();
         tblPassSlips.setItems(masterList.filtered(slip -> {
-            boolean matchKw=kw.isEmpty()||slip.getEmpName().toLowerCase().contains(kw)||String.valueOf(slip.getSlipId()).contains(kw)||slip.getDepartment().toLowerCase().contains(kw);
-            boolean matchF="All".equals(filter)||slip.getStatus().equalsIgnoreCase(filter);
+            boolean matchKw = kw.isEmpty() ||
+                    (slip.getEmpName() != null && slip.getEmpName().toLowerCase().contains(kw)) ||
+                    String.valueOf(slip.getSlipId()).contains(kw) ||
+                    (slip.getDepartment() != null && slip.getDepartment().toLowerCase().contains(kw));
+            boolean matchF = "All".equals(filter) || slip.getStatus().equalsIgnoreCase(filter);
             return matchKw && matchF;
         }));
     }
+
     @FXML public void handleFilter() { handleSearch(); }
 
     @FXML public void handleCreatePassSlip() {
@@ -250,7 +274,6 @@ public class StaffDashboardController implements Initializable {
 
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
-            // ── BUG 1 FIX: bind to parent window — closes with main window ──
             stage.initOwner(tblPassSlips.getScene().getWindow());
             stage.setTitle("Create Pass Slip");
             stage.setScene(new Scene(root, winW, winH));
@@ -280,37 +303,84 @@ public class StaffDashboardController implements Initializable {
         a.showAndWait();
     }
 
-    // ── BUG 3 FIX: fade transition on every panel change ──────────
-    private void navigateToStaff(String fxmlPath, String title) {
-        try { stopAutoRefresh();
-            FXMLLoader loader=new FXMLLoader(getClass().getResource(fxmlPath)); Parent root=loader.load();
-            Object ctrl=loader.getController();
-            String username=currentUser!=null?currentUser.getUsername():"Staff";
-            String role    =currentUser!=null?currentUser.getRole()    :"Staff";
-            if (ctrl instanceof StaffPassSlipController) ((StaffPassSlipController)ctrl).initSession(username,role);
-            else if (ctrl instanceof StaffReportsController) ((StaffReportsController)ctrl).initSession(username,role);
-            Stage stage=(Stage)tblPassSlips.getScene().getWindow();
-            double w=stage.getWidth(), h=stage.getHeight();
+    private StackPane createLoadingPane() {
+        StackPane root = new StackPane();
+        root.setStyle("-fx-background-color: #1a0808;");
+        VBox box = new VBox(16);
+        box.setAlignment(Pos.CENTER);
+        ProgressIndicator spinner = new ProgressIndicator();
+        spinner.setPrefSize(60, 60);
+        spinner.setStyle("-fx-progress-color: #8B0000;");
+        Label lbl = new Label("Loading...");
+        lbl.setStyle("-fx-text-fill: #cccccc; -fx-font-size: 14px; -fx-font-family: 'Segoe UI';");
+        box.getChildren().addAll(spinner, lbl);
+        root.getChildren().add(box);
+        return root;
+    }
 
-            root.setOpacity(0);
-            stage.setScene(new Scene(root)); stage.setTitle(title+" – Pass Slip System");
+    private void navigateToStaff(String fxmlPath, String title) {
+        stopAutoRefresh();
+        Stage stage = (Stage) tblPassSlips.getScene().getWindow();
+        Parent currentRoot = tblPassSlips.getScene().getRoot();
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(200), currentRoot);
+        fadeOut.setFromValue(1.0);
+        fadeOut.setToValue(0.0);
+        fadeOut.setOnFinished(ev -> {
+            double w = stage.getWidth(), h = stage.getHeight();
+            stage.setScene(new Scene(createLoadingPane(), w, h));
             stage.setWidth(w); stage.setHeight(h);
-            stage.show();
-            FadeTransition ft1 = new FadeTransition(Duration.millis(250), root); ft1.setFromValue(0); ft1.setToValue(1); ft1.play();
-        } catch(IOException e){System.out.println("Nav error: "+e.getMessage());}
+            PauseTransition pause = new PauseTransition(Duration.millis(400));
+            pause.setOnFinished(pev -> {
+                try {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+                    Parent root = loader.load();
+                    Object ctrl = loader.getController();
+                    String username = currentUser != null ? currentUser.getUsername() : "Staff";
+                    String role     = currentUser != null ? currentUser.getRole()     : "Staff";
+                    if (ctrl instanceof StaffPassSlipController) ((StaffPassSlipController) ctrl).initSession(username, role);
+                    else if (ctrl instanceof StaffReportsController) ((StaffReportsController) ctrl).initSession(username, role);
+                    root.setOpacity(0);
+                    stage.setScene(new Scene(root));
+                    stage.setTitle(title + " – Pass Slip System");
+                    stage.setWidth(w); stage.setHeight(h);
+                    stage.show();
+                    FadeTransition fadeIn = new FadeTransition(Duration.millis(200), root);
+                    fadeIn.setFromValue(0); fadeIn.setToValue(1); fadeIn.play();
+                } catch (IOException e) { System.out.println("Nav error: " + e.getMessage()); }
+            });
+            pause.play();
+        });
+        fadeOut.play();
     }
 
     private void navigateTo(String fxmlPath, String title) {
-        try { stopAutoRefresh();
-            FXMLLoader loader=new FXMLLoader(getClass().getResource(fxmlPath)); Parent root=loader.load();
-            Stage stage=(Stage)tblPassSlips.getScene().getWindow();
-            double w=stage.getWidth(), h=stage.getHeight();
-            root.setOpacity(0);
-            stage.setScene(new Scene(root)); stage.setTitle(title+" – Pass Slip System");
+        stopAutoRefresh();
+        Stage stage = (Stage) tblPassSlips.getScene().getWindow();
+        Parent currentRoot = tblPassSlips.getScene().getRoot();
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(200), currentRoot);
+        fadeOut.setFromValue(1.0);
+        fadeOut.setToValue(0.0);
+        fadeOut.setOnFinished(ev -> {
+            double w = stage.getWidth(), h = stage.getHeight();
+            stage.setScene(new Scene(createLoadingPane(), w, h));
             stage.setWidth(w); stage.setHeight(h);
-            stage.show();
-            FadeTransition ft2 = new FadeTransition(Duration.millis(250), root); ft2.setFromValue(0); ft2.setToValue(1); ft2.play();
-        } catch(IOException e){System.out.println("Nav error: "+e.getMessage());}
+            PauseTransition pause = new PauseTransition(Duration.millis(400));
+            pause.setOnFinished(pev -> {
+                try {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+                    Parent root = loader.load();
+                    root.setOpacity(0);
+                    stage.setScene(new Scene(root));
+                    stage.setTitle(title + " – Pass Slip System");
+                    stage.setWidth(w); stage.setHeight(h);
+                    stage.show();
+                    FadeTransition fadeIn = new FadeTransition(Duration.millis(200), root);
+                    fadeIn.setFromValue(0); fadeIn.setToValue(1); fadeIn.play();
+                } catch (IOException e) { System.out.println("Nav error: " + e.getMessage()); }
+            });
+            pause.play();
+        });
+        fadeOut.play();
     }
 
     private void setActiveButton(Button active) {

@@ -4,6 +4,7 @@ import dao.PassSlipDAO;
 import dao.ActivityLogDAO;
 import models.PassSlip;
 import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -19,6 +20,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -118,12 +120,12 @@ public class PassSlipIssuanceController implements Initializable {
             final Button btnView     = new Button("👁");
             final HBox   box         = new HBox(4, btnDownload, btnPrint, btnView);
             { box.setAlignment(Pos.CENTER);
-              btnDownload.setStyle("-fx-background-color:#8B0000;-fx-text-fill:white;-fx-font-size:11px;-fx-padding:5 10;-fx-cursor:hand;-fx-background-radius:5;");
-              btnPrint.setStyle("-fx-background-color:transparent;-fx-text-fill:#E67E22;-fx-font-size:15px;-fx-cursor:hand;-fx-padding:2 5;");
-              btnView.setStyle("-fx-background-color:transparent;-fx-text-fill:#1565C0;-fx-font-size:15px;-fx-cursor:hand;-fx-padding:2 5;");
-              btnDownload.setOnAction(e -> handleDownload(getTableView().getItems().get(getIndex())));
-              btnPrint.setOnAction(e -> handlePrint(getTableView().getItems().get(getIndex())));
-              btnView.setOnAction(e -> showDetails(getTableView().getItems().get(getIndex()))); }
+                btnDownload.setStyle("-fx-background-color:#8B0000;-fx-text-fill:white;-fx-font-size:11px;-fx-padding:5 10;-fx-cursor:hand;-fx-background-radius:5;");
+                btnPrint.setStyle("-fx-background-color:transparent;-fx-text-fill:#E67E22;-fx-font-size:15px;-fx-cursor:hand;-fx-padding:2 5;");
+                btnView.setStyle("-fx-background-color:transparent;-fx-text-fill:#1565C0;-fx-font-size:15px;-fx-cursor:hand;-fx-padding:2 5;");
+                btnDownload.setOnAction(e -> handleDownload(getTableView().getItems().get(getIndex())));
+                btnPrint.setOnAction(e -> handlePrint(getTableView().getItems().get(getIndex())));
+                btnView.setOnAction(e -> showDetails(getTableView().getItems().get(getIndex()))); }
             @Override protected void updateItem(String val, boolean empty) { super.updateItem(val, empty); setGraphic(empty ? null : box); }
         });
     }
@@ -146,8 +148,11 @@ public class PassSlipIssuanceController implements Initializable {
         String kw = txtSearch.getText().toLowerCase().trim();
         String dept = cmbFilter.getValue();
         filteredList.setPredicate(ps -> {
-            boolean matchDept = "All Departments".equals(dept) || ps.getDepartment().equalsIgnoreCase(dept);
-            boolean matchKw = kw.isEmpty() || ps.getEmpName().toLowerCase().contains(kw) || ps.getDepartment().toLowerCase().contains(kw) || ps.getReason().toLowerCase().contains(kw) || String.valueOf(ps.getSlipId()).contains(kw);
+            String name = ps.getEmpName() != null ? ps.getEmpName() : "";
+            String department = ps.getDepartment() != null ? ps.getDepartment() : "";
+            String reason = ps.getReason() != null ? ps.getReason() : "";
+            boolean matchDept = "All Departments".equals(dept) || department.equalsIgnoreCase(dept);
+            boolean matchKw = kw.isEmpty() || name.toLowerCase().contains(kw) || department.toLowerCase().contains(kw) || reason.toLowerCase().contains(kw) || String.valueOf(ps.getSlipId()).contains(kw);
             return matchDept && matchKw;
         });
     }
@@ -193,17 +198,47 @@ public class PassSlipIssuanceController implements Initializable {
     }
 
     // ── FIX: no double-brace init — FadeTransition is final ──────
+    private StackPane createLoadingPane() {
+        StackPane root = new StackPane();
+        root.setStyle("-fx-background-color: #1a0808;");
+        VBox box = new VBox(16);
+        box.setAlignment(Pos.CENTER);
+        ProgressIndicator spinner = new ProgressIndicator();
+        spinner.setPrefSize(60, 60);
+        spinner.setStyle("-fx-progress-color: #8B0000;");
+        Label lbl = new Label("Loading...");
+        lbl.setStyle("-fx-text-fill: #cccccc; -fx-font-size: 14px; -fx-font-family: 'Segoe UI';");
+        box.getChildren().addAll(spinner, lbl);
+        root.getChildren().add(box);
+        return root;
+    }
+
     private void goTo(String fxml, String title) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
-            Parent root = loader.load();
-            Stage stage = (Stage) tblSlips.getScene().getWindow();
+        Stage stage = (Stage) tblSlips.getScene().getWindow();
+        Parent currentRoot = tblSlips.getScene().getRoot();
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(200), currentRoot);
+        fadeOut.setFromValue(1.0);
+        fadeOut.setToValue(0.0);
+        fadeOut.setOnFinished(ev -> {
             double w = stage.getWidth(), h = stage.getHeight();
-            root.setOpacity(0);
-            stage.setTitle(title); stage.setScene(new Scene(root)); stage.setWidth(w); stage.setHeight(h);
-            FadeTransition ft = new FadeTransition(Duration.millis(250), root);
-            ft.setFromValue(0.0); ft.setToValue(1.0); ft.play();
-        } catch (IOException e) { showError("Screen not available:\n" + fxml); }
+            stage.setScene(new Scene(createLoadingPane(), w, h));
+            stage.setWidth(w); stage.setHeight(h);
+            PauseTransition pause = new PauseTransition(Duration.millis(400));
+            pause.setOnFinished(pev -> {
+                try {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
+                    Parent root = loader.load();
+                    root.setOpacity(0);
+                    stage.setTitle(title);
+                    stage.setScene(new Scene(root));
+                    stage.setWidth(w); stage.setHeight(h);
+                    FadeTransition fadeIn = new FadeTransition(Duration.millis(200), root);
+                    fadeIn.setFromValue(0); fadeIn.setToValue(1); fadeIn.play();
+                } catch (IOException e) { showError("Screen not available:\n" + fxml); }
+            });
+            pause.play();
+        });
+        fadeOut.play();
     }
 
     private void showInfo(String msg) { Alert a=new Alert(Alert.AlertType.INFORMATION);a.setTitle("Success");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }

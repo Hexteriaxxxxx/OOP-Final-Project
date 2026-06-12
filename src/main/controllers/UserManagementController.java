@@ -3,6 +3,7 @@ package main.controllers;
 import dao.DepartmentDAO;
 import dao.EmployeeDAO;
 import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -10,12 +11,14 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -175,16 +178,47 @@ public class UserManagementController implements Initializable {
     }
 
     // ── FIX: FadeTransition is final — no double-brace init ──────
+    private StackPane createLoadingPane() {
+        StackPane root = new StackPane();
+        root.setStyle("-fx-background-color: #1a0808;");
+        VBox box = new VBox(16);
+        box.setAlignment(Pos.CENTER);
+        ProgressIndicator spinner = new ProgressIndicator();
+        spinner.setPrefSize(60, 60);
+        spinner.setStyle("-fx-progress-color: #8B0000;");
+        Label lbl = new Label("Loading...");
+        lbl.setStyle("-fx-text-fill: #cccccc; -fx-font-size: 14px; -fx-font-family: 'Segoe UI';");
+        box.getChildren().addAll(spinner, lbl);
+        root.getChildren().add(box);
+        return root;
+    }
+
     private void goTo(String fxml, String title) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml)); Parent root = loader.load();
-            Stage stage = (Stage) tableEmployees.getScene().getWindow();
+        Stage stage = (Stage) tableEmployees.getScene().getWindow();
+        Parent currentRoot = tableEmployees.getScene().getRoot();
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(200), currentRoot);
+        fadeOut.setFromValue(1.0);
+        fadeOut.setToValue(0.0);
+        fadeOut.setOnFinished(ev -> {
             double w = stage.getWidth(), h = stage.getHeight();
-            root.setOpacity(0);
-            stage.setTitle(title); stage.setScene(new Scene(root)); stage.setWidth(w); stage.setHeight(h);
-            FadeTransition ft = new FadeTransition(Duration.millis(250), root);
-            ft.setFromValue(0.0); ft.setToValue(1.0); ft.play();
-        } catch (IOException e) { showError("Screen not available:\n" + e.getMessage()); }
+            stage.setScene(new Scene(createLoadingPane(), w, h));
+            stage.setWidth(w); stage.setHeight(h);
+            PauseTransition pause = new PauseTransition(Duration.millis(400));
+            pause.setOnFinished(pev -> {
+                try {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
+                    Parent root = loader.load();
+                    root.setOpacity(0);
+                    stage.setTitle(title);
+                    stage.setScene(new Scene(root));
+                    stage.setWidth(w); stage.setHeight(h);
+                    FadeTransition fadeIn = new FadeTransition(Duration.millis(200), root);
+                    fadeIn.setFromValue(0); fadeIn.setToValue(1); fadeIn.play();
+                } catch (IOException e) { showError("Screen not available:\n" + e.getMessage()); }
+            });
+            pause.play();
+        });
+        fadeOut.play();
     }
 
     private void showError(String msg) { Alert a=new Alert(Alert.AlertType.ERROR);a.setTitle("Error");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }
