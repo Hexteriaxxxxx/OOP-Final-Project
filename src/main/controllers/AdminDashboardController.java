@@ -2,6 +2,7 @@ package main.controllers;
 
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -357,8 +358,14 @@ public class AdminDashboardController implements Initializable {
         fadeOut.setToValue(0.0);
         fadeOut.setOnFinished(ev -> {
             double w = stage.getWidth(), h = stage.getHeight();
-            stage.setScene(new Scene(createLoadingPane(), w, h));
+            boolean wasFullscreen = stage.isFullScreen();
+            boolean wasMaximized  = stage.isMaximized();
+            Scene loadScene = new Scene(createLoadingPane(), w, h);
+            loadScene.setFill(javafx.scene.paint.Color.web("#0f0505"));
+            stage.setScene(loadScene);
             stage.setWidth(w); stage.setHeight(h);
+            if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
+            else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
             PauseTransition pause = new PauseTransition(Duration.millis(400));
             pause.setOnFinished(pev -> {
                 try {
@@ -371,9 +378,13 @@ public class AdminDashboardController implements Initializable {
                     else if (ctrl instanceof PassSlipIssuanceController) ((PassSlipIssuanceController) ctrl).initSession(username, role);
                     else if (ctrl instanceof UserManagementController)   ((UserManagementController) ctrl).initSession(username, role);
                     root.setOpacity(0);
-                    stage.setScene(new Scene(root));
+                    Scene navScene = new Scene(root);
+                    navScene.setFill(javafx.scene.paint.Color.web("#0f0505"));
+                    stage.setScene(navScene);
                     stage.setTitle(title);
                     stage.setWidth(w); stage.setHeight(h);
+                    if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
+                    else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
                     stage.show();
                     FadeTransition fadeIn = new FadeTransition(Duration.millis(200), root);
                     fadeIn.setFromValue(0); fadeIn.setToValue(1); fadeIn.play();

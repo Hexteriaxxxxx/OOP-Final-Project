@@ -4,6 +4,8 @@ import dao.DepartmentDAO;
 import dao.EmployeeDAO;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
+import javafx.application.Platform;
+import javafx.scene.paint.Color;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -201,8 +203,14 @@ public class UserManagementController implements Initializable {
         fadeOut.setToValue(0.0);
         fadeOut.setOnFinished(ev -> {
             double w = stage.getWidth(), h = stage.getHeight();
-            stage.setScene(new Scene(createLoadingPane(), w, h));
+            boolean wasFullscreen = stage.isFullScreen();
+            boolean wasMaximized  = stage.isMaximized();
+            Scene loadScene = new Scene(createLoadingPane(), w, h);
+            loadScene.setFill(Color.web("#0f0505"));
+            stage.setScene(loadScene);
             stage.setWidth(w); stage.setHeight(h);
+            if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
+            else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
             PauseTransition pause = new PauseTransition(Duration.millis(400));
             pause.setOnFinished(pev -> {
                 try {
@@ -210,8 +218,12 @@ public class UserManagementController implements Initializable {
                     Parent root = loader.load();
                     root.setOpacity(0);
                     stage.setTitle(title);
-                    stage.setScene(new Scene(root));
+                    Scene navScene = new Scene(root);
+                    navScene.setFill(Color.web("#0f0505"));
+                    stage.setScene(navScene);
                     stage.setWidth(w); stage.setHeight(h);
+                    if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
+                    else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
                     FadeTransition fadeIn = new FadeTransition(Duration.millis(200), root);
                     fadeIn.setFromValue(0); fadeIn.setToValue(1); fadeIn.play();
                 } catch (IOException e) { showError("Screen not available:\n" + e.getMessage()); }

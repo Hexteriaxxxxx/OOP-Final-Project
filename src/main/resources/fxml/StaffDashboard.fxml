@@ -5,7 +5,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="main.controllers.StaffDashboardController"
-            prefWidth="1100" prefHeight="780" style="-fx-background-color: #F4F6F9;"
+            prefWidth="1100" style="-fx-background-color: #F4F6F9;"
             stylesheets="@../styles/app.css">
     <left>
         <VBox prefWidth="160" spacing="0" style="-fx-background-color: #8B0000;">
@@ -77,9 +77,11 @@
                                 <Label text="🔔  Notifications" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1a1a1a;"/>
                                 <VBox fx:id="notifContainer" spacing="5"><Label text="No notifications." style="-fx-text-fill: #999; -fx-font-size: 12px;"/></VBox>
                             </VBox>
-                            <VBox spacing="8" VBox.vgrow="ALWAYS" style="-fx-background-color: #f8f8f8; -fx-background-radius: 10; -fx-padding: 12 14; -fx-border-color: #ececec; -fx-border-radius: 10; -fx-border-width: 1;">
+                            <VBox spacing="8" maxHeight="160" style="-fx-background-color: #f8f8f8; -fx-background-radius: 10; -fx-padding: 12 14; -fx-border-color: #ececec; -fx-border-radius: 10; -fx-border-width: 1;">
                                 <Label text="🕐  Recent Activity" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1a1a1a;"/>
-                                <VBox fx:id="activityContainer" spacing="6"><Label text="No recent activity." style="-fx-text-fill: #999; -fx-font-size: 12px;"/></VBox>
+                                <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-border-width: 0; -fx-padding: 0;" maxHeight="120">
+                                    <VBox fx:id="activityContainer" spacing="6"><Label text="No recent activity." style="-fx-text-fill: #999; -fx-font-size: 12px;"/></VBox>
+                                </ScrollPane>
                             </VBox>
                             <!-- FIXED: Adjusted spacing in Today's Summary -->
                             <VBox spacing="10" style="-fx-background-color: #8B0000; -fx-background-radius: 10; -fx-padding: 14 14 14 14;">

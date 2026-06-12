@@ -1,12 +1,18 @@
 package main.controllers;
 
 import dao.UserDAO;
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.ParallelTransition;
+import javafx.animation.TranslateTransition;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -16,6 +22,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.util.Duration;
 
 import java.io.IOException;
 import java.net.URL;
@@ -213,15 +220,39 @@ public class RegisterController implements Initializable {
     @FXML public void handleBackToLogin(ActionEvent e) { navigateToLogin(e); }
 
     private void navigateToLogin(ActionEvent e) {
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/main/resources/fxml/Login.fxml"));
-            Stage stage = (Stage) fullNameField.getScene().getWindow();
-            stage.setScene(new Scene(root, 1280, 720));
-            stage.setTitle("Pass Slip Issuance System");
-            stage.show();
-        } catch (IOException ex) {
-            showAlert(Alert.AlertType.ERROR,"Navigation Error","Could not load Login page.");
-        }
+        Stage stage = (Stage) fullNameField.getScene().getWindow();
+        boolean wasFullscreen = stage.isFullScreen();
+        boolean wasMaximized  = stage.isMaximized();
+        Node currentRoot = fullNameField.getScene().getRoot();
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(160), currentRoot);
+        fadeOut.setToValue(0);
+        TranslateTransition slideOut = new TranslateTransition(Duration.millis(160), currentRoot);
+        slideOut.setToX(40);
+        slideOut.setInterpolator(Interpolator.EASE_IN);
+        ParallelTransition out = new ParallelTransition(fadeOut, slideOut);
+        out.setOnFinished(ev -> {
+            try {
+                Parent root = FXMLLoader.load(getClass().getResource("/main/resources/fxml/Login.fxml"));
+                root.setOpacity(0);
+                root.setTranslateX(-40);
+                Scene loginScene = new Scene(root, 1280, 720);
+                loginScene.setFill(Color.web("#0f0505"));
+                stage.setScene(loginScene);
+                stage.setTitle("Pass Slip Issuance System");
+                stage.show();
+                if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
+                else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
+                FadeTransition fadeIn = new FadeTransition(Duration.millis(360), root);
+                fadeIn.setToValue(1);
+                TranslateTransition slideIn = new TranslateTransition(Duration.millis(360), root);
+                slideIn.setToX(0);
+                slideIn.setInterpolator(Interpolator.EASE_OUT);
+                new ParallelTransition(fadeIn, slideIn).play();
+            } catch (IOException ex) {
+                showAlert(Alert.AlertType.ERROR,"Navigation Error","Could not load Login page.");
+            }
+        });
+        out.play();
     }
 
     private void showAlert(Alert.AlertType type, String title, String msg) {

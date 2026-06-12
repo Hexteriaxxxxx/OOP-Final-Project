@@ -2,12 +2,18 @@ package main.controllers;
 
 import dao.UserDAO;
 import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.ParallelTransition;
+import javafx.animation.ScaleTransition;
+import javafx.animation.TranslateTransition;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.paint.Color;
 import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -48,8 +54,13 @@ public class LoginController implements Initializable {
         loadSavedCredentials();
         if (rootPane != null) {
             rootPane.setOpacity(0);
-            FadeTransition ft = new FadeTransition(Duration.millis(450), rootPane);
-            ft.setFromValue(0.0); ft.setToValue(1.0); ft.play();
+            rootPane.setTranslateY(22);
+            FadeTransition fade = new FadeTransition(Duration.millis(420), rootPane);
+            fade.setToValue(1);
+            TranslateTransition rise = new TranslateTransition(Duration.millis(420), rootPane);
+            rise.setToY(0);
+            rise.setInterpolator(Interpolator.EASE_OUT);
+            new ParallelTransition(fade, rise).play();
         }
     }
 
@@ -102,28 +113,48 @@ public class LoginController implements Initializable {
     }
 
     private void redirectToDashboard(User user) {
-        try {
-            String fxmlPath = selectedRole.equals("admin")
-                    ? "/main/resources/fxml/AdminDashboard.fxml"
-                    : "/main/resources/fxml/StaffDashboard.fxml";
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-            Parent root = loader.load();
-
-            if (selectedRole.equals("admin")) {
-                AdminDashboardController ctrl = loader.getController(); ctrl.setCurrentUser(user);
-            } else {
-                StaffDashboardController ctrl = loader.getController(); ctrl.setCurrentUser(user);
-            }
-
-            Stage stage = (Stage) usernameField.getScene().getWindow();
-            stage.setScene(new Scene(root, 1280, 720));
-            stage.setTitle(selectedRole.equals("admin")
-                    ? "Pass Slip System - Admin Dashboard"
-                    : "Pass Slip System - Staff Dashboard");
-            root.setOpacity(0); stage.show();
-            FadeTransition ft = new FadeTransition(Duration.millis(450), root);
-            ft.setFromValue(0.0); ft.setToValue(1.0); ft.play();
-        } catch (IOException ex) { ex.printStackTrace(); showAlert(Alert.AlertType.ERROR,"Navigation Error","Could not load Dashboard."); }
+        if (rootPane == null) return;
+        Stage stage = (Stage) usernameField.getScene().getWindow();
+        boolean wasFullscreen = stage.isFullScreen();
+        boolean wasMaximized  = stage.isMaximized();
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(200), rootPane);
+        fadeOut.setToValue(0);
+        ScaleTransition scaleOut = new ScaleTransition(Duration.millis(200), rootPane);
+        scaleOut.setToX(0.95); scaleOut.setToY(0.95);
+        scaleOut.setInterpolator(Interpolator.EASE_IN);
+        ParallelTransition out = new ParallelTransition(fadeOut, scaleOut);
+        out.setOnFinished(ev -> {
+            try {
+                String fxmlPath = selectedRole.equals("admin")
+                        ? "/main/resources/fxml/AdminDashboard.fxml"
+                        : "/main/resources/fxml/StaffDashboard.fxml";
+                FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+                Parent root = loader.load();
+                if (selectedRole.equals("admin")) {
+                    AdminDashboardController ctrl = loader.getController(); ctrl.setCurrentUser(user);
+                } else {
+                    StaffDashboardController ctrl = loader.getController(); ctrl.setCurrentUser(user);
+                }
+                root.setOpacity(0);
+                root.setScaleX(0.97); root.setScaleY(0.97);
+                Scene dashScene = new Scene(root, 1280, 720);
+                dashScene.setFill(Color.web("#0f0505"));
+                stage.setScene(dashScene);
+                stage.setTitle(selectedRole.equals("admin")
+                        ? "Pass Slip System - Admin Dashboard"
+                        : "Pass Slip System - Staff Dashboard");
+                stage.show();
+                if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
+                else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
+                FadeTransition fadeIn = new FadeTransition(Duration.millis(420), root);
+                fadeIn.setToValue(1);
+                ScaleTransition scaleIn = new ScaleTransition(Duration.millis(420), root);
+                scaleIn.setToX(1); scaleIn.setToY(1);
+                scaleIn.setInterpolator(Interpolator.EASE_OUT);
+                new ParallelTransition(fadeIn, scaleIn).play();
+            } catch (IOException ex) { ex.printStackTrace(); showAlert(Alert.AlertType.ERROR,"Navigation Error","Could not load Dashboard."); }
+        });
+        out.play();
     }
 
     private void saveCredentials(String username, String role) {
@@ -150,14 +181,37 @@ public class LoginController implements Initializable {
     }
 
     @FXML public void handleSignUp(ActionEvent e) {
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/main/resources/fxml/Register.fxml"));
-            Stage stage = (Stage) usernameField.getScene().getWindow();
-            stage.setScene(new Scene(root, 1280, 720)); stage.setTitle("Register");
-            root.setOpacity(0); stage.show();
-            FadeTransition ft = new FadeTransition(Duration.millis(350), root);
-            ft.setFromValue(0.0); ft.setToValue(1.0); ft.play();
-        } catch (Exception ex) { ex.printStackTrace(); }
+        if (rootPane == null) return;
+        Stage stage = (Stage) usernameField.getScene().getWindow();
+        boolean wasFullscreen = stage.isFullScreen();
+        boolean wasMaximized  = stage.isMaximized();
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(160), rootPane);
+        fadeOut.setToValue(0);
+        TranslateTransition slideOut = new TranslateTransition(Duration.millis(160), rootPane);
+        slideOut.setToX(-32);
+        slideOut.setInterpolator(Interpolator.EASE_IN);
+        ParallelTransition out = new ParallelTransition(fadeOut, slideOut);
+        out.setOnFinished(ev -> {
+            try {
+                Parent root = FXMLLoader.load(getClass().getResource("/main/resources/fxml/Register.fxml"));
+                root.setOpacity(0);
+                root.setTranslateX(40);
+                Scene regScene = new Scene(root, 1280, 720);
+                regScene.setFill(Color.web("#0f0505"));
+                stage.setScene(regScene);
+                stage.setTitle("Register");
+                stage.show();
+                if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
+                else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
+                FadeTransition fadeIn = new FadeTransition(Duration.millis(360), root);
+                fadeIn.setToValue(1);
+                TranslateTransition slideIn = new TranslateTransition(Duration.millis(360), root);
+                slideIn.setToX(0);
+                slideIn.setInterpolator(Interpolator.EASE_OUT);
+                new ParallelTransition(fadeIn, slideIn).play();
+            } catch (Exception ex) { ex.printStackTrace(); }
+        });
+        out.play();
     }
 
     @FXML public void handleForgotPassword(ActionEvent e) {
