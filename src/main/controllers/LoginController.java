@@ -102,7 +102,7 @@ public class LoginController implements Initializable {
         }
         User user = userDAO.login(username, password, selectedRole);
         if (user != null) {
-            if (rememberMe.isSelected()) saveCredentials(username, selectedRole); else clearCredentials();
+            if (rememberMe.isSelected()) saveCredentials(username, password, selectedRole); else clearCredentials();
             // ── SET GLOBAL SESSION — persists across ALL panels ──
             SessionManager.setCurrentUser(user);
             redirectToDashboard(user);
@@ -157,9 +157,12 @@ public class LoginController implements Initializable {
         out.play();
     }
 
-    private void saveCredentials(String username, String role) {
+    private void saveCredentials(String username, String password, String role) {
         Properties props = new Properties();
-        props.setProperty("username", username); props.setProperty("role", role); props.setProperty("rememberMe", "true");
+        props.setProperty("username", username);
+        props.setProperty("password", password);
+        props.setProperty("role", role);
+        props.setProperty("rememberMe", "true");
         try (FileOutputStream fos = new FileOutputStream(PREFS_FILE)) { props.store(fos, "Login Preferences"); }
         catch (IOException e) { System.out.println("Could not save preferences: " + e.getMessage()); }
     }
@@ -172,7 +175,11 @@ public class LoginController implements Initializable {
         try (FileInputStream fis = new FileInputStream(f)) {
             props.load(fis);
             if ("true".equals(props.getProperty("rememberMe"))) {
-                usernameField.setText(props.getProperty("username", ""));
+                String savedUser = props.getProperty("username", "");
+                String savedPass = props.getProperty("password", "");
+                usernameField.setText(savedUser);
+                passwordField.setText(savedPass);
+                passwordVisible.setText(savedPass);
                 rememberMe.setSelected(true);
                 selectedRole = props.getProperty("role", "staff");
                 setActiveTab(selectedRole.equals("admin") ? "Admin" : "Staff");

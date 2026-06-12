@@ -34,7 +34,20 @@ public class SessionManager {
     }
 
     public static String getRole() {
-        return currentUser != null ? currentUser.getRole() : "Administrator";
+        if (currentUser == null) return "Administrator";
+        String role = currentUser.getRole();
+        if (role == null) return "Administrator";
+        // Normalize to display-friendly label
+        return switch (role.toLowerCase()) {
+            case "admin" -> "Administrator";
+            case "staff" -> "Staff";
+            default -> capitalize(role);
+        };
+    }
+
+    private static String capitalize(String s) {
+        if (s == null || s.isEmpty()) return s;
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase();
     }
 
     /**

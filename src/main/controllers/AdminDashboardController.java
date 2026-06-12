@@ -74,10 +74,20 @@ public class AdminDashboardController implements Initializable {
         filteredList = new FilteredList<>(masterList, p -> true);
         tblPassSlips.setItems(filteredList);
         setupTableColumns(); setupFilterComboBox();
+        applySession();
         SkeletonLoader.show(skeletonContainer);
         loadDataAsync();
         loadRecentActivity();
         startOverdueChecker();
+    }
+
+    /** Syncs sidebar + welcome label from SessionManager (called on init and on setCurrentUser). */
+    private void applySession() {
+        String username = main.utils.SessionManager.getUsername();
+        String role     = main.utils.SessionManager.getRole();
+        if (lblSidebarUser != null) lblSidebarUser.setText(username);
+        if (lblSidebarRole != null) lblSidebarRole.setText(role);
+        if (lblWelcome     != null) lblWelcome.setText("Welcome back, " + username);
     }
 
     private void loadDataAsync() {
@@ -113,11 +123,8 @@ public class AdminDashboardController implements Initializable {
 
     public void setCurrentUser(User user) {
         this.currentUser = user;
-        if (user != null) {
-            lblSidebarUser.setText(user.getUsername());
-            lblSidebarRole.setText("Administrator");
-            lblWelcome.setText("Welcome back, " + user.getUsername());
-        }
+        main.utils.SessionManager.setCurrentUser(user);
+        applySession();
     }
 
     private void startOverdueChecker() {
@@ -132,7 +139,7 @@ public class AdminDashboardController implements Initializable {
             String expected = slip.getTimeIn() != null ? slip.getTimeIn().format(TIME_FMT) : "—";
             long minsLate = slip.getTimeIn() != null ? java.time.Duration.between(slip.getTimeIn(), LocalDateTime.now()).toMinutes() : 0;
             msg.append("• ").append(slip.getEmpName()).append("  (PS-").append(String.format("%04d", slip.getSlipId())).append(")")
-               .append("\n  Expected: ").append(expected).append("  |  ").append(minsLate).append(" min(s) late\n\n");
+                    .append("\n  Expected: ").append(expected).append("  |  ").append(minsLate).append(" min(s) late\n\n");
         }
         msg.append("Click 'View Overdue' to see them in the dashboard.");
         Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -183,15 +190,15 @@ public class AdminDashboardController implements Initializable {
             final Button btnView=new Button("👁"); final Button btnApprove=new Button("✓"); final Button btnReject=new Button("✗"); final Button btnReturn=new Button("↩");
             final HBox box=new HBox(6, btnView, btnApprove, btnReject, btnReturn);
             { box.setAlignment(Pos.CENTER_LEFT);
-              btnView   .setStyle("-fx-background-color:transparent;-fx-font-size:14px;-fx-cursor:hand;-fx-padding:2 4;");
-              btnApprove.setStyle("-fx-background-color:transparent;-fx-text-fill:#28a745;-fx-font-size:15px;-fx-font-weight:bold;-fx-cursor:hand;-fx-padding:2 4;");
-              btnReject .setStyle("-fx-background-color:transparent;-fx-text-fill:#dc3545;-fx-font-size:15px;-fx-font-weight:bold;-fx-cursor:hand;-fx-padding:2 4;");
-              btnReturn .setStyle("-fx-background-color:#FF6B35;-fx-text-fill:white;-fx-font-size:14px;-fx-padding:3 10;-fx-background-radius:12;-fx-cursor:hand;-fx-border-width:0;-fx-font-weight:bold;");
-              btnView.setTooltip(new Tooltip("View")); btnApprove.setTooltip(new Tooltip("Approve")); btnReject.setTooltip(new Tooltip("Reject")); btnReturn.setTooltip(new Tooltip("Record return"));
-              btnView   .setOnAction(e -> handleViewPassSlip  (getTableView().getItems().get(getIndex())));
-              btnApprove.setOnAction(e -> handleApprovePassSlip(getTableView().getItems().get(getIndex())));
-              btnReject .setOnAction(e -> handleRejectPassSlip (getTableView().getItems().get(getIndex())));
-              btnReturn .setOnAction(e -> handleRecordReturn   (getTableView().getItems().get(getIndex())));
+                btnView   .setStyle("-fx-background-color:transparent;-fx-font-size:14px;-fx-cursor:hand;-fx-padding:2 4;");
+                btnApprove.setStyle("-fx-background-color:transparent;-fx-text-fill:#28a745;-fx-font-size:15px;-fx-font-weight:bold;-fx-cursor:hand;-fx-padding:2 4;");
+                btnReject .setStyle("-fx-background-color:transparent;-fx-text-fill:#dc3545;-fx-font-size:15px;-fx-font-weight:bold;-fx-cursor:hand;-fx-padding:2 4;");
+                btnReturn .setStyle("-fx-background-color:#FF6B35;-fx-text-fill:white;-fx-font-size:14px;-fx-padding:3 10;-fx-background-radius:12;-fx-cursor:hand;-fx-border-width:0;-fx-font-weight:bold;");
+                btnView.setTooltip(new Tooltip("View")); btnApprove.setTooltip(new Tooltip("Approve")); btnReject.setTooltip(new Tooltip("Reject")); btnReturn.setTooltip(new Tooltip("Record return"));
+                btnView   .setOnAction(e -> handleViewPassSlip  (getTableView().getItems().get(getIndex())));
+                btnApprove.setOnAction(e -> handleApprovePassSlip(getTableView().getItems().get(getIndex())));
+                btnReject .setOnAction(e -> handleRejectPassSlip (getTableView().getItems().get(getIndex())));
+                btnReturn .setOnAction(e -> handleRecordReturn   (getTableView().getItems().get(getIndex())));
             }
             @Override protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
@@ -372,8 +379,8 @@ public class AdminDashboardController implements Initializable {
                     FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
                     Parent root = loader.load();
                     Object ctrl = loader.getController();
-                    String username = currentUser != null ? currentUser.getUsername() : "Admin";
-                    String role     = "Administrator";
+                    String username = main.utils.SessionManager.getUsername();
+                    String role     = main.utils.SessionManager.getRole();
                     if (ctrl instanceof ReportsController)             ((ReportsController) ctrl).initSession(username, role);
                     else if (ctrl instanceof PassSlipIssuanceController) ((PassSlipIssuanceController) ctrl).initSession(username, role);
                     else if (ctrl instanceof UserManagementController)   ((UserManagementController) ctrl).initSession(username, role);

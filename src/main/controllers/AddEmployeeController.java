@@ -28,33 +28,40 @@ public class AddEmployeeController implements Initializable {
     private final EmployeeDAO        employeeDAO    = new EmployeeDAO();
     private final DepartmentDAO      departmentDAO  = new DepartmentDAO();
 
-    // Predefined positions — admin can always type custom via "Add new..."
     private static final List<String> POSITIONS = List.of(
-        "Campus Director",
-        "Administrative Officer",
-        "Faculty Member",
-        "Department Head",
-        "Registrar",
-        "Admission Officer",
-        "Librarian",
-        "Security Guard",
-        "Utility Staff",
-        "Canteen Staff",
-        "Medical Staff / Nurse",
-        "Research Staff",
-        "Student Services Officer",
-        "IT Staff",
-        "HR Officer",
-        "Finance Officer",
-        "Accounting Staff",
-        "Office Staff",
-        "── Add new... ──"
+            "Campus Director",
+            "Administrative Officer",
+            "Faculty Member",
+            "Department Head",
+            "Registrar",
+            "Admission Officer",
+            "Librarian",
+            "Security Guard",
+            "Utility Staff",
+            "Canteen Staff",
+            "Medical Staff / Nurse",
+            "Research Staff",
+            "Student Services Officer",
+            "IT Staff",
+            "HR Officer",
+            "Finance Officer",
+            "Accounting Staff",
+            "Office Staff",
+            "── Add new... ──"
     );
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         loadDepartments();
         loadPositions();
+
+        // Block special characters in real-time as user types
+        tfFullName.textProperty().addListener((obs, oldVal, newVal) -> {
+            // Allow only letters, spaces, dots, hyphens, and apostrophes (valid name chars)
+            if (!newVal.matches("[a-zA-Z\\s.\\-']*")) {
+                tfFullName.setText(newVal.replaceAll("[^a-zA-Z\\s.\\-']", ""));
+            }
+        });
     }
 
     private void loadDepartments() {
@@ -96,8 +103,8 @@ public class AddEmployeeController implements Initializable {
         if (name.isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Validation Error", "Full Name is required."); return;
         }
-        if (name.matches(".*\\d.*")) {
-            showAlert(Alert.AlertType.WARNING, "Validation Error", "Full Name must not contain numbers."); return;
+        if (!name.matches("[a-zA-Z\\s.\\-']+")) {
+            showAlert(Alert.AlertType.WARNING, "Validation Error", "Full Name must only contain letters, spaces, hyphens, apostrophes, or dots."); return;
         }
         if (dept == null || dept.isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Validation Error", "Department is required."); return;
@@ -117,7 +124,6 @@ public class AddEmployeeController implements Initializable {
             return;
         }
 
-        // If custom dept was entered — save to Department table too
         if ("── Add new... ──".equals(cbDepartment.getValue()) && !tfCustomDept.getText().trim().isEmpty()) {
             departmentDAO.addDepartment(tfCustomDept.getText().trim());
         }

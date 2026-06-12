@@ -64,14 +64,10 @@ public class StaffDashboardController implements Initializable {
 
     public void setCurrentUser(User user) {
         this.currentUser = user;
-        if (user != null) {
-            if (lblUserName != null) lblUserName.setText(user.getUsername());
-            if (lblUserRole != null) lblUserRole.setText(capitalize(user.getRole()));
-            if (lblWelcome  != null) lblWelcome .setText("Welcome back, " + user.getUsername());
-        }
+        main.utils.SessionManager.setCurrentUser(user);
+        applySession();
     }
 
-    /** Restores sidebar/header session display when navigating back from another staff screen. */
     public void initSession(String username, String role) {
         String name = (username != null && !username.isBlank()) ? username : (currentUser != null ? currentUser.getUsername() : "Staff");
         String r    = (role     != null && !role.isBlank())     ? role     : (currentUser != null ? currentUser.getRole()     : "Staff");
@@ -89,18 +85,19 @@ public class StaffDashboardController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         setupFilterCombo(); setupTableColumns();
         tblPassSlips.setItems(masterList);
-        tblPassSlips.setFixedCellSize(36);
-        javafx.beans.binding.DoubleBinding tableHeight = javafx.beans.binding.Bindings.createDoubleBinding(
-                () -> 38 + Math.max(masterList.size(), 1) * 36.0 + 2,
-                masterList
-        );
-        tblPassSlips.prefHeightProperty().bind(tableHeight);
-        tblPassSlips.minHeightProperty().bind(tableHeight);
-        tblPassSlips.maxHeightProperty().bind(tableHeight);
+        applySession();
         SkeletonLoader.show(skeletonContainer);
         loadDataAsync();
         loadNotifications(); loadRecentActivity();
         startAutoRefresh();
+    }
+
+    private void applySession() {
+        String username = main.utils.SessionManager.getUsername();
+        String role     = main.utils.SessionManager.getRole();
+        if (lblUserName != null) lblUserName.setText(username);
+        if (lblUserRole != null) lblUserRole.setText(role);
+        if (lblWelcome  != null) lblWelcome.setText("Welcome back, " + username);
     }
 
     private void loadDataAsync() {
@@ -124,13 +121,12 @@ public class StaffDashboardController implements Initializable {
         long approved = all.stream().filter(s -> "Approved".equalsIgnoreCase(s.getStatus())).count();
         long rejected = all.stream().filter(s -> "Rejected".equalsIgnoreCase(s.getStatus())).count();
 
-        // Derive today's stats from the already-loaded list — no extra DB call, no silent failures
         long totalToday    = all.stream()
                 .filter(s -> s.getTimeOut() != null && s.getTimeOut().toLocalDate().equals(today))
                 .count();
         long approvedToday = all.stream()
                 .filter(s -> s.getTimeOut() != null && s.getTimeOut().toLocalDate().equals(today)
-                             && "Approved".equalsIgnoreCase(s.getStatus()))
+                        && "Approved".equalsIgnoreCase(s.getStatus()))
                 .count();
         int rate = totalToday == 0 ? 0 : (int)((approvedToday * 100.0) / totalToday);
 
@@ -246,7 +242,6 @@ public class StaffDashboardController implements Initializable {
         loadNotifications(); loadRecentActivity();
     }
 
-    // ── BUG 3 FIX: null-safe checks on empName and department ──
     @FXML public void handleSearch() {
         String kw = txtSearch.getText().trim().toLowerCase();
         String filter = cmbFilter.getValue();
@@ -342,8 +337,8 @@ public class StaffDashboardController implements Initializable {
                     FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
                     Parent root = loader.load();
                     Object ctrl = loader.getController();
-                    String username = currentUser != null ? currentUser.getUsername() : "Staff";
-                    String role     = currentUser != null ? currentUser.getRole()     : "Staff";
+                    String username = main.utils.SessionManager.getUsername();
+                    String role     = main.utils.SessionManager.getRole();
                     if (ctrl instanceof StaffPassSlipController) ((StaffPassSlipController) ctrl).initSession(username, role);
                     else if (ctrl instanceof StaffReportsController) ((StaffReportsController) ctrl).initSession(username, role);
                     root.setOpacity(0);
