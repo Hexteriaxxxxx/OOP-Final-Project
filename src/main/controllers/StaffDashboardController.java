@@ -8,6 +8,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -15,6 +16,8 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import dao.ActivityLogDAO;
 import dao.PassSlipDAO;
@@ -67,7 +70,6 @@ public class StaffDashboardController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         setupFilterCombo(); setupTableColumns();
         tblPassSlips.setItems(masterList);
-        // Skeleton then load
         SkeletonLoader.show(skeletonContainer);
         loadDataAsync();
         loadNotifications(); loadRecentActivity();
@@ -165,10 +167,8 @@ public class StaffDashboardController implements Initializable {
             if (logs==null||logs.isEmpty()) { activityContainer.getChildren().add(styledLabel("No recent activity.", "#999")); return; }
             for (ActivityLog log : logs) {
                 VBox item = new VBox(2);
-                Label action    = new Label("• " + log.getAction());
-                Label timestamp = new Label(log.getFormattedTimestamp());
-                action   .setStyle("-fx-font-size:12px;-fx-text-fill:#333;");
-                timestamp.setStyle("-fx-font-size:10px;-fx-text-fill:#999;");
+                Label action    = new Label("• " + log.getAction());    action   .setStyle("-fx-font-size:12px;-fx-text-fill:#333;");
+                Label timestamp = new Label(log.getFormattedTimestamp()); timestamp.setStyle("-fx-font-size:10px;-fx-text-fill:#999;");
                 item.getChildren().addAll(action, timestamp);
                 activityContainer.getChildren().add(item);
             }
@@ -200,8 +200,7 @@ public class StaffDashboardController implements Initializable {
     }
 
     @FXML public void handleSearch() {
-        String kw = txtSearch.getText().trim().toLowerCase();
-        String filter = cmbFilter.getValue();
+        String kw = txtSearch.getText().trim().toLowerCase(); String filter = cmbFilter.getValue();
         tblPassSlips.setItems(masterList.filtered(slip -> {
             boolean matchKw = kw.isEmpty()||slip.getEmpName().toLowerCase().contains(kw)||String.valueOf(slip.getSlipId()).contains(kw)||slip.getDepartment().toLowerCase().contains(kw);
             boolean matchF  = "All".equals(filter)||slip.getStatus().equalsIgnoreCase(filter);
@@ -217,8 +216,22 @@ public class StaffDashboardController implements Initializable {
             Parent root = loader.load();
             CreatePassSlipController ctrl = loader.getController();
             if (currentUser != null) ctrl.setCurrentUserId(currentUser.getUserId());
+
+            // ── THE REAL FIX: setHeight forces size; setMaxHeight alone does NOT ──
+            Rectangle2D screen = Screen.getPrimary().getVisualBounds();
+            double winW = 480;
+            double winH = Math.min(screen.getHeight() * 0.88, 620); // 620 fits 768px screens
+
             Stage stage = new Stage();
-            stage.setTitle("Create Pass Slip"); stage.setScene(new Scene(root)); stage.showAndWait();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Create Pass Slip");
+            stage.setScene(new Scene(root, winW, winH)); // set scene dimensions
+            stage.setResizable(false);
+            stage.setWidth(winW);
+            stage.setHeight(winH);                        // FORCE height — this is the key
+            stage.setX(screen.getMinX() + (screen.getWidth()  - winW) / 2); // center X
+            stage.setY(screen.getMinY() + (screen.getHeight() - winH) / 2); // center Y
+            stage.showAndWait();
             refreshDashboard();
         } catch (IOException e) { System.out.println("Open form error: " + e.getMessage()); }
     }
@@ -234,17 +247,14 @@ public class StaffDashboardController implements Initializable {
     @FXML public void handleReports()          { setActiveButton(btnReports);   navigateToStaff("/main/resources/fxml/StaffReports.fxml","Reports"); }
 
     private void handleViewPassSlip(PassSlip slip) {
-        Alert a = new Alert(Alert.AlertType.INFORMATION);
-        a.setTitle("Pass Slip Details"); a.setHeaderText("Slip ID: PS-" + slip.getSlipId());
+        Alert a = new Alert(Alert.AlertType.INFORMATION); a.setTitle("Pass Slip Details"); a.setHeaderText("Slip ID: PS-" + slip.getSlipId());
         a.setContentText("Employee  : " + slip.getEmpName() + "\nDepartment: " + slip.getDepartment() + "\nCategory  : " + slip.getCategory() + "\nPurpose   : " + slip.getReason() + "\nTime Out  : " + slip.getFormattedTimeOut() + "\nTime In   : " + slip.getFormattedTimeIn() + "\nStatus    : " + slip.getStatus());
         a.showAndWait();
     }
 
     private void navigateToStaff(String fxmlPath, String title) {
-        try {
-            stopAutoRefresh();
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-            Parent root = loader.load();
+        try { stopAutoRefresh();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath)); Parent root = loader.load();
             Object ctrl = loader.getController();
             String username = currentUser != null ? currentUser.getUsername() : "Staff";
             String role     = currentUser != null ? currentUser.getRole()     : "Staff";
@@ -256,10 +266,8 @@ public class StaffDashboardController implements Initializable {
     }
 
     private void navigateTo(String fxmlPath, String title) {
-        try {
-            stopAutoRefresh();
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-            Parent root = loader.load();
+        try { stopAutoRefresh();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath)); Parent root = loader.load();
             Stage stage = (Stage) tblPassSlips.getScene().getWindow();
             stage.setScene(new Scene(root)); stage.setTitle(title+" – Pass Slip System"); stage.show();
         } catch (IOException e) { System.out.println("Nav error: " + e.getMessage()); }

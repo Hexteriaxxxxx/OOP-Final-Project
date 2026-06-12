@@ -1,0 +1,26 @@
+    @FXML private void handleCreatePassSlip() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/resources/fxml/CreatePassSlip.fxml"));
+            Parent root = loader.load();
+            CreatePassSlipController ctrl = loader.getController();
+            if (currentUser != null) ctrl.setCurrentUserId(currentUser.getUserId());
+
+            // ── Definitive screen-fit fix ─────────────────────────────────
+            // setMaxHeight alone does NOT force window height — must use setHeight + Scene dimensions
+            Rectangle2D screen = Screen.getPrimary().getVisualBounds();
+            double winW = 480;
+            double winH = Math.min(screen.getHeight() * 0.88, 620); // fits 768px screens
+
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Create Pass Slip");
+            stage.setScene(new Scene(root, winW, winH)); // set scene size
+            stage.setResizable(false);
+            stage.setWidth(winW);
+            stage.setHeight(winH);                       // FORCE height — key line
+            stage.setX(screen.getMinX() + (screen.getWidth()  - winW) / 2); // center
+            stage.setY(screen.getMinY() + (screen.getHeight() - winH) / 2);
+            stage.showAndWait();
+            loadDashboardData(); loadRecentActivity();
+        } catch (IOException e) { showAlert(Alert.AlertType.ERROR, "Error", "Could not open Pass Slip form."); }
+    }
