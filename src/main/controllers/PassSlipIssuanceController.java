@@ -20,6 +20,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import main.utils.SessionManager;
 import main.utils.SkeletonLoader;
 
 import java.io.File;
@@ -57,8 +58,9 @@ public class PassSlipIssuanceController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        // ── BUG 1 FIX: read from global SessionManager ───────────
+        SessionManager.apply(this::initSession);
         setupFilter(); setupColumns(); setupActionColumn();
-        // Show skeleton then load in background
         SkeletonLoader.show(skeletonContainer);
         loadDataAsync();
     }
@@ -71,9 +73,7 @@ public class PassSlipIssuanceController implements Initializable {
             SkeletonLoader.hide(skeletonContainer);
             masterList.clear();
             List<PassSlip> all = task.getValue();
-            if (all != null) all.stream()
-                .filter(ps -> "Approved".equalsIgnoreCase(ps.getStatus()))
-                .forEach(masterList::add);
+            if (all != null) all.stream().filter(ps -> "Approved".equalsIgnoreCase(ps.getStatus())).forEach(masterList::add);
             refreshStats(); applyFilters();
         });
         task.setOnFailed(e -> SkeletonLoader.hide(skeletonContainer));
@@ -81,9 +81,10 @@ public class PassSlipIssuanceController implements Initializable {
     }
 
     public void initSession(String username, String role) {
-        this.sessionUser = username; this.sessionRole = role;
-        if (lblAdminName != null) lblAdminName.setText(username);
-        if (lblAdminRole != null) lblAdminRole.setText(role);
+        this.sessionUser = username != null ? username : "Admin";
+        this.sessionRole = role     != null ? role     : "Administrator";
+        if (lblAdminName != null) lblAdminName.setText(this.sessionUser);
+        if (lblAdminRole != null) lblAdminRole.setText(this.sessionRole);
     }
 
     @FXML private void handleNotifications() {
@@ -152,8 +153,7 @@ public class PassSlipIssuanceController implements Initializable {
 
     @FXML private void handleDownloadAll() {
         if (filteredList.isEmpty()) { showError("No records."); return; }
-        FileChooser fc = new FileChooser(); fc.setInitialFileName("PassSlips_All.csv");
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files","*.csv"));
+        FileChooser fc = new FileChooser(); fc.setInitialFileName("PassSlips_All.csv"); fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files","*.csv"));
         File f = fc.showSaveDialog(tblSlips.getScene().getWindow());
         if (f != null) { try (FileWriter fw = new FileWriter(f)) {
             fw.write("Slip ID,Name,Department,Purpose,Time Out,Time In,Duration,Status\n");
@@ -163,8 +163,7 @@ public class PassSlipIssuanceController implements Initializable {
     }
 
     private void handleDownload(PassSlip ps) {
-        FileChooser fc = new FileChooser(); fc.setInitialFileName("PassSlip_" + ps.getSlipId() + ".csv");
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files","*.csv"));
+        FileChooser fc = new FileChooser(); fc.setInitialFileName("PassSlip_" + ps.getSlipId() + ".csv"); fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files","*.csv"));
         File f = fc.showSaveDialog(tblSlips.getScene().getWindow());
         if (f != null) { try (FileWriter fw = new FileWriter(f)) {
             fw.write("Slip ID,Name,Department,Purpose,Time Out,Time In,Duration,Status\n");
@@ -185,21 +184,23 @@ public class PassSlipIssuanceController implements Initializable {
 
     @FXML private void handleNavDashboard() { goTo("/main/resources/fxml/AdminDashboard.fxml","Dashboard"); }
     @FXML private void handleNavPassSlip()  { /* already here */ }
-    @FXML private void handleNavReports()   { goToWithSession("/main/resources/fxml/Reports.fxml","Reports"); }
-    @FXML private void handleNavUserMgmt()  { goToWithSession("/main/resources/fxml/UserManagement.fxml","User Management"); }
-    @FXML private void handleLogout() { Optional<ButtonType> res = new Alert(Alert.AlertType.CONFIRMATION,"Logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait(); if (res.isPresent() && res.get() == ButtonType.OK) goTo("/main/resources/fxml/Login.fxml","Login"); }
+    @FXML private void handleNavReports()   { goTo("/main/resources/fxml/Reports.fxml","Reports"); }
+    @FXML private void handleNavUserMgmt()  { goTo("/main/resources/fxml/UserManagement.fxml","User Management"); }
+    @FXML private void handleLogout() { Optional<ButtonType> res = new Alert(Alert.AlertType.CONFIRMATION,"Logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait(); if (res.isPresent() && res.get() == ButtonType.OK) { SessionManager.clear(); goTo("/main/resources/fxml/Login.fxml","Login"); } }
+
     private void goTo(String fxml, String title) {
-        try { FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml)); Parent root = loader.load(); Stage stage = (Stage) tblSlips.getScene().getWindow(); double w=stage.getWidth(), h=stage.getHeight(); stage.setTitle(title); stage.setScene(new Scene(root)); stage.setWidth(w); stage.setHeight(h); } catch (IOException e) { showError("Screen not available:\n" + fxml); }
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
+            Parent root = loader.load();
+            Stage stage = (Stage) tblSlips.getScene().getWindow();
+            double w = stage.getWidth(), h = stage.getHeight();
+
+            root.setOpacity(0);
+            stage.setTitle(title); stage.setScene(new Scene(root)); stage.setWidth(w); stage.setHeight(h);
+            new javafx.animation.FadeTransition(javafx.util.Duration.millis(250), root){{setFromValue(0);setToValue(1);}}.play();
+        } catch (IOException e) { showError("Screen not available:\n" + fxml); }
     }
-    private void goToWithSession(String fxml, String title) {
-        try { FXMLLoader loader=new FXMLLoader(getClass().getResource(fxml)); Parent root=loader.load();
-              Object ctrl=loader.getController();
-              if (ctrl instanceof ReportsController) ((ReportsController)ctrl).initSession(sessionUser, "Administrator");
-              else if (ctrl instanceof UserManagementController) ((UserManagementController)ctrl).initSession(sessionUser, "Administrator");
-              Stage stage=(Stage)tblSlips.getScene().getWindow(); double w=stage.getWidth(), h=stage.getHeight();
-              stage.setTitle(title); stage.setScene(new Scene(root)); stage.setWidth(w); stage.setHeight(h);
-        } catch(IOException e){ showError("Screen not available:\n" + fxml); }
-    }
+
     private void showInfo(String msg) { Alert a=new Alert(Alert.AlertType.INFORMATION);a.setTitle("Success");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }
     private void showError(String msg) { Alert a=new Alert(Alert.AlertType.ERROR);a.setTitle("Error");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }
 }

@@ -2,6 +2,7 @@ package main.controllers;
 
 import dao.DepartmentDAO;
 import dao.EmployeeDAO;
+import javafx.animation.FadeTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -18,6 +19,8 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.util.Duration;
+import main.utils.SessionManager;
 import main.utils.SkeletonLoader;
 import models.Employee;
 
@@ -48,8 +51,9 @@ public class UserManagementController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        // ── BUG 1 FIX: read from global SessionManager ───────────
+        SessionManager.apply(this::initSession);
         setupFilterCombo(); setupTableColumns(); setupSearch();
-        // Show skeleton then load employees in background
         SkeletonLoader.show(skeletonContainer);
         loadEmployeesAsync();
     }
@@ -122,15 +126,11 @@ public class UserManagementController implements Initializable {
         long uniqueDepts    = masterList.stream().map(Employee::getDepartment).filter(d->d!=null&&!d.isBlank()).distinct().count();
         long uniquePositions= masterList.stream().map(Employee::getPosition).filter(p->p!=null&&!p.isBlank()).distinct().count();
         long adminCount     = masterList.stream().filter(e->e.getPosition()!=null&&(e.getPosition().toLowerCase().contains("admin")||e.getPosition().toLowerCase().contains("director")||e.getPosition().toLowerCase().contains("officer"))).count();
-        lblTotal   .setText(String.valueOf(total));
-        lblActive  .setText(String.valueOf(uniqueDepts));
-        lblInactive.setText(String.valueOf(uniquePositions));
-        lblAdmins  .setText(String.valueOf(adminCount));
-        // Refresh dept dropdown to reflect any newly added departments
+        lblTotal.setText(String.valueOf(total)); lblActive.setText(String.valueOf(uniqueDepts));
+        lblInactive.setText(String.valueOf(uniquePositions)); lblAdmins.setText(String.valueOf(adminCount));
         String current = cbFilter.getValue();
         List<String> depts = departmentDAO.getAllDepartmentNames();
-        ObservableList<String> items = FXCollections.observableArrayList("All Departments");
-        items.addAll(depts);
+        ObservableList<String> items = FXCollections.observableArrayList("All Departments"); items.addAll(depts);
         cbFilter.setItems(items);
         cbFilter.setValue(current != null && items.contains(current) ? current : "All Departments");
     }
@@ -170,10 +170,20 @@ public class UserManagementController implements Initializable {
     @FXML private void handleNavPassSlip()  { goTo("/main/resources/fxml/PassSlipIssuance.fxml","Pass Slip Issuance"); }
     @FXML private void handleNavReports()   { goTo("/main/resources/fxml/Reports.fxml","Reports"); }
     @FXML private void handleNavUserMgmt()  { /* already here */ }
-    @FXML private void handleLogout()       { Optional<ButtonType> res=new Alert(Alert.AlertType.CONFIRMATION,"Are you sure you want to logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();if(res.isPresent()&&res.get()==ButtonType.OK)goTo("/main/resources/fxml/Login.fxml","Login"); }
+    @FXML private void handleLogout() {
+        Optional<ButtonType> res = new Alert(Alert.AlertType.CONFIRMATION,"Are you sure you want to logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();
+        if (res.isPresent()&&res.get()==ButtonType.OK) { SessionManager.clear(); goTo("/main/resources/fxml/Login.fxml","Login"); }
+    }
 
     private void goTo(String fxml, String title) {
-        try { FXMLLoader loader=new FXMLLoader(getClass().getResource(fxml));Parent root=loader.load();Stage stage=(Stage)tableEmployees.getScene().getWindow();double w=stage.getWidth(),h=stage.getHeight();stage.setTitle(title);stage.setScene(new Scene(root));stage.setWidth(w);stage.setHeight(h); } catch (IOException e) { showError("Screen not available:\n"+e.getMessage()); }
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml)); Parent root = loader.load();
+            Stage stage = (Stage) tableEmployees.getScene().getWindow();
+            double w = stage.getWidth(), h = stage.getHeight();
+            root.setOpacity(0);
+            stage.setTitle(title); stage.setScene(new Scene(root)); stage.setWidth(w); stage.setHeight(h);
+            new FadeTransition(Duration.millis(250), root){{setFromValue(0);setToValue(1);}}.play();
+        } catch (IOException e) { showError("Screen not available:\n" + e.getMessage()); }
     }
 
     private void showError(String msg) { Alert a=new Alert(Alert.AlertType.ERROR);a.setTitle("Error");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }

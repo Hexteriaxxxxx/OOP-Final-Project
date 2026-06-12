@@ -133,8 +133,8 @@ public class StaffReportsController implements Initializable {
         colEmpName   .setCellValueFactory(d->new SimpleStringProperty(d.getValue().getEmpName()));
         colDepartment.setCellValueFactory(d->new SimpleStringProperty(d.getValue().getDepartment()));
         colPurpose   .setCellValueFactory(d->new SimpleStringProperty(d.getValue().getReason()));
-        colTimeOut   .setCellValueFactory(d->new SimpleStringProperty(d.getValue().getFormattedTimeOut()));
-        colTimeIn    .setCellValueFactory(d->new SimpleStringProperty(d.getValue().getTimeIn()!=null?d.getValue().getFormattedTimeIn():"—"));
+        colTimeOut   .setCellValueFactory(d->new SimpleStringProperty(d.getValue().getTimeOut()!=null?d.getValue().getTimeOut().format(DateTimeFormatter.ofPattern("hh:mm a")):""));
+        colTimeIn    .setCellValueFactory(d->new SimpleStringProperty(d.getValue().getTimeIn()!=null?d.getValue().getTimeIn().format(DateTimeFormatter.ofPattern("hh:mm a")):"—"));
         colDuration  .setCellValueFactory(d->new SimpleStringProperty(d.getValue().getDuration()!=null?d.getValue().getDuration():"—"));
         colStatus    .setCellValueFactory(d->new SimpleStringProperty(d.getValue().getStatus()));
         colStatus.setCellFactory(col->new TableCell<>(){@Override protected void updateItem(String item,boolean empty){super.updateItem(item,empty);if(empty||item==null){setText(null);setStyle("");return;}setText(item);switch(item.toLowerCase()){case"approved"->setStyle("-fx-text-fill:#1D9E75;-fx-font-weight:bold;");case"pending"->setStyle("-fx-text-fill:#BA7517;-fx-font-weight:bold;");case"rejected"->setStyle("-fx-text-fill:#E24B4A;-fx-font-weight:bold;");default->setStyle("");}}});

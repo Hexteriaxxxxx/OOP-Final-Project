@@ -1,0 +1,13 @@
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        // ── BUG 1 FIX: read from global SessionManager ───────────
+        main.utils.SessionManager.apply(this::initSession);
+        setupFilterCombo(); setupTableColumns(); setupSearch();
+        SkeletonLoader.show(skeletonContainer);
+        loadEmployeesAsync();
+    }
+
+    public void initSession(String username, String role) {
+        if (lblSidebarUser != null) lblSidebarUser.setText(username);
+        if (lblSidebarRole != null) lblSidebarRole.setText(role);
+    }

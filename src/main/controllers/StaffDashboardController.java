@@ -48,7 +48,7 @@ public class StaffDashboardController implements Initializable {
     @FXML private ComboBox<String>    cmbFilter;
     @FXML private TableView<PassSlip> tblPassSlips;
     @FXML private TableColumn<PassSlip, String> colRequestId, colName, colDepartment;
-    @FXML private TableColumn<PassSlip, String> colPurpose, colTimeOut, colTimeIn, colStatus;
+    @FXML private TableColumn<PassSlip, String> colPurpose, colDate, colTimeOut, colTimeIn, colStatus;
     @FXML private TableColumn<PassSlip, Void>   colActions;
     @FXML private VBox notifContainer, activityContainer;
 
@@ -86,6 +86,14 @@ public class StaffDashboardController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         setupFilterCombo(); setupTableColumns();
         tblPassSlips.setItems(masterList);
+        tblPassSlips.setFixedCellSize(36);
+        javafx.beans.binding.DoubleBinding tableHeight = javafx.beans.binding.Bindings.createDoubleBinding(
+            () -> 38 + Math.max(masterList.size(), 1) * 36.0 + 2,
+            masterList
+        );
+        tblPassSlips.prefHeightProperty().bind(tableHeight);
+        tblPassSlips.minHeightProperty().bind(tableHeight);
+        tblPassSlips.maxHeightProperty().bind(tableHeight);
         SkeletonLoader.show(skeletonContainer);
         loadDataAsync();
         loadNotifications(); loadRecentActivity();
@@ -135,8 +143,12 @@ public class StaffDashboardController implements Initializable {
         colName      .setCellValueFactory(new PropertyValueFactory<>("empName"));
         colDepartment.setCellValueFactory(new PropertyValueFactory<>("department"));
         colPurpose   .setCellValueFactory(new PropertyValueFactory<>("reason"));
-        colTimeOut   .setCellValueFactory(new PropertyValueFactory<>("formattedTimeOut"));
-        colTimeIn    .setCellValueFactory(new PropertyValueFactory<>("formattedTimeIn"));
+        colDate      .setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(
+                d.getValue().getTimeOut() != null ? d.getValue().getTimeOut().toLocalDate().format(java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy")) : "-"));
+        colTimeOut   .setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(
+                d.getValue().getTimeOut() != null ? d.getValue().getTimeOut().format(java.time.format.DateTimeFormatter.ofPattern("hh:mm a")) : ""));
+        colTimeIn    .setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(
+                d.getValue().getTimeIn() != null ? d.getValue().getTimeIn().format(java.time.format.DateTimeFormatter.ofPattern("hh:mm a")) : "Not yet returned"));
         colStatus    .setCellValueFactory(new PropertyValueFactory<>("status"));
         colStatus.setCellFactory(col -> new TableCell<>() {
             @Override protected void updateItem(String status, boolean empty) {
