@@ -29,10 +29,7 @@
     <center>
         <VBox style="-fx-background-color: white;">
             <HBox alignment="CENTER_LEFT" style="-fx-padding: 14 20 12 20; -fx-border-color: #e8e8e8; -fx-border-width: 0 0 1 0;">
-                <VBox HBox.hgrow="ALWAYS">
-                    <Label text="Pass Slip Issuance" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1a1a1a;"/>
-                    <Label text="Approved pass slips ready for download" style="-fx-font-size: 12px; -fx-text-fill: #888;"/>
-                </VBox>
+                <VBox HBox.hgrow="ALWAYS"><Label text="Pass Slip Issuance" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1a1a1a;"/><Label text="Approved pass slips ready for download" style="-fx-font-size: 12px; -fx-text-fill: #888;"/></VBox>
                 <Button fx:id="btnNotification" text="🔔" onAction="#handleNotification" style="-fx-background-color: transparent; -fx-font-size: 18px; -fx-text-fill: #888; -fx-cursor: hand; -fx-border-width: 0; -fx-padding: 4;"/>
             </HBox>
             <HBox spacing="12" style="-fx-padding: 14 20 0 20;">
@@ -44,31 +41,32 @@
             <VBox spacing="10" VBox.vgrow="ALWAYS" style="-fx-padding: 14 20 20 20;">
                 <VBox spacing="10" VBox.vgrow="ALWAYS" style="-fx-background-color: #f8f8f8; -fx-background-radius: 10; -fx-padding: 14; -fx-border-color: #ececec; -fx-border-radius: 10; -fx-border-width: 1;">
                     <HBox alignment="CENTER_LEFT" spacing="10">
-                        <VBox HBox.hgrow="ALWAYS" spacing="2">
-                            <Label text="Approved Pass Slip Requests" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
-                            <Label fx:id="lblApprovedCount" text="0 approved requests" style="-fx-font-size: 11px; -fx-text-fill: #888;"/>
-                        </VBox>
+                        <VBox HBox.hgrow="ALWAYS" spacing="2"><Label text="Approved Pass Slip Requests" style="-fx-font-size: 13px; -fx-font-weight: bold;"/><Label fx:id="lblApprovedCount" text="0 approved requests" style="-fx-font-size: 11px; -fx-text-fill: #888;"/></VBox>
                         <Button fx:id="btnDownloadAll" text="⬇  Download All" onAction="#handleDownloadAll" style="-fx-background-color: #1D9E75; -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 6 14; -fx-background-radius: 20; -fx-border-width: 0; -fx-cursor: hand;"/>
                     </HBox>
                     <HBox spacing="8" alignment="CENTER_LEFT">
                         <TextField fx:id="txtSearch" promptText="🔍  Search..." onKeyReleased="#handleSearch" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-border-color: #ddd; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 7 12; -fx-font-size: 12.5px;"/>
                         <ComboBox fx:id="cmbFilter" prefWidth="150" onAction="#handleFilter" style="-fx-background-radius: 20; -fx-border-color: #ddd; -fx-background-color: white;"/>
                     </HBox>
-                    <TableView fx:id="tblSlips" VBox.vgrow="ALWAYS" minHeight="300" style="-fx-background-color: white; -fx-border-color: #e8e8e8;">
-                        <columns>
-                            <TableColumn fx:id="colId"         text="Pass Slip ID" prefWidth="95"/>
-                            <TableColumn fx:id="colName"       text="Name"         prefWidth="100"/>
-                            <TableColumn fx:id="colDept"       text="Department"   prefWidth="110"/>
-                            <TableColumn fx:id="colPurpose"    text="Purpose"      prefWidth="120"/>
-                            <TableColumn fx:id="colTimeOut"    text="Time Out"     prefWidth="80"/>
-                            <TableColumn fx:id="colTimeIn"     text="Time In"      prefWidth="80"/>
-                            <TableColumn fx:id="colDate"       text="Date"         prefWidth="90"/>
-                            <TableColumn fx:id="colApprovedBy" text="Approved By"  prefWidth="90"/>
-                            <TableColumn fx:id="colActions"    text="Actions"      prefWidth="130" sortable="false"/>
-                        </columns>
-                        <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
-                        <placeholder><Label text="No approved pass slips found." style="-fx-text-fill: #aaa;"/></placeholder>
-                    </TableView>
+                    <!-- StackPane for skeleton overlay -->
+                    <StackPane fx:id="skeletonContainer" VBox.vgrow="ALWAYS" minHeight="300">
+                        <TableView fx:id="tblSlips" maxHeight="1.7976931348623157E308"
+                                   style="-fx-background-color: white; -fx-border-color: #e8e8e8;">
+                            <columns>
+                                <TableColumn fx:id="colId"         text="Pass Slip ID" prefWidth="95"/>
+                                <TableColumn fx:id="colName"       text="Name"         prefWidth="100"/>
+                                <TableColumn fx:id="colDept"       text="Department"   prefWidth="110"/>
+                                <TableColumn fx:id="colPurpose"    text="Purpose"      prefWidth="120"/>
+                                <TableColumn fx:id="colTimeOut"    text="Time Out"     prefWidth="80"/>
+                                <TableColumn fx:id="colTimeIn"     text="Time In"      prefWidth="80"/>
+                                <TableColumn fx:id="colDate"       text="Date"         prefWidth="90"/>
+                                <TableColumn fx:id="colApprovedBy" text="Approved By"  prefWidth="90"/>
+                                <TableColumn fx:id="colActions"    text="Actions"      prefWidth="130" sortable="false"/>
+                            </columns>
+                            <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
+                            <placeholder><Label text="No approved pass slips found." style="-fx-text-fill: #aaa;"/></placeholder>
+                        </TableView>
+                    </StackPane>
                 </VBox>
             </VBox>
         </VBox>

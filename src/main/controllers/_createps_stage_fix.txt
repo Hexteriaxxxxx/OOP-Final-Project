@@ -1,0 +1,19 @@
+THE REAL FIX:
+setMaxHeight alone = user can't resize BEYOND that, but window can still OPEN bigger than screen
+setHeight = forces actual window height when opening
+
+CORRECT:
+Rectangle2D screen = Screen.getPrimary().getVisualBounds();
+double winW = 480;
+double winH = Math.min(screen.getHeight() * 0.88, 620); // max 620px, fits 1366x768
+
+Stage stage = new Stage();
+stage.initModality(Modality.APPLICATION_MODAL);
+stage.setTitle("Create Pass Slip");
+stage.setScene(new Scene(root, winW, winH));   // SET scene dimensions
+stage.setResizable(false);
+stage.setWidth(winW);
+stage.setHeight(winH);                          // FORCE height
+stage.setX(screen.getMinX() + (screen.getWidth() - winW) / 2);   // center X
+stage.setY(screen.getMinY() + (screen.getHeight() - winH) / 2);  // center Y
+stage.showAndWait();
