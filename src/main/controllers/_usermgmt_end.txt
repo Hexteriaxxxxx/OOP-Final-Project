@@ -1,0 +1,24 @@
+    @FXML private void handleNavDashboard() { goTo("/main/resources/fxml/AdminDashboard.fxml","Dashboard"); }
+    @FXML private void handleNavPassSlip()  { goTo("/main/resources/fxml/PassSlipIssuance.fxml","Pass Slip Issuance"); }
+    @FXML private void handleNavReports()   { goTo("/main/resources/fxml/Reports.fxml","Reports"); }
+    @FXML private void handleNavUserMgmt()  { /* already here */ }
+    @FXML private void handleLogout() {
+        Optional<ButtonType> res = new Alert(Alert.AlertType.CONFIRMATION,"Are you sure you want to logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();
+        if (res.isPresent()&&res.get()==ButtonType.OK) { SessionManager.clear(); goTo("/main/resources/fxml/Login.fxml","Login"); }
+    }
+
+    // ── FIX: FadeTransition is final — no double-brace init allowed ──
+    private void goTo(String fxml, String title) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml)); Parent root = loader.load();
+            Stage stage = (Stage) tableEmployees.getScene().getWindow();
+            double w = stage.getWidth(), h = stage.getHeight();
+            root.setOpacity(0);
+            stage.setTitle(title); stage.setScene(new Scene(root)); stage.setWidth(w); stage.setHeight(h);
+            FadeTransition ft = new FadeTransition(Duration.millis(250), root);
+            ft.setFromValue(0.0); ft.setToValue(1.0); ft.play();
+        } catch (IOException e) { showError("Screen not available:\n" + e.getMessage()); }
+    }
+
+    private void showError(String msg) { Alert a=new Alert(Alert.AlertType.ERROR);a.setTitle("Error");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }
+}

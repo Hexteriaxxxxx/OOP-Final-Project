@@ -51,7 +51,6 @@ public class UserManagementController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // ── BUG 1 FIX: read from global SessionManager ───────────
         SessionManager.apply(this::initSession);
         setupFilterCombo(); setupTableColumns(); setupSearch();
         SkeletonLoader.show(skeletonContainer);
@@ -175,6 +174,7 @@ public class UserManagementController implements Initializable {
         if (res.isPresent()&&res.get()==ButtonType.OK) { SessionManager.clear(); goTo("/main/resources/fxml/Login.fxml","Login"); }
     }
 
+    // ── FIX: FadeTransition is final — no double-brace init ──────
     private void goTo(String fxml, String title) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml)); Parent root = loader.load();
@@ -182,7 +182,8 @@ public class UserManagementController implements Initializable {
             double w = stage.getWidth(), h = stage.getHeight();
             root.setOpacity(0);
             stage.setTitle(title); stage.setScene(new Scene(root)); stage.setWidth(w); stage.setHeight(h);
-            new FadeTransition(Duration.millis(250), root){{setFromValue(0);setToValue(1);}}.play();
+            FadeTransition ft = new FadeTransition(Duration.millis(250), root);
+            ft.setFromValue(0.0); ft.setToValue(1.0); ft.play();
         } catch (IOException e) { showError("Screen not available:\n" + e.getMessage()); }
     }
 

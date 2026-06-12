@@ -3,6 +3,7 @@ package main.controllers;
 import dao.PassSlipDAO;
 import dao.ActivityLogDAO;
 import models.PassSlip;
+import javafx.animation.FadeTransition;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -20,6 +21,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import main.utils.SessionManager;
 import main.utils.SkeletonLoader;
 
@@ -58,7 +60,6 @@ public class PassSlipIssuanceController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // ── BUG 1 FIX: read from global SessionManager ───────────
         SessionManager.apply(this::initSession);
         setupFilter(); setupColumns(); setupActionColumn();
         SkeletonLoader.show(skeletonContainer);
@@ -186,18 +187,22 @@ public class PassSlipIssuanceController implements Initializable {
     @FXML private void handleNavPassSlip()  { /* already here */ }
     @FXML private void handleNavReports()   { goTo("/main/resources/fxml/Reports.fxml","Reports"); }
     @FXML private void handleNavUserMgmt()  { goTo("/main/resources/fxml/UserManagement.fxml","User Management"); }
-    @FXML private void handleLogout() { Optional<ButtonType> res = new Alert(Alert.AlertType.CONFIRMATION,"Logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait(); if (res.isPresent() && res.get() == ButtonType.OK) { SessionManager.clear(); goTo("/main/resources/fxml/Login.fxml","Login"); } }
+    @FXML private void handleLogout() {
+        Optional<ButtonType> res = new Alert(Alert.AlertType.CONFIRMATION,"Logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();
+        if (res.isPresent() && res.get() == ButtonType.OK) { SessionManager.clear(); goTo("/main/resources/fxml/Login.fxml","Login"); }
+    }
 
+    // ── FIX: no double-brace init — FadeTransition is final ──────
     private void goTo(String fxml, String title) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
             Parent root = loader.load();
             Stage stage = (Stage) tblSlips.getScene().getWindow();
             double w = stage.getWidth(), h = stage.getHeight();
-
             root.setOpacity(0);
             stage.setTitle(title); stage.setScene(new Scene(root)); stage.setWidth(w); stage.setHeight(h);
-            new javafx.animation.FadeTransition(javafx.util.Duration.millis(250), root){{setFromValue(0);setToValue(1);}}.play();
+            FadeTransition ft = new FadeTransition(Duration.millis(250), root);
+            ft.setFromValue(0.0); ft.setToValue(1.0); ft.play();
         } catch (IOException e) { showError("Screen not available:\n" + fxml); }
     }
 
