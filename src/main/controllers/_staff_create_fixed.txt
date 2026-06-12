@@ -1,0 +1,26 @@
+    @FXML public void handleCreatePassSlip() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/resources/fxml/CreatePassSlip.fxml"));
+            Parent root = loader.load();
+            CreatePassSlipController ctrl = loader.getController();
+            if (currentUser != null) ctrl.setCurrentUserId(currentUser.getUserId());
+
+            javafx.geometry.Rectangle2D screen = javafx.stage.Screen.getPrimary().getVisualBounds();
+            double winW = 480;
+            double winH = Math.min(screen.getHeight() * 0.88, 620);
+
+            Stage stage = new Stage();
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            // BUG 1 FIX: bind to parent window
+            stage.initOwner(tblPassSlips.getScene().getWindow());
+            stage.setTitle("Create Pass Slip");
+            stage.setScene(new Scene(root, winW, winH));
+            stage.setResizable(false);
+            stage.setWidth(winW);
+            stage.setHeight(winH);
+            stage.setX(screen.getMinX() + (screen.getWidth()  - winW) / 2);
+            stage.setY(screen.getMinY() + (screen.getHeight() - winH) / 2);
+            stage.showAndWait();
+            refreshDashboard();
+        } catch (IOException e) { System.out.println("Open form error: " + e.getMessage()); }
+    }

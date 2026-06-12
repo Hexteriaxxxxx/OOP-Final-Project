@@ -1,5 +1,6 @@
 package main.controllers;
 
+import javafx.animation.FadeTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -20,6 +21,7 @@ import javafx.scene.shape.Circle;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import dao.ActivityLogDAO;
 import dao.PassSlipDAO;
 import main.utils.OverdueCheckerService;
@@ -31,7 +33,6 @@ import models.User;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -93,18 +94,17 @@ public class AdminDashboardController implements Initializable {
     private void updateStatCards(List<PassSlip> all) {
         long pending  = all.stream().filter(p -> "Pending" .equalsIgnoreCase(p.getStatus())).count();
         long approved = all.stream().filter(p -> "Approved".equalsIgnoreCase(p.getStatus())).count();
-        long rejected = all.stream().filter(p -> "Rejected".equalsIgnoreCase(p.getStatus())).count();
         long overdue  = all.stream().filter(p -> "Overdue" .equalsIgnoreCase(p.getStatus())).count();
         lblPendingCount .setText(String.valueOf(pending));
         lblApprovedCount.setText(String.valueOf(approved));
-        lblRejectedCount.setText(overdue > 0 ? "⚠ " + overdue : String.valueOf(rejected));
+        lblRejectedCount.setText(overdue > 0 ? "⚠ " + overdue : String.valueOf(all.stream().filter(p -> "Rejected".equalsIgnoreCase(p.getStatus())).count()));
         lblActiveCount  .setText(String.valueOf(approved + overdue));
         try {
             List<PassSlip> today = passSlipDAO.getTodayPassSlips();
-            long todayApproved   = today.stream().filter(p -> "Approved".equalsIgnoreCase(p.getStatus())).count();
-            int  approvalRate    = today.isEmpty() ? 0 : (int)((todayApproved*100)/today.size());
+            long todayApproved = today.stream().filter(p -> "Approved".equalsIgnoreCase(p.getStatus())).count();
+            int  rate = today.isEmpty() ? 0 : (int)((todayApproved*100)/today.size());
             lblTotalRequests.setText(String.valueOf(today.size()));
-            lblApprovalRate .setText(approvalRate + "%");
+            lblApprovalRate .setText(rate + "%");
             lblActiveNow    .setText(String.valueOf(approved + overdue));
         } catch (Exception ignored) {}
     }
@@ -125,11 +125,10 @@ public class AdminDashboardController implements Initializable {
 
     private void onOverdueDetected(List<PassSlip> overdueSlips) {
         loadDashboardData(); loadRecentActivity();
-        StringBuilder msg = new StringBuilder();
-        msg.append("The following employee(s) have NOT returned on time:\n\n");
+        StringBuilder msg = new StringBuilder("The following employee(s) have NOT returned on time:\n\n");
         for (PassSlip slip : overdueSlips) {
             String expected = slip.getTimeIn() != null ? slip.getTimeIn().format(TIME_FMT) : "—";
-            long minsLate = slip.getTimeIn() != null ? Duration.between(slip.getTimeIn(), LocalDateTime.now()).toMinutes() : 0;
+            long minsLate = slip.getTimeIn() != null ? java.time.Duration.between(slip.getTimeIn(), LocalDateTime.now()).toMinutes() : 0;
             msg.append("• ").append(slip.getEmpName()).append("  (PS-").append(String.format("%04d", slip.getSlipId())).append(")")
                .append("\n  Expected: ").append(expected).append("  |  ").append(minsLate).append(" min(s) late\n\n");
         }
@@ -165,8 +164,7 @@ public class AdminDashboardController implements Initializable {
             @Override protected void updateItem(String status, boolean empty) {
                 super.updateItem(status, empty);
                 if (empty || status == null) { setText(null); setGraphic(null); return; }
-                Label badge = new Label(status);
-                badge.setPadding(new Insets(3, 10, 3, 10));
+                Label badge = new Label(status); badge.setPadding(new Insets(3, 10, 3, 10));
                 badge.setStyle("-fx-background-radius: 12; -fx-font-size: 10px; -fx-font-weight: bold;");
                 switch (status.toLowerCase()) {
                     case "pending"  -> badge.setStyle(badge.getStyle() + "-fx-background-color: #FFF3CD; -fx-text-fill: #856404;");
@@ -180,31 +178,24 @@ public class AdminDashboardController implements Initializable {
             }
         });
         colActions.setCellFactory(col -> new TableCell<>() {
-            final Button btnView    = new Button("👁");
-            final Button btnApprove = new Button("✓");
-            final Button btnReject  = new Button("✗");
-            final Button btnReturn  = new Button("↩");
-            final HBox   box        = new HBox(6, btnView, btnApprove, btnReject, btnReturn);
-            {
-                box.setAlignment(Pos.CENTER_LEFT);
-                btnView   .setStyle("-fx-background-color: transparent; -fx-font-size: 14px; -fx-cursor: hand; -fx-padding: 2 4;");
-                btnApprove.setStyle("-fx-background-color: transparent; -fx-text-fill: #28a745; -fx-font-size: 15px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 2 4;");
-                btnReject .setStyle("-fx-background-color: transparent; -fx-text-fill: #dc3545; -fx-font-size: 15px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 2 4;");
-                btnReturn .setStyle("-fx-background-color: #FF6B35; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 3 10; -fx-background-radius: 12; -fx-cursor: hand; -fx-border-width: 0; -fx-font-weight: bold;");
-                btnView.setTooltip(new Tooltip("View details")); btnApprove.setTooltip(new Tooltip("Approve"));
-                btnReject.setTooltip(new Tooltip("Reject"));     btnReturn.setTooltip(new Tooltip("Record return"));
-                btnView   .setOnAction(e -> handleViewPassSlip  (getTableView().getItems().get(getIndex())));
-                btnApprove.setOnAction(e -> handleApprovePassSlip(getTableView().getItems().get(getIndex())));
-                btnReject .setOnAction(e -> handleRejectPassSlip (getTableView().getItems().get(getIndex())));
-                btnReturn .setOnAction(e -> handleRecordReturn   (getTableView().getItems().get(getIndex())));
+            final Button btnView=new Button("👁"); final Button btnApprove=new Button("✓"); final Button btnReject=new Button("✗"); final Button btnReturn=new Button("↩");
+            final HBox box=new HBox(6, btnView, btnApprove, btnReject, btnReturn);
+            { box.setAlignment(Pos.CENTER_LEFT);
+              btnView   .setStyle("-fx-background-color:transparent;-fx-font-size:14px;-fx-cursor:hand;-fx-padding:2 4;");
+              btnApprove.setStyle("-fx-background-color:transparent;-fx-text-fill:#28a745;-fx-font-size:15px;-fx-font-weight:bold;-fx-cursor:hand;-fx-padding:2 4;");
+              btnReject .setStyle("-fx-background-color:transparent;-fx-text-fill:#dc3545;-fx-font-size:15px;-fx-font-weight:bold;-fx-cursor:hand;-fx-padding:2 4;");
+              btnReturn .setStyle("-fx-background-color:#FF6B35;-fx-text-fill:white;-fx-font-size:14px;-fx-padding:3 10;-fx-background-radius:12;-fx-cursor:hand;-fx-border-width:0;-fx-font-weight:bold;");
+              btnView.setTooltip(new Tooltip("View")); btnApprove.setTooltip(new Tooltip("Approve")); btnReject.setTooltip(new Tooltip("Reject")); btnReturn.setTooltip(new Tooltip("Record return"));
+              btnView   .setOnAction(e -> handleViewPassSlip  (getTableView().getItems().get(getIndex())));
+              btnApprove.setOnAction(e -> handleApprovePassSlip(getTableView().getItems().get(getIndex())));
+              btnReject .setOnAction(e -> handleRejectPassSlip (getTableView().getItems().get(getIndex())));
+              btnReturn .setOnAction(e -> handleRecordReturn   (getTableView().getItems().get(getIndex())));
             }
             @Override protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty) { setGraphic(null); return; }
-                PassSlip ps   = getTableView().getItems().get(getIndex());
-                String status = ps.getStatus() != null ? ps.getStatus().toLowerCase() : "";
-                boolean isPending = status.equals("pending");
-                boolean canReturn = status.equals("approved") || status.equals("overdue");
+                PassSlip ps=getTableView().getItems().get(getIndex()); String status=ps.getStatus()!=null?ps.getStatus().toLowerCase():"";
+                boolean isPending=status.equals("pending"); boolean canReturn=status.equals("approved")||status.equals("overdue");
                 btnApprove.setVisible(isPending); btnApprove.setManaged(isPending);
                 btnReject .setVisible(isPending); btnReject .setManaged(isPending);
                 btnReturn .setVisible(canReturn);  btnReturn .setManaged(canReturn);
@@ -224,19 +215,14 @@ public class AdminDashboardController implements Initializable {
         try {
             vboxRecentActivity.getChildren().clear();
             List<ActivityLog> logs = activityLogDAO.getRecentLogs(10);
-            if (logs.isEmpty()) {
-                Label empty = new Label("No recent activity."); empty.setStyle("-fx-font-size: 11px; -fx-text-fill: #999;");
-                vboxRecentActivity.getChildren().add(empty); return;
-            }
+            if (logs.isEmpty()) { Label empty=new Label("No recent activity."); empty.setStyle("-fx-font-size:11px;-fx-text-fill:#999;"); vboxRecentActivity.getChildren().add(empty); return; }
             for (ActivityLog log : logs) {
-                HBox row = new HBox(8); row.setAlignment(Pos.CENTER_LEFT);
-                Circle dot = new Circle(4, Color.web("#8B0000"));
-                VBox textBox = new VBox(1);
-                Label lblAction = new Label(log.getAction()); lblAction.setStyle("-fx-font-size: 11px; -fx-text-fill: #333;");
-                Label lblTime   = new Label(log.getFormattedTimestamp()); lblTime.setStyle("-fx-font-size: 10px; -fx-text-fill: #999;");
-                textBox.getChildren().addAll(lblAction, lblTime);
-                row.getChildren().addAll(dot, textBox);
-                vboxRecentActivity.getChildren().add(row);
+                HBox row=new HBox(8); row.setAlignment(Pos.CENTER_LEFT);
+                Circle dot=new Circle(4,Color.web("#8B0000"));
+                VBox textBox=new VBox(1);
+                Label lA=new Label(log.getAction()); lA.setStyle("-fx-font-size:11px;-fx-text-fill:#333;");
+                Label lT=new Label(log.getFormattedTimestamp()); lT.setStyle("-fx-font-size:10px;-fx-text-fill:#999;");
+                textBox.getChildren().addAll(lA,lT); row.getChildren().addAll(dot,textBox); vboxRecentActivity.getChildren().add(row);
             }
         } catch (Exception e) { System.out.println("Activity Error: " + e.getMessage()); }
     }
@@ -246,31 +232,13 @@ public class AdminDashboardController implements Initializable {
 
     private void applyFilter() {
         if (filteredList == null) return;
-        String kw = txtSearch != null ? txtSearch.getText().toLowerCase().trim() : "";
-        String sf = cmbFilter != null ? cmbFilter.getValue() : "All";
+        String kw = txtSearch!=null?txtSearch.getText().toLowerCase().trim():"";
+        String sf = cmbFilter!=null?cmbFilter.getValue():"All";
         filteredList.setPredicate(ps -> {
-            boolean matchKw = kw.isEmpty()
-                || String.valueOf(ps.getSlipId()).contains(kw)
-                || (ps.getEmpName()    != null && ps.getEmpName()   .toLowerCase().contains(kw))
-                || (ps.getDepartment() != null && ps.getDepartment().toLowerCase().contains(kw))
-                || (ps.getReason()     != null && ps.getReason()    .toLowerCase().contains(kw));
-            boolean matchSt = sf == null || "All".equals(sf)
-                || (ps.getStatus() != null && ps.getStatus().equalsIgnoreCase(sf));
+            boolean matchKw = kw.isEmpty() || String.valueOf(ps.getSlipId()).contains(kw) || (ps.getEmpName()!=null&&ps.getEmpName().toLowerCase().contains(kw)) || (ps.getDepartment()!=null&&ps.getDepartment().toLowerCase().contains(kw)) || (ps.getReason()!=null&&ps.getReason().toLowerCase().contains(kw));
+            boolean matchSt = sf==null||"All".equals(sf)||(ps.getStatus()!=null&&ps.getStatus().equalsIgnoreCase(sf));
             return matchKw && matchSt;
         });
-    }
-
-    // ── THE FIX: setHeight forces window size; setMaxHeight alone does not ──
-    private static void openCreatePassSlip(Stage stage, Parent root) {
-        Rectangle2D screen = Screen.getPrimary().getVisualBounds();
-        double winW = 480;
-        double winH = Math.min(screen.getHeight() * 0.88, 620); // max 620 — fits 768px screens
-        stage.setScene(new Scene(root, winW, winH)); // scene size
-        stage.setResizable(false);
-        stage.setWidth(winW);
-        stage.setHeight(winH);                        // FORCE height — key
-        stage.setX(screen.getMinX() + (screen.getWidth()  - winW) / 2); // center X
-        stage.setY(screen.getMinY() + (screen.getHeight() - winH) / 2); // center Y
     }
 
     @FXML private void handleCreatePassSlip() {
@@ -279,58 +247,70 @@ public class AdminDashboardController implements Initializable {
             Parent root = loader.load();
             CreatePassSlipController ctrl = loader.getController();
             if (currentUser != null) ctrl.setCurrentUserId(currentUser.getUserId());
+
+            Rectangle2D screen = Screen.getPrimary().getVisualBounds();
+            double winW = 480;
+            double winH = Math.min(screen.getHeight() * 0.88, 620);
+
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
+            // ── BUG 1 FIX: bind to parent window — closes when main window closes ──
+            stage.initOwner(lblSidebarUser.getScene().getWindow());
             stage.setTitle("Create Pass Slip");
-            openCreatePassSlip(stage, root);
+            stage.setScene(new Scene(root, winW, winH));
+            stage.setResizable(false);
+            stage.setWidth(winW);
+            stage.setHeight(winH);
+            stage.setX(screen.getMinX() + (screen.getWidth()  - winW) / 2);
+            stage.setY(screen.getMinY() + (screen.getHeight() - winH) / 2);
             stage.showAndWait();
             loadDashboardData(); loadRecentActivity();
         } catch (IOException e) { showAlert(Alert.AlertType.ERROR, "Error", "Could not open Pass Slip form."); }
     }
 
     private void handleViewPassSlip(PassSlip ps) {
-        Alert a = new Alert(Alert.AlertType.INFORMATION); a.setTitle("Pass Slip Details"); a.setHeaderText("Request ID: PS-" + ps.getSlipId());
-        a.setContentText("Employee   : " + ps.getEmpName() + "\nDepartment : " + ps.getDepartment() + "\nCategory   : " + ps.getCategory() + "\nPurpose    : " + ps.getReason() + "\nTime Out   : " + ps.getFormattedTimeOut() + "\nExpected In: " + ps.getFormattedTimeIn() + "\nStatus     : " + ps.getStatus());
+        Alert a=new Alert(Alert.AlertType.INFORMATION); a.setTitle("Pass Slip Details"); a.setHeaderText("Request ID: PS-"+ps.getSlipId());
+        a.setContentText("Employee   : "+ps.getEmpName()+"\nDepartment : "+ps.getDepartment()+"\nCategory   : "+ps.getCategory()+"\nPurpose    : "+ps.getReason()+"\nTime Out   : "+ps.getFormattedTimeOut()+"\nExpected In: "+ps.getFormattedTimeIn()+"\nStatus     : "+ps.getStatus());
         a.showAndWait();
     }
 
     private void handleApprovePassSlip(PassSlip ps) {
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION); confirm.setTitle("Approve"); confirm.setHeaderText("Approve #" + ps.getSlipId() + "?"); confirm.setContentText("Employee: " + ps.getEmpName());
-        confirm.showAndWait().ifPresent(r -> { if (r == ButtonType.OK) {
-            if (passSlipDAO.updatePassSlipStatus(ps.getSlipId(), "Approved")) {
-                activityLogDAO.logActivity(ps.getEmpId(), "Pass slip #" + ps.getSlipId() + " approved", currentUser != null ? currentUser.getUsername() : "Admin");
-                Alert pp = new Alert(Alert.AlertType.CONFIRMATION); pp.setTitle("Print"); pp.setHeaderText("✅  Approved!"); pp.setContentText("Generate PDF for " + ps.getEmpName() + "?");
-                ButtonType btnPrint = new ButtonType("🖨  Print Now"); ButtonType btnSkip = new ButtonType("Skip");
-                pp.getButtonTypes().setAll(btnPrint, btnSkip);
-                pp.showAndWait().ifPresent(c -> { if (c == btnPrint) { String p = main.utils.PassSlipPdfGenerator.generateAndOpen(ps); if (p != null) showAlert(Alert.AlertType.INFORMATION, "PDF Ready", "Saved to Desktop:\n" + new File(p).getName()); else showAlert(Alert.AlertType.WARNING, "PDF Failed", "pip install reportlab"); } });
+        Alert confirm=new Alert(Alert.AlertType.CONFIRMATION); confirm.setTitle("Approve"); confirm.setHeaderText("Approve #"+ps.getSlipId()+"?"); confirm.setContentText("Employee: "+ps.getEmpName());
+        confirm.showAndWait().ifPresent(r -> { if(r==ButtonType.OK) {
+            if(passSlipDAO.updatePassSlipStatus(ps.getSlipId(),"Approved")) {
+                activityLogDAO.logActivity(ps.getEmpId(),"Pass slip #"+ps.getSlipId()+" approved",currentUser!=null?currentUser.getUsername():"Admin");
+                Alert pp=new Alert(Alert.AlertType.CONFIRMATION); pp.setTitle("Print"); pp.setHeaderText("✅  Approved!"); pp.setContentText("Generate PDF for "+ps.getEmpName()+"?");
+                ButtonType btnPrint=new ButtonType("🖨  Print Now"); ButtonType btnSkip=new ButtonType("Skip");
+                pp.getButtonTypes().setAll(btnPrint,btnSkip);
+                pp.showAndWait().ifPresent(c -> { if(c==btnPrint){String p=main.utils.PassSlipPdfGenerator.generateAndOpen(ps);if(p!=null)showAlert(Alert.AlertType.INFORMATION,"PDF Ready","Saved:\n"+new File(p).getName());else showAlert(Alert.AlertType.WARNING,"PDF Failed","pip install reportlab");} });
                 loadDashboardData(); loadRecentActivity();
-            } else showAlert(Alert.AlertType.ERROR, "Error", "Failed to approve.");
+            } else showAlert(Alert.AlertType.ERROR,"Error","Failed to approve.");
         }});
     }
 
     private void handleRejectPassSlip(PassSlip ps) {
-        Alert c = new Alert(Alert.AlertType.CONFIRMATION); c.setTitle("Reject"); c.setHeaderText("Reject #" + ps.getSlipId() + "?"); c.setContentText("Employee: " + ps.getEmpName());
-        c.showAndWait().ifPresent(r -> { if (r == ButtonType.OK) {
-            if (passSlipDAO.updatePassSlipStatus(ps.getSlipId(), "Rejected")) { activityLogDAO.logActivity(ps.getEmpId(), "Pass slip #" + ps.getSlipId() + " rejected", currentUser != null ? currentUser.getUsername() : "Admin"); showAlert(Alert.AlertType.INFORMATION, "Done", "Rejected."); loadDashboardData(); loadRecentActivity(); }
-            else showAlert(Alert.AlertType.ERROR, "Error", "Failed to reject.");
+        Alert c=new Alert(Alert.AlertType.CONFIRMATION); c.setTitle("Reject"); c.setHeaderText("Reject #"+ps.getSlipId()+"?"); c.setContentText("Employee: "+ps.getEmpName());
+        c.showAndWait().ifPresent(r -> { if(r==ButtonType.OK) {
+            if(passSlipDAO.updatePassSlipStatus(ps.getSlipId(),"Rejected")) { activityLogDAO.logActivity(ps.getEmpId(),"Pass slip #"+ps.getSlipId()+" rejected",currentUser!=null?currentUser.getUsername():"Admin"); showAlert(Alert.AlertType.INFORMATION,"Done","Rejected."); loadDashboardData(); loadRecentActivity(); }
+            else showAlert(Alert.AlertType.ERROR,"Error","Failed to reject.");
         }});
     }
 
     private void handleRecordReturn(PassSlip ps) {
-        final LocalDateTime now = LocalDateTime.now();
-        final String dur  = (ps.getTimeOut() != null) ? (Duration.between(ps.getTimeOut(), now).toMinutes() / 60) + "h " + (Duration.between(ps.getTimeOut(), now).toMinutes() % 60) + "m" : "—";
-        final String late = ("Overdue".equalsIgnoreCase(ps.getStatus()) && ps.getTimeIn() != null) ? "\n⚠  Late: " + (Duration.between(ps.getTimeIn(), now).toMinutes() / 60) + "h " + (Duration.between(ps.getTimeIn(), now).toMinutes() % 60) + "m" : "";
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION); confirm.setTitle("Confirm Return"); confirm.setHeaderText("Confirm return of " + ps.getEmpName() + "?");
-        confirm.setContentText("PS-" + String.format("%04d", ps.getSlipId()) + " | " + ps.getDepartment() + "\nTime Out: " + ps.getFormattedTimeOut() + " | Expected In: " + ps.getFormattedTimeIn() + "\nActual Return: " + now.format(DATETIME_FMT) + " | Duration: " + dur + late + "\n\nHave you personally verified the return?");
-        ButtonType btnConfirm = new ButtonType("✅  Yes, Confirm Return", ButtonBar.ButtonData.OK_DONE);
-        ButtonType btnCancel  = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
-        confirm.getButtonTypes().setAll(btnConfirm, btnCancel);
-        confirm.showAndWait().ifPresent(r -> { if (r == btnConfirm) {
-            if (passSlipDAO.recordTimeIn(ps.getSlipId(), now, dur)) {
-                activityLogDAO.logActivity(ps.getEmpId(), "Return: " + ps.getEmpName() + " at " + now.format(TIME_FMT), currentUser != null ? currentUser.getUsername() : "Admin");
-                showAlert(Alert.AlertType.INFORMATION, "Return Confirmed", "✅  " + ps.getEmpName() + " marked RETURNED.\n" + now.format(TIME_FMT) + " | " + dur);
+        final LocalDateTime now=LocalDateTime.now();
+        final String dur=(ps.getTimeOut()!=null)?(java.time.Duration.between(ps.getTimeOut(),now).toMinutes()/60)+"h "+(java.time.Duration.between(ps.getTimeOut(),now).toMinutes()%60)+"m":"—";
+        final String late=("Overdue".equalsIgnoreCase(ps.getStatus())&&ps.getTimeIn()!=null)?"\n⚠  Late: "+(java.time.Duration.between(ps.getTimeIn(),now).toMinutes()/60)+"h "+(java.time.Duration.between(ps.getTimeIn(),now).toMinutes()%60)+"m":"";
+        Alert confirm=new Alert(Alert.AlertType.CONFIRMATION); confirm.setTitle("Confirm Return"); confirm.setHeaderText("Confirm return of "+ps.getEmpName()+"?");
+        confirm.setContentText("PS-"+String.format("%04d",ps.getSlipId())+" | "+ps.getDepartment()+"\nTime Out: "+ps.getFormattedTimeOut()+" | Expected In: "+ps.getFormattedTimeIn()+"\nActual Return: "+now.format(DATETIME_FMT)+" | Duration: "+dur+late+"\n\nHave you personally verified the return?");
+        ButtonType btnConfirm=new ButtonType("✅  Yes, Confirm Return",ButtonBar.ButtonData.OK_DONE);
+        ButtonType btnCancel =new ButtonType("Cancel",ButtonBar.ButtonData.CANCEL_CLOSE);
+        confirm.getButtonTypes().setAll(btnConfirm,btnCancel);
+        confirm.showAndWait().ifPresent(r -> { if(r==btnConfirm) {
+            if(passSlipDAO.recordTimeIn(ps.getSlipId(),now,dur)) {
+                activityLogDAO.logActivity(ps.getEmpId(),"Return: "+ps.getEmpName()+" at "+now.format(TIME_FMT),currentUser!=null?currentUser.getUsername():"Admin");
+                showAlert(Alert.AlertType.INFORMATION,"Return Confirmed","✅  "+ps.getEmpName()+" marked RETURNED.\n"+now.format(TIME_FMT)+" | "+dur);
                 cmbFilter.setValue("All"); loadDashboardData(); loadRecentActivity();
-            } else showAlert(Alert.AlertType.ERROR, "Error", "Failed to record return.");
+            } else showAlert(Alert.AlertType.ERROR,"Error","Failed to record return.");
         }});
     }
 
@@ -342,24 +322,41 @@ public class AdminDashboardController implements Initializable {
     private void setActiveNav(Button active) {
         String on  = "-fx-background-color: rgba(255,255,255,0.22); -fx-text-fill: white; -fx-font-size: 12.5px; -fx-font-weight: bold; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12; -fx-background-radius: 8; -fx-cursor: hand; -fx-border-width: 0;";
         String off = "-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12.5px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12; -fx-border-width: 0; -fx-cursor: hand;";
-        for (Button btn : new Button[]{btnDashboard, btnPassSlip, btnReports, btnUserMgmt}) if (btn != null) btn.setStyle(off);
-        if (active != null) active.setStyle(on);
+        for (Button btn : new Button[]{btnDashboard, btnPassSlip, btnReports, btnUserMgmt}) if (btn!=null) btn.setStyle(off);
+        if (active!=null) active.setStyle(on);
     }
 
-    private void stopOverdueChecker() { if (overdueChecker != null) overdueChecker.stop(); }
+    private void stopOverdueChecker() { if (overdueChecker!=null) overdueChecker.stop(); }
 
     @FXML private void handleLogout() {
-        Alert c = new Alert(Alert.AlertType.CONFIRMATION); c.setTitle("Logout"); c.setHeaderText("Are you sure you want to logout?");
-        c.showAndWait().ifPresent(r -> { if (r == ButtonType.OK) { stopOverdueChecker();
-            try { FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/resources/fxml/Login.fxml")); Parent root = loader.load(); Stage stage = (Stage) lblSidebarUser.getScene().getWindow(); stage.setScene(new Scene(root)); stage.setTitle("Pass Slip Issuance System"); stage.show(); } catch (IOException e) { System.out.println("Logout error: " + e.getMessage()); }
+        Alert c=new Alert(Alert.AlertType.CONFIRMATION); c.setTitle("Logout"); c.setHeaderText("Are you sure you want to logout?");
+        c.showAndWait().ifPresent(r -> { if(r==ButtonType.OK) { stopOverdueChecker();
+            try { FXMLLoader loader=new FXMLLoader(getClass().getResource("/main/resources/fxml/Login.fxml")); Parent root=loader.load(); Stage stage=(Stage)lblSidebarUser.getScene().getWindow();
+                  root.setOpacity(0); stage.setScene(new Scene(root)); stage.setTitle("Pass Slip Issuance System"); stage.show();
+                  FadeTransition ftLogout = new FadeTransition(Duration.millis(350), root); ftLogout.setFromValue(0); ftLogout.setToValue(1); ftLogout.play();
+            } catch(IOException e){System.out.println("Logout error: "+e.getMessage());}
         }});
     }
 
+    // ── BUG 3 FIX: fade transition on every panel change ──────────
     private void navigateTo(String fxmlPath, String title) {
-        try { FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath)); Parent root = loader.load(); Stage stage = (Stage) lblSidebarUser.getScene().getWindow(); double w=stage.getWidth(), h=stage.getHeight(); stage.setScene(new Scene(root)); stage.setTitle(title); stage.setWidth(w); stage.setHeight(h); } catch (IOException e) { showAlert(Alert.AlertType.ERROR, "Nav Error", "Cannot open " + title); }
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
+            Stage stage = (Stage) lblSidebarUser.getScene().getWindow();
+            double w = stage.getWidth(), h = stage.getHeight();
+
+            root.setOpacity(0);                          // start invisible
+            stage.setScene(new Scene(root));
+            stage.setTitle(title);
+            stage.setWidth(w); stage.setHeight(h);
+
+            FadeTransition ft = new FadeTransition(Duration.millis(250), root);
+            ft.setFromValue(0.0); ft.setToValue(1.0); ft.play();
+        } catch (IOException e) { showAlert(Alert.AlertType.ERROR, "Nav Error", "Cannot open " + title); }
     }
 
     private void showAlert(Alert.AlertType type, String title, String msg) {
-        Alert a = new Alert(type); a.setTitle(title); a.setHeaderText(null); a.setContentText(msg); a.showAndWait();
+        Alert a=new Alert(type); a.setTitle(title); a.setHeaderText(null); a.setContentText(msg); a.showAndWait();
     }
 }

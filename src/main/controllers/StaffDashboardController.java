@@ -1,5 +1,6 @@
 package main.controllers;
 
+import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -19,6 +20,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import dao.ActivityLogDAO;
 import dao.PassSlipDAO;
 import main.utils.SkeletonLoader;
@@ -95,15 +97,12 @@ public class StaffDashboardController implements Initializable {
         long approved = all.stream().filter(s -> "Approved".equalsIgnoreCase(s.getStatus())).count();
         long rejected = all.stream().filter(s -> "Rejected".equalsIgnoreCase(s.getStatus())).count();
         try { int active = passSlipDAO.countActiveSlips(); lblActive.setText(String.valueOf(active)); } catch (Exception ignored) {}
-        lblPending .setText(String.valueOf(pending));
-        lblApproved.setText(String.valueOf(approved));
-        lblRejected.setText(String.valueOf(rejected));
+        lblPending.setText(String.valueOf(pending)); lblApproved.setText(String.valueOf(approved)); lblRejected.setText(String.valueOf(rejected));
         try {
             List<PassSlip> today = passSlipDAO.getTodayPassSlips();
             long approvedToday = today.stream().filter(s -> "Approved".equalsIgnoreCase(s.getStatus())).count();
             int  rate = today.isEmpty() ? 0 : (int)((approvedToday*100.0)/today.size());
-            lblTotalRequests.setText(String.valueOf(today.size()));
-            lblApprovalRate .setText(rate + "%");
+            lblTotalRequests.setText(String.valueOf(today.size())); lblApprovalRate.setText(rate + "%");
         } catch (Exception ignored) {}
     }
 
@@ -128,8 +127,7 @@ public class StaffDashboardController implements Initializable {
         colStatus.setCellFactory(col -> new TableCell<>() {
             @Override protected void updateItem(String status, boolean empty) {
                 super.updateItem(status, empty);
-                if (empty||status==null){setText(null);setStyle("");return;}
-                setText(status);
+                if (empty||status==null){setText(null);setStyle("");return;} setText(status);
                 switch(status.toUpperCase()){
                     case "PENDING"  -> setStyle("-fx-text-fill:#E67E00;-fx-font-weight:bold;");
                     case "APPROVED" -> setStyle("-fx-text-fill:#27AE60;-fx-font-weight:bold;");
@@ -153,8 +151,8 @@ public class StaffDashboardController implements Initializable {
             List<PassSlip> all = passSlipDAO.getAllPassSlips();
             long pending = all.stream().filter(s -> "PENDING".equalsIgnoreCase(s.getStatus())).count();
             int  active  = passSlipDAO.countActiveSlips();
-            if (pending > 0) addNotifItem(notifContainer, pending + " pending approval" + (pending>1?"s":""), "#FFF3E0", "#E67E00");
-            if (active  > 0) addNotifItem(notifContainer, active  + " employee" + (active>1?"s":"") + " currently out", "#FFF8E1", "#F39C12");
+            if (pending > 0) addNotifItem(notifContainer, pending+" pending approval"+(pending>1?"s":""), "#FFF3E0", "#E67E00");
+            if (active  > 0) addNotifItem(notifContainer, active+" employee"+(active>1?"s":"")+" currently out", "#FFF8E1", "#F39C12");
             if (notifContainer.getChildren().isEmpty()) notifContainer.getChildren().add(styledLabel("No new notifications.", "#999"));
         } catch (Exception e) { notifContainer.getChildren().add(styledLabel("Could not load notifications.", "#E74C3C")); }
     }
@@ -166,24 +164,23 @@ public class StaffDashboardController implements Initializable {
             List<ActivityLog> logs = activityLogDAO.getRecentLogs(5);
             if (logs==null||logs.isEmpty()) { activityContainer.getChildren().add(styledLabel("No recent activity.", "#999")); return; }
             for (ActivityLog log : logs) {
-                VBox item = new VBox(2);
-                Label action    = new Label("• " + log.getAction());    action   .setStyle("-fx-font-size:12px;-fx-text-fill:#333;");
-                Label timestamp = new Label(log.getFormattedTimestamp()); timestamp.setStyle("-fx-font-size:10px;-fx-text-fill:#999;");
-                item.getChildren().addAll(action, timestamp);
-                activityContainer.getChildren().add(item);
+                VBox item=new VBox(2);
+                Label action=new Label("• "+log.getAction()); action.setStyle("-fx-font-size:12px;-fx-text-fill:#333;");
+                Label ts=new Label(log.getFormattedTimestamp()); ts.setStyle("-fx-font-size:10px;-fx-text-fill:#999;");
+                item.getChildren().addAll(action,ts); activityContainer.getChildren().add(item);
             }
         } catch (Exception e) { activityContainer.getChildren().add(styledLabel("Could not load activity.", "#E74C3C")); }
     }
 
     private void addNotifItem(VBox container, String text, String bg, String border) {
-        HBox box = new HBox(); box.setPadding(new Insets(8,10,8,10));
+        HBox box=new HBox(); box.setPadding(new Insets(8,10,8,10));
         box.setStyle("-fx-background-color:"+bg+";-fx-border-color:"+border+";-fx-border-width:0 0 0 3;-fx-background-radius:4;-fx-border-radius:4;");
-        Label lbl = new Label(text); lbl.setStyle("-fx-font-size:12px;-fx-text-fill:#333;"); lbl.setWrapText(true);
+        Label lbl=new Label(text); lbl.setStyle("-fx-font-size:12px;-fx-text-fill:#333;"); lbl.setWrapText(true);
         box.getChildren().add(lbl); container.getChildren().add(box);
     }
 
     private Label styledLabel(String text, String color) {
-        Label lbl = new Label(text); lbl.setStyle("-fx-font-size:12px;-fx-text-fill:"+color+";"); return lbl;
+        Label lbl=new Label(text); lbl.setStyle("-fx-font-size:12px;-fx-text-fill:"+color+";"); return lbl;
     }
 
     private void startAutoRefresh() {
@@ -200,14 +197,13 @@ public class StaffDashboardController implements Initializable {
     }
 
     @FXML public void handleSearch() {
-        String kw = txtSearch.getText().trim().toLowerCase(); String filter = cmbFilter.getValue();
+        String kw=txtSearch.getText().trim().toLowerCase(); String filter=cmbFilter.getValue();
         tblPassSlips.setItems(masterList.filtered(slip -> {
-            boolean matchKw = kw.isEmpty()||slip.getEmpName().toLowerCase().contains(kw)||String.valueOf(slip.getSlipId()).contains(kw)||slip.getDepartment().toLowerCase().contains(kw);
-            boolean matchF  = "All".equals(filter)||slip.getStatus().equalsIgnoreCase(filter);
+            boolean matchKw=kw.isEmpty()||slip.getEmpName().toLowerCase().contains(kw)||String.valueOf(slip.getSlipId()).contains(kw)||slip.getDepartment().toLowerCase().contains(kw);
+            boolean matchF="All".equals(filter)||slip.getStatus().equalsIgnoreCase(filter);
             return matchKw && matchF;
         }));
     }
-
     @FXML public void handleFilter() { handleSearch(); }
 
     @FXML public void handleCreatePassSlip() {
@@ -217,28 +213,29 @@ public class StaffDashboardController implements Initializable {
             CreatePassSlipController ctrl = loader.getController();
             if (currentUser != null) ctrl.setCurrentUserId(currentUser.getUserId());
 
-            // ── THE REAL FIX: setHeight forces size; setMaxHeight alone does NOT ──
             Rectangle2D screen = Screen.getPrimary().getVisualBounds();
             double winW = 480;
-            double winH = Math.min(screen.getHeight() * 0.88, 620); // 620 fits 768px screens
+            double winH = Math.min(screen.getHeight() * 0.88, 620);
 
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
+            // ── BUG 1 FIX: bind to parent window — closes with main window ──
+            stage.initOwner(tblPassSlips.getScene().getWindow());
             stage.setTitle("Create Pass Slip");
-            stage.setScene(new Scene(root, winW, winH)); // set scene dimensions
+            stage.setScene(new Scene(root, winW, winH));
             stage.setResizable(false);
             stage.setWidth(winW);
-            stage.setHeight(winH);                        // FORCE height — this is the key
-            stage.setX(screen.getMinX() + (screen.getWidth()  - winW) / 2); // center X
-            stage.setY(screen.getMinY() + (screen.getHeight() - winH) / 2); // center Y
+            stage.setHeight(winH);
+            stage.setX(screen.getMinX() + (screen.getWidth()  - winW) / 2);
+            stage.setY(screen.getMinY() + (screen.getHeight() - winH) / 2);
             stage.showAndWait();
             refreshDashboard();
         } catch (IOException e) { System.out.println("Open form error: " + e.getMessage()); }
     }
 
     @FXML public void handleLogout() {
-        Alert c = new Alert(Alert.AlertType.CONFIRMATION,"Are you sure you want to logout?",ButtonType.OK,ButtonType.CANCEL);
-        Optional<ButtonType> res = c.showAndWait();
+        Alert c=new Alert(Alert.AlertType.CONFIRMATION,"Are you sure you want to logout?",ButtonType.OK,ButtonType.CANCEL);
+        Optional<ButtonType> res=c.showAndWait();
         if (res.isPresent()&&res.get()==ButtonType.OK) { stopAutoRefresh(); navigateTo("/main/resources/fxml/Login.fxml","Login"); }
     }
 
@@ -247,37 +244,43 @@ public class StaffDashboardController implements Initializable {
     @FXML public void handleReports()          { setActiveButton(btnReports);   navigateToStaff("/main/resources/fxml/StaffReports.fxml","Reports"); }
 
     private void handleViewPassSlip(PassSlip slip) {
-        Alert a = new Alert(Alert.AlertType.INFORMATION); a.setTitle("Pass Slip Details"); a.setHeaderText("Slip ID: PS-" + slip.getSlipId());
-        a.setContentText("Employee  : " + slip.getEmpName() + "\nDepartment: " + slip.getDepartment() + "\nCategory  : " + slip.getCategory() + "\nPurpose   : " + slip.getReason() + "\nTime Out  : " + slip.getFormattedTimeOut() + "\nTime In   : " + slip.getFormattedTimeIn() + "\nStatus    : " + slip.getStatus());
+        Alert a=new Alert(Alert.AlertType.INFORMATION); a.setTitle("Pass Slip Details"); a.setHeaderText("Slip ID: PS-"+slip.getSlipId());
+        a.setContentText("Employee  : "+slip.getEmpName()+"\nDepartment: "+slip.getDepartment()+"\nCategory  : "+slip.getCategory()+"\nPurpose   : "+slip.getReason()+"\nTime Out  : "+slip.getFormattedTimeOut()+"\nTime In   : "+slip.getFormattedTimeIn()+"\nStatus    : "+slip.getStatus());
         a.showAndWait();
     }
 
+    // ── BUG 3 FIX: fade transition on every panel change ──────────
     private void navigateToStaff(String fxmlPath, String title) {
         try { stopAutoRefresh();
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath)); Parent root = loader.load();
-            Object ctrl = loader.getController();
-            String username = currentUser != null ? currentUser.getUsername() : "Staff";
-            String role     = currentUser != null ? currentUser.getRole()     : "Staff";
-            if (ctrl instanceof StaffPassSlipController) ((StaffPassSlipController)ctrl).initSession(username, role);
-            else if (ctrl instanceof StaffReportsController) ((StaffReportsController)ctrl).initSession(username, role);
-            Stage stage = (Stage) tblPassSlips.getScene().getWindow();
-            stage.setScene(new Scene(root)); stage.setTitle(title + " – Pass Slip System"); stage.show();
-        } catch (IOException e) { System.out.println("Nav error: " + e.getMessage()); }
+            FXMLLoader loader=new FXMLLoader(getClass().getResource(fxmlPath)); Parent root=loader.load();
+            Object ctrl=loader.getController();
+            String username=currentUser!=null?currentUser.getUsername():"Staff";
+            String role    =currentUser!=null?currentUser.getRole()    :"Staff";
+            if (ctrl instanceof StaffPassSlipController) ((StaffPassSlipController)ctrl).initSession(username,role);
+            else if (ctrl instanceof StaffReportsController) ((StaffReportsController)ctrl).initSession(username,role);
+            Stage stage=(Stage)tblPassSlips.getScene().getWindow();
+
+            root.setOpacity(0);
+            stage.setScene(new Scene(root)); stage.setTitle(title+" – Pass Slip System"); stage.show();
+            FadeTransition ft1 = new FadeTransition(Duration.millis(250), root); ft1.setFromValue(0); ft1.setToValue(1); ft1.play();
+        } catch(IOException e){System.out.println("Nav error: "+e.getMessage());}
     }
 
     private void navigateTo(String fxmlPath, String title) {
         try { stopAutoRefresh();
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath)); Parent root = loader.load();
-            Stage stage = (Stage) tblPassSlips.getScene().getWindow();
+            FXMLLoader loader=new FXMLLoader(getClass().getResource(fxmlPath)); Parent root=loader.load();
+            Stage stage=(Stage)tblPassSlips.getScene().getWindow();
+            root.setOpacity(0);
             stage.setScene(new Scene(root)); stage.setTitle(title+" – Pass Slip System"); stage.show();
-        } catch (IOException e) { System.out.println("Nav error: " + e.getMessage()); }
+            FadeTransition ft2 = new FadeTransition(Duration.millis(250), root); ft2.setFromValue(0); ft2.setToValue(1); ft2.play();
+        } catch(IOException e){System.out.println("Nav error: "+e.getMessage());}
     }
 
     private void setActiveButton(Button active) {
-        for (Button btn : new Button[]{btnDashboard, btnPassSlip, btnReports})
-            if (btn != null) btn.getStyleClass().remove("nav-btn-active");
-        if (active != null && !active.getStyleClass().contains("nav-btn-active")) active.getStyleClass().add("nav-btn-active");
+        for (Button btn : new Button[]{btnDashboard,btnPassSlip,btnReports})
+            if (btn!=null) btn.getStyleClass().remove("nav-btn-active");
+        if (active!=null&&!active.getStyleClass().contains("nav-btn-active")) active.getStyleClass().add("nav-btn-active");
     }
 
-    private void stopAutoRefresh() { if (autoRefreshTimer!=null){autoRefreshTimer.cancel();autoRefreshTimer=null;} }
+    private void stopAutoRefresh() { if(autoRefreshTimer!=null){autoRefreshTimer.cancel();autoRefreshTimer=null;} }
 }

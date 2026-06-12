@@ -1,0 +1,1 @@
+    @FXML private javafx.scene.layout.StackPane rootPane; // was VBox — root is StackPane

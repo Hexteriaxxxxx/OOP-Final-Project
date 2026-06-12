@@ -115,6 +115,9 @@ public class EditEmployeeController implements Initializable {
         if (name.isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Validation Error", "Full Name is required."); return;
         }
+        if (name.matches(".*\\d.*")) {
+            showAlert(Alert.AlertType.WARNING, "Validation Error", "Full Name must not contain numbers."); return;
+        }
         if (dept == null || dept.isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Validation Error", "Department is required."); return;
         }

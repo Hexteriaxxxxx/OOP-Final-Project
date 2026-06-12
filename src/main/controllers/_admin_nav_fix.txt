@@ -1,0 +1,46 @@
+    // ── THE REAL FIX: setHeight forces size; setMaxHeight alone does not ──
+    @FXML private void handleCreatePassSlip() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/resources/fxml/CreatePassSlip.fxml"));
+            Parent root = loader.load();
+            CreatePassSlipController ctrl = loader.getController();
+            if (currentUser != null) ctrl.setCurrentUserId(currentUser.getUserId());
+
+            Rectangle2D screen = Screen.getPrimary().getVisualBounds();
+            double winW = 480;
+            double winH = Math.min(screen.getHeight() * 0.88, 620);
+
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            // ── BUG 1 FIX: bind to parent so it closes with main window ──
+            stage.initOwner(lblSidebarUser.getScene().getWindow());
+            stage.setTitle("Create Pass Slip");
+            stage.setScene(new Scene(root, winW, winH));
+            stage.setResizable(false);
+            stage.setWidth(winW);
+            stage.setHeight(winH);
+            stage.setX(screen.getMinX() + (screen.getWidth()  - winW) / 2);
+            stage.setY(screen.getMinY() + (screen.getHeight() - winH) / 2);
+            stage.showAndWait();
+            loadDashboardData(); loadRecentActivity();
+        } catch (IOException e) { showAlert(Alert.AlertType.ERROR, "Error", "Could not open Pass Slip form."); }
+    }
+
+    // ── BUG 3 FIX: fade transition on every panel change ──
+    private void navigateTo(String fxmlPath, String title) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
+            Stage stage = (Stage) lblSidebarUser.getScene().getWindow();
+            double w = stage.getWidth(), h = stage.getHeight();
+
+            root.setOpacity(0);                          // start invisible
+            stage.setScene(new Scene(root));
+            stage.setTitle(title);
+            stage.setWidth(w); stage.setHeight(h);
+
+            javafx.animation.FadeTransition ft = new javafx.animation.FadeTransition(javafx.util.Duration.millis(250), root);
+            ft.setFromValue(0.0); ft.setToValue(1.0); ft.play();
+
+        } catch (IOException e) { showAlert(Alert.AlertType.ERROR, "Navigation Error", "Could not open " + title + "."); }
+    }
