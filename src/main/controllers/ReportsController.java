@@ -54,7 +54,7 @@ public class ReportsController implements Initializable {
     private LocalDate specificDate = null;
     private String    dateRange    = "All";
     private boolean   isMonthlyTab = false;
-    private String sessionUser = "Admin", sessionRole = "Admin";
+    private String sessionUser = "Admin", sessionRole = "Administrator";
     private NotificationHelper notifHelper;
 
     private static final String TOGGLE_ACTIVE   = "-fx-background-color:#8B0000;-fx-text-fill:white;-fx-background-radius:20;-fx-border-radius:20;-fx-padding:6 18;-fx-cursor:hand;-fx-font-weight:bold;-fx-border-width:0;";
@@ -231,10 +231,19 @@ public class ReportsController implements Initializable {
     private void showError(String msg)   { Alert a=new Alert(Alert.AlertType.ERROR);a.setTitle("Export Failed");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }
 
     @FXML private void handleDashboard()      { goTo("/main/resources/fxml/AdminDashboard.fxml","Dashboard"); }
-    @FXML private void handlePassSlip()       { goTo("/main/resources/fxml/PassSlipIssuance.fxml","Pass Slip"); }
-    @FXML private void handleUserManagement() { goTo("/main/resources/fxml/UserManagement.fxml","User Management"); }
+    @FXML private void handlePassSlip()       { goToWithSession("/main/resources/fxml/PassSlipIssuance.fxml","Pass Slip"); }
+    @FXML private void handleUserManagement() { goToWithSession("/main/resources/fxml/UserManagement.fxml","User Management"); }
     @FXML private void handleLogout()         { Optional<ButtonType> res=new Alert(Alert.AlertType.CONFIRMATION,"Logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();if(res.isPresent()&&res.get()==ButtonType.OK)goTo("/main/resources/fxml/Login.fxml","Login"); }
     private void goTo(String fxml,String title) { try{FXMLLoader loader=new FXMLLoader(getClass().getResource(fxml));Parent root=loader.load();Stage stage=(Stage)dailyTable.getScene().getWindow();double w=stage.getWidth(),h=stage.getHeight();stage.setTitle(title);stage.setScene(new Scene(root));stage.setWidth(w);stage.setHeight(h);}catch(IOException e){new Alert(Alert.AlertType.ERROR,"Screen not available:\n"+fxml).showAndWait();} }
+    private void goToWithSession(String fxml, String title) {
+        try { FXMLLoader loader=new FXMLLoader(getClass().getResource(fxml)); Parent root=loader.load();
+              Object ctrl=loader.getController();
+              if (ctrl instanceof PassSlipIssuanceController) ((PassSlipIssuanceController)ctrl).initSession(sessionUser, "Administrator");
+              else if (ctrl instanceof UserManagementController) ((UserManagementController)ctrl).initSession(sessionUser, "Administrator");
+              Stage stage=(Stage)dailyTable.getScene().getWindow(); double w=stage.getWidth(),h=stage.getHeight();
+              stage.setTitle(title); stage.setScene(new Scene(root)); stage.setWidth(w); stage.setHeight(h);
+        } catch(IOException e){new Alert(Alert.AlertType.ERROR,"Screen not available:\n"+fxml).showAndWait();}
+    }
 
     public static class MonthlyReport {
         private final String month; private final int totalRequests,approved,rejected,pending,totalVisitors; private final String avgDuration;

@@ -12,9 +12,12 @@
 
     <Pane style="-fx-background-color: linear-gradient(to bottom right, #6B0000, #A00000, #8B0000);"/>
 
-    <VBox alignment="CENTER" spacing="0">
+    <ScrollPane fitToWidth="true" fitToHeight="false"
+                style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;"
+                hbarPolicy="NEVER" vbarPolicy="AS_NEEDED">
+        <VBox alignment="CENTER" spacing="0" style="-fx-min-height: 720px;">
 
-        <VBox alignment="CENTER" spacing="8" style="-fx-padding: 0 0 16 0;">
+        <VBox alignment="CENTER" spacing="8" style="-fx-padding: 20 0 16 0;">
             <StackPane>
                 <Circle radius="32" fill="white" opacity="0.15"/>
                 <Circle radius="28" fill="white"/>
@@ -121,6 +124,7 @@
         </VBox>
 
         <Label text="© 2026 Pass Slip Issuance System — PUP Santa Rosa Campus. All rights reserved."
-               style="-fx-font-size: 10px; -fx-text-fill: rgba(255,255,255,0.6); -fx-padding: 16 0 0 0;"/>
-    </VBox>
+               style="-fx-font-size: 10px; -fx-text-fill: rgba(255,255,255,0.6); -fx-padding: 16 0 20 0;"/>
+        </VBox>
+    </ScrollPane>
 </StackPane>

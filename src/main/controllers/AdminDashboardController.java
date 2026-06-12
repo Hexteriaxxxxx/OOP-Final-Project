@@ -113,7 +113,7 @@ public class AdminDashboardController implements Initializable {
         this.currentUser = user;
         if (user != null) {
             lblSidebarUser.setText(user.getUsername());
-            lblSidebarRole.setText(user.getRole());
+            lblSidebarRole.setText("Administrator");
             lblWelcome.setText("Welcome back, " + user.getUsername());
         }
     }
@@ -343,10 +343,19 @@ public class AdminDashboardController implements Initializable {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Parent root = loader.load();
+
+            // Pass current user info to the loaded controller
+            Object ctrl = loader.getController();
+            String username = currentUser != null ? currentUser.getUsername() : "Admin";
+            String role     = "Administrator";
+            if (ctrl instanceof ReportsController)        ((ReportsController)ctrl).initSession(username, role);
+            else if (ctrl instanceof PassSlipIssuanceController) ((PassSlipIssuanceController)ctrl).initSession(username, role);
+            else if (ctrl instanceof UserManagementController)   ((UserManagementController)ctrl).initSession(username, role);
+
             Stage stage = (Stage) lblSidebarUser.getScene().getWindow();
             double w = stage.getWidth(), h = stage.getHeight();
 
-            root.setOpacity(0);                          // start invisible
+            root.setOpacity(0);
             stage.setScene(new Scene(root));
             stage.setTitle(title);
             stage.setWidth(w); stage.setHeight(h);

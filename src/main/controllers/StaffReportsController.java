@@ -95,7 +95,12 @@ public class StaffReportsController implements Initializable {
         this.sessionUser = username != null ? username : "Staff";
         this.sessionRole = role     != null ? role     : "Staff";
         if (lblStaffName != null) lblStaffName.setText(this.sessionUser);
-        if (lblStaffRole != null) lblStaffRole.setText(this.sessionRole);
+        if (lblStaffRole != null) lblStaffRole.setText(capitalize(this.sessionRole));
+    }
+
+    private String capitalize(String s) {
+        if (s == null || s.isEmpty()) return s;
+        return s.substring(0,1).toUpperCase() + s.substring(1).toLowerCase();
     }
 
     @FXML private void handleNotification() {
@@ -200,6 +205,9 @@ public class StaffReportsController implements Initializable {
     @FXML private void handleLogout(){Optional<ButtonType> res=new Alert(Alert.AlertType.CONFIRMATION,"Logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();if(res.isPresent()&&res.get()==ButtonType.OK)goTo("/main/resources/fxml/Login.fxml","Login");}
 
     private void goTo(String fxml, String title) {
-        try { FXMLLoader loader=new FXMLLoader(getClass().getResource(fxml));Parent root=loader.load();Object ctrl=loader.getController(); if(ctrl instanceof StaffPassSlipController)((StaffPassSlipController)ctrl).initSession(sessionUser,sessionRole); Stage stage=(Stage)dailyTable.getScene().getWindow();double w=stage.getWidth(),h=stage.getHeight();stage.setTitle(title);stage.setScene(new Scene(root));stage.setWidth(w);stage.setHeight(h); } catch(IOException e){new Alert(Alert.AlertType.ERROR,"Screen not available:\n"+fxml).showAndWait();}
+        try { FXMLLoader loader=new FXMLLoader(getClass().getResource(fxml));Parent root=loader.load();Object ctrl=loader.getController();
+              if(ctrl instanceof StaffPassSlipController)((StaffPassSlipController)ctrl).initSession(sessionUser,sessionRole);
+              else if(ctrl instanceof StaffDashboardController)((StaffDashboardController)ctrl).initSession(sessionUser,sessionRole);
+              Stage stage=(Stage)dailyTable.getScene().getWindow();double w=stage.getWidth(),h=stage.getHeight();stage.setTitle(title);stage.setScene(new Scene(root));stage.setWidth(w);stage.setHeight(h); } catch(IOException e){new Alert(Alert.AlertType.ERROR,"Screen not available:\n"+fxml).showAndWait();}
     }
 }
