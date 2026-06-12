@@ -63,9 +63,23 @@ public class StaffDashboardController implements Initializable {
         this.currentUser = user;
         if (user != null) {
             if (lblUserName != null) lblUserName.setText(user.getUsername());
-            if (lblUserRole != null) lblUserRole.setText(user.getRole());
+            if (lblUserRole != null) lblUserRole.setText(capitalize(user.getRole()));
             if (lblWelcome  != null) lblWelcome .setText("Welcome back, " + user.getUsername());
         }
+    }
+
+    /** Restores sidebar/header session display when navigating back from another staff screen. */
+    public void initSession(String username, String role) {
+        String name = (username != null && !username.isBlank()) ? username : (currentUser != null ? currentUser.getUsername() : "Staff");
+        String r    = (role     != null && !role.isBlank())     ? role     : (currentUser != null ? currentUser.getRole()     : "Staff");
+        if (lblUserName != null) lblUserName.setText(name);
+        if (lblUserRole != null) lblUserRole.setText(capitalize(r));
+        if (lblWelcome  != null) lblWelcome .setText("Welcome back, " + name);
+    }
+
+    private String capitalize(String s) {
+        if (s == null || s.isEmpty()) return s;
+        return s.substring(0,1).toUpperCase() + s.substring(1).toLowerCase();
     }
 
     @Override
@@ -127,13 +141,18 @@ public class StaffDashboardController implements Initializable {
         colStatus.setCellFactory(col -> new TableCell<>() {
             @Override protected void updateItem(String status, boolean empty) {
                 super.updateItem(status, empty);
-                if (empty||status==null){setText(null);setStyle("");return;} setText(status);
-                switch(status.toUpperCase()){
-                    case "PENDING"  -> setStyle("-fx-text-fill:#E67E00;-fx-font-weight:bold;");
-                    case "APPROVED" -> setStyle("-fx-text-fill:#27AE60;-fx-font-weight:bold;");
-                    case "REJECTED" -> setStyle("-fx-text-fill:#E74C3C;-fx-font-weight:bold;");
-                    default         -> setStyle("-fx-text-fill:#333;");
+                if (empty || status == null) { setText(null); setGraphic(null); return; }
+                Label badge = new Label(status); badge.setPadding(new Insets(3, 10, 3, 10));
+                badge.setStyle("-fx-background-radius: 12; -fx-font-size: 10px; -fx-font-weight: bold;");
+                switch (status.toLowerCase()) {
+                    case "pending"  -> badge.setStyle(badge.getStyle() + "-fx-background-color: #FFF3CD; -fx-text-fill: #856404;");
+                    case "approved" -> badge.setStyle(badge.getStyle() + "-fx-background-color: #D4EDDA; -fx-text-fill: #155724;");
+                    case "rejected" -> badge.setStyle(badge.getStyle() + "-fx-background-color: #F8D7DA; -fx-text-fill: #721c24;");
+                    case "overdue"  -> badge.setStyle(badge.getStyle() + "-fx-background-color: #FF6B35; -fx-text-fill: white;");
+                    case "returned" -> badge.setStyle(badge.getStyle() + "-fx-background-color: #E2E3E5; -fx-text-fill: #383d41;");
+                    default         -> badge.setStyle(badge.getStyle() + "-fx-background-color: #E2E3E5; -fx-text-fill: #383d41;");
                 }
+                setGraphic(badge); setText(null);
             }
         });
         colActions.setCellFactory(col -> new TableCell<>() {
@@ -259,9 +278,12 @@ public class StaffDashboardController implements Initializable {
             if (ctrl instanceof StaffPassSlipController) ((StaffPassSlipController)ctrl).initSession(username,role);
             else if (ctrl instanceof StaffReportsController) ((StaffReportsController)ctrl).initSession(username,role);
             Stage stage=(Stage)tblPassSlips.getScene().getWindow();
+            double w=stage.getWidth(), h=stage.getHeight();
 
             root.setOpacity(0);
-            stage.setScene(new Scene(root)); stage.setTitle(title+" – Pass Slip System"); stage.show();
+            stage.setScene(new Scene(root)); stage.setTitle(title+" – Pass Slip System");
+            stage.setWidth(w); stage.setHeight(h);
+            stage.show();
             FadeTransition ft1 = new FadeTransition(Duration.millis(250), root); ft1.setFromValue(0); ft1.setToValue(1); ft1.play();
         } catch(IOException e){System.out.println("Nav error: "+e.getMessage());}
     }
@@ -270,8 +292,11 @@ public class StaffDashboardController implements Initializable {
         try { stopAutoRefresh();
             FXMLLoader loader=new FXMLLoader(getClass().getResource(fxmlPath)); Parent root=loader.load();
             Stage stage=(Stage)tblPassSlips.getScene().getWindow();
+            double w=stage.getWidth(), h=stage.getHeight();
             root.setOpacity(0);
-            stage.setScene(new Scene(root)); stage.setTitle(title+" – Pass Slip System"); stage.show();
+            stage.setScene(new Scene(root)); stage.setTitle(title+" – Pass Slip System");
+            stage.setWidth(w); stage.setHeight(h);
+            stage.show();
             FadeTransition ft2 = new FadeTransition(Duration.millis(250), root); ft2.setFromValue(0); ft2.setToValue(1); ft2.play();
         } catch(IOException e){System.out.println("Nav error: "+e.getMessage());}
     }

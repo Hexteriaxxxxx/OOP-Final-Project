@@ -50,7 +50,7 @@ public class PassSlipIssuanceController implements Initializable {
     private final ObservableList<PassSlip> masterList = FXCollections.observableArrayList();
     private FilteredList<PassSlip> filteredList;
     private int downloadCount = 0, printCount = 0;
-    private String sessionUser = "Admin", sessionRole = "Admin";
+    private String sessionUser = "Admin", sessionRole = "Administrator";
     private NotificationHelper notifHelper;
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -185,12 +185,20 @@ public class PassSlipIssuanceController implements Initializable {
 
     @FXML private void handleNavDashboard() { goTo("/main/resources/fxml/AdminDashboard.fxml","Dashboard"); }
     @FXML private void handleNavPassSlip()  { /* already here */ }
-    @FXML private void handleNavReports()   { goTo("/main/resources/fxml/Reports.fxml","Reports"); }
-    @FXML private void handleNavUserMgmt()  { goTo("/main/resources/fxml/UserManagement.fxml","User Management"); }
+    @FXML private void handleNavReports()   { goToWithSession("/main/resources/fxml/Reports.fxml","Reports"); }
+    @FXML private void handleNavUserMgmt()  { goToWithSession("/main/resources/fxml/UserManagement.fxml","User Management"); }
     @FXML private void handleLogout() { Optional<ButtonType> res = new Alert(Alert.AlertType.CONFIRMATION,"Logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait(); if (res.isPresent() && res.get() == ButtonType.OK) goTo("/main/resources/fxml/Login.fxml","Login"); }
-
     private void goTo(String fxml, String title) {
         try { FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml)); Parent root = loader.load(); Stage stage = (Stage) tblSlips.getScene().getWindow(); double w=stage.getWidth(), h=stage.getHeight(); stage.setTitle(title); stage.setScene(new Scene(root)); stage.setWidth(w); stage.setHeight(h); } catch (IOException e) { showError("Screen not available:\n" + fxml); }
+    }
+    private void goToWithSession(String fxml, String title) {
+        try { FXMLLoader loader=new FXMLLoader(getClass().getResource(fxml)); Parent root=loader.load();
+              Object ctrl=loader.getController();
+              if (ctrl instanceof ReportsController) ((ReportsController)ctrl).initSession(sessionUser, "Administrator");
+              else if (ctrl instanceof UserManagementController) ((UserManagementController)ctrl).initSession(sessionUser, "Administrator");
+              Stage stage=(Stage)tblSlips.getScene().getWindow(); double w=stage.getWidth(), h=stage.getHeight();
+              stage.setTitle(title); stage.setScene(new Scene(root)); stage.setWidth(w); stage.setHeight(h);
+        } catch(IOException e){ showError("Screen not available:\n" + fxml); }
     }
     private void showInfo(String msg) { Alert a=new Alert(Alert.AlertType.INFORMATION);a.setTitle("Success");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }
     private void showError(String msg) { Alert a=new Alert(Alert.AlertType.ERROR);a.setTitle("Error");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }

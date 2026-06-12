@@ -21,8 +21,8 @@
                 <Button text="  👥  User Management"    maxWidth="Infinity" onAction="#handleNavUserMgmt"  style="-fx-background-color: rgba(255,255,255,0.18); -fx-text-fill: white; -fx-font-size: 12.5px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12; -fx-border-width: 0; -fx-cursor: hand;"/>
             </VBox>
             <VBox style="-fx-padding: 12 12 12 12; -fx-border-color: rgba(255,255,255,0.15); -fx-border-width: 1 0 0 0;">
-                <Label text="Admin"         style="-fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold;"/>
-                <Label text="Administrator" style="-fx-text-fill: rgba(255,255,255,0.6); -fx-font-size: 11px;"/>
+                <Label fx:id="lblSidebarUser" text="Admin"         style="-fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold;"/>
+                <Label fx:id="lblSidebarRole" text="Administrator" style="-fx-text-fill: rgba(255,255,255,0.6); -fx-font-size: 11px;"/>
                 <Button text="↪  Logout" maxWidth="Infinity" onAction="#handleLogout" style="-fx-background-color: rgba(255,255,255,0.12); -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 6 10; -fx-background-radius: 6; -fx-border-width: 0; -fx-alignment: CENTER_LEFT; -fx-cursor: hand;"/>
             </VBox>
         </VBox>

@@ -73,11 +73,13 @@
                 </StackPane>
             </VBox>
 
-            <HBox alignment="CENTER_LEFT" spacing="0">
+            <HBox alignment="CENTER_LEFT">
                 <CheckBox fx:id="rememberMe" text="Remember me"
                           style="-fx-font-size: 12px; -fx-text-fill: #555;" HBox.hgrow="ALWAYS"/>
+                <Region HBox.hgrow="ALWAYS"/>
                 <Hyperlink text="Forgot Password?" onAction="#handleForgotPassword"
-                           style="-fx-font-size: 12px; -fx-text-fill: #555; -fx-border-color: transparent;"/>
+                           style="-fx-font-size: 12px; -fx-text-fill: #8B0000; -fx-font-weight: bold; -fx-border-color: transparent; -fx-padding: 0;"
+                           HBox.hgrow="NEVER"/>
             </HBox>
 
             <Button text="Sign In" onAction="#handleLogin" maxWidth="Infinity"

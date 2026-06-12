@@ -1,5 +1,6 @@
 package main.controllers;
 
+import dao.DepartmentDAO;
 import dao.EmployeeDAO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -29,6 +30,7 @@ import java.util.ResourceBundle;
 public class UserManagementController implements Initializable {
 
     @FXML private Label lblTotal, lblActive, lblInactive, lblAdmins;
+    @FXML private Label lblSidebarUser, lblSidebarRole;
     @FXML private TextField tfSearch;
     @FXML private ComboBox<String> cbFilter;
     @FXML private StackPane skeletonContainer;
@@ -38,7 +40,8 @@ public class UserManagementController implements Initializable {
     @FXML private TableColumn<Employee, Void>    colActions;
     @FXML private Button btnNotification;
 
-    private final EmployeeDAO employeeDAO = new EmployeeDAO();
+    private final EmployeeDAO   employeeDAO   = new EmployeeDAO();
+    private final DepartmentDAO departmentDAO = new DepartmentDAO();
     private final ObservableList<Employee> masterList = FXCollections.observableArrayList();
     private FilteredList<Employee> filteredList;
     private NotificationHelper notifHelper;
@@ -70,8 +73,16 @@ public class UserManagementController implements Initializable {
         notifHelper.toggle();
     }
 
+    public void initSession(String username, String role) {
+        if (lblSidebarUser != null) lblSidebarUser.setText(username);
+        if (lblSidebarRole != null) lblSidebarRole.setText(role);
+    }
+
     private void setupFilterCombo() {
-        cbFilter.setItems(FXCollections.observableArrayList("All Departments","IT Department","HR Department","Finance","Marketing","Operations","Admin"));
+        List<String> depts = departmentDAO.getAllDepartmentNames();
+        ObservableList<String> items = FXCollections.observableArrayList("All Departments");
+        items.addAll(depts);
+        cbFilter.setItems(items);
         cbFilter.setValue("All Departments");
         cbFilter.setOnAction(e -> applyFilter());
     }
@@ -115,6 +126,13 @@ public class UserManagementController implements Initializable {
         lblActive  .setText(String.valueOf(uniqueDepts));
         lblInactive.setText(String.valueOf(uniquePositions));
         lblAdmins  .setText(String.valueOf(adminCount));
+        // Refresh dept dropdown to reflect any newly added departments
+        String current = cbFilter.getValue();
+        List<String> depts = departmentDAO.getAllDepartmentNames();
+        ObservableList<String> items = FXCollections.observableArrayList("All Departments");
+        items.addAll(depts);
+        cbFilter.setItems(items);
+        cbFilter.setValue(current != null && items.contains(current) ? current : "All Departments");
     }
 
     @FXML private void handleAddEmployee() {
