@@ -100,18 +100,18 @@
                     <!-- BUG 2 FIX: right padding pulls values in to align under the "y" in "Summary" -->
                     <VBox spacing="10" style="-fx-background-color: #8B0000; -fx-background-radius: 10; -fx-padding: 14 16;">
                         <Label text="📅  Today's Summary" style="-fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold;"/>
-                        <HBox alignment="CENTER_LEFT" style="-fx-padding: 0 61 0 0;">
-                            <Label text="Total Requests" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 11px;"/>
+                        <HBox alignment="CENTER_LEFT" style="-fx-padding: 0 101 0 0;">
+                            <Label text="Total Requests:" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 11px;"/>
                             <Region HBox.hgrow="ALWAYS"/>
                             <Label fx:id="lblTotalRequests" text="0" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/>
                         </HBox>
-                        <HBox alignment="CENTER_LEFT" style="-fx-padding: 0 50 0 0;">
-                            <Label text="Approval Rate" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 11px;"/>
+                        <HBox alignment="CENTER_LEFT" style="-fx-padding: 0 90 0 0;">
+                            <Label text="Approval Rate:" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 11px;"/>
                             <Region HBox.hgrow="ALWAYS"/>
                             <Label fx:id="lblApprovalRate" text="0%" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/>
                         </HBox>
-                        <HBox alignment="CENTER_LEFT" style="-fx-padding: 0 60 0 0;">
-                            <Label text="Active Now" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 11px;"/>
+                        <HBox alignment="CENTER_LEFT" style="-fx-padding: 0 100 0 0;">
+                            <Label text="Active Now:" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 11px;"/>
                             <Region HBox.hgrow="ALWAYS"/>
                             <Label fx:id="lblActiveNow" text="0" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/>
                         </HBox>
