@@ -97,20 +97,23 @@
                             </VBox>
                         </ScrollPane>
                     </VBox>
-                    <!-- BUG 2 FIX: spacing="8" + minWidth="35" on number labels -->
-                    <VBox spacing="6" style="-fx-background-color: #8B0000; -fx-background-radius: 10; -fx-padding: 10 12;">
+                    <!-- BUG 2 FIX: Region spacers used to push values to the right edge with normal spacing/padding -->
+                    <VBox spacing="10" style="-fx-background-color: #8B0000; -fx-background-radius: 10; -fx-padding: 14 16;">
                         <Label text="📅  Today's Summary" style="-fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold;"/>
-                        <HBox alignment="CENTER_LEFT" spacing="8">
-                            <Label text="Total Requests" HBox.hgrow="ALWAYS" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 11px;"/>
-                            <Label fx:id="lblTotalRequests" text="0" minWidth="35" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold; -fx-alignment: CENTER_RIGHT;"/>
+                        <HBox alignment="CENTER_LEFT">
+                            <Label text="Total Requests" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 11px;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="lblTotalRequests" text="0" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/>
                         </HBox>
-                        <HBox alignment="CENTER_LEFT" spacing="8">
-                            <Label text="Approval Rate" HBox.hgrow="ALWAYS" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 11px;"/>
-                            <Label fx:id="lblApprovalRate" text="0%" minWidth="35" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold; -fx-alignment: CENTER_RIGHT;"/>
+                        <HBox alignment="CENTER_LEFT">
+                            <Label text="Approval Rate" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 11px;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="lblApprovalRate" text="0%" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/>
                         </HBox>
-                        <HBox alignment="CENTER_LEFT" spacing="8">
-                            <Label text="Active Now" HBox.hgrow="ALWAYS" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 11px;"/>
-                            <Label fx:id="lblActiveNow" text="0" minWidth="35" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold; -fx-alignment: CENTER_RIGHT;"/>
+                        <HBox alignment="CENTER_LEFT">
+                            <Label text="Active Now" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 11px;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="lblActiveNow" text="0" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/>
                         </HBox>
                     </VBox>
                 </VBox>
