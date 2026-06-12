@@ -46,7 +46,7 @@
 
             <VBox spacing="5">
                 <Label text="Username" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #333;"/>
-                <TextField fx:id="usernameField" promptText="Enter your username"
+                <TextField fx:id="usernameField" promptText="Enter your username" onAction="#handleLogin"
                            style="-fx-background-color: #f9f9f9; -fx-border-color: #ddd;
                                   -fx-border-radius: 8; -fx-background-radius: 8;
                                   -fx-padding: 10 12; -fx-font-size: 13px;"/>
@@ -55,11 +55,11 @@
             <VBox spacing="5">
                 <Label text="Password" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #333;"/>
                 <StackPane>
-                    <PasswordField fx:id="passwordField" promptText="Enter your password"
+                    <PasswordField fx:id="passwordField" promptText="Enter your password" onAction="#handleLogin"
                                    style="-fx-background-color: #f9f9f9; -fx-border-color: #ddd;
                                           -fx-border-radius: 8; -fx-background-radius: 8;
                                           -fx-padding: 10 40 10 12; -fx-font-size: 13px;"/>
-                    <TextField fx:id="passwordVisible" promptText="Enter your password"
+                    <TextField fx:id="passwordVisible" promptText="Enter your password" onAction="#handleLogin"
                                style="-fx-background-color: #f9f9f9; -fx-border-color: #ddd;
                                       -fx-border-radius: 8; -fx-background-radius: 8;
                                       -fx-padding: 10 40 10 12; -fx-font-size: 13px;"
