@@ -53,8 +53,8 @@
                             <TextField fx:id="txtSearch" promptText="🔍  Search..." HBox.hgrow="ALWAYS" onKeyReleased="#handleSearch" style="-fx-background-color: white; -fx-border-color: #ddd; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 7 12; -fx-font-size: 12.5px;"/>
                             <ComboBox fx:id="cmbFilter" prefWidth="110" onAction="#handleFilter" style="-fx-background-radius: 20; -fx-border-color: #ddd; -fx-background-color: white;"/>
                         </HBox>
-                        <StackPane fx:id="skeletonContainer">
-                            <TableView fx:id="tblPassSlips"
+                        <StackPane fx:id="skeletonContainer" VBox.vgrow="ALWAYS">
+                            <TableView fx:id="tblPassSlips" maxHeight="1.7976931348623157E308"
                                        style="-fx-background-color: white; -fx-border-color: #e8e8e8;">
                                 <columns>
                                     <TableColumn fx:id="colRequestId"  text="Request ID"  prefWidth="90"/>
@@ -73,16 +73,16 @@
                         </StackPane>
                     </VBox>
                     <VBox spacing="12" prefWidth="220">
-                        <VBox spacing="8" style="-fx-background-color: #f8f8f8; -fx-background-radius: 10; -fx-padding: 12 14; -fx-border-color: #ececec; -fx-border-radius: 10; -fx-border-width: 1;">
-                            <Label text="🔔  Notifications" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1a1a1a;"/>
-                            <VBox fx:id="notifContainer" spacing="5"><Label text="No notifications." style="-fx-text-fill: #999; -fx-font-size: 12px;"/></VBox>
-                        </VBox>
-                        <VBox spacing="8" maxHeight="160" style="-fx-background-color: #f8f8f8; -fx-background-radius: 10; -fx-padding: 12 14; -fx-border-color: #ececec; -fx-border-radius: 10; -fx-border-width: 1;">
-                            <Label text="🕐  Recent Activity" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1a1a1a;"/>
-                            <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-border-width: 0; -fx-padding: 0;" maxHeight="120">
-                                <VBox fx:id="activityContainer" spacing="6"><Label text="No recent activity." style="-fx-text-fill: #999; -fx-font-size: 12px;"/></VBox>
-                            </ScrollPane>
-                        </VBox>
+                    <VBox spacing="8" style="-fx-background-color: #f8f8f8; -fx-background-radius: 10; -fx-padding: 12 14; -fx-border-color: #ececec; -fx-border-radius: 10; -fx-border-width: 1;">
+                    <Label text="🔔  Notifications" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1a1a1a;"/>
+                    <VBox fx:id="notifContainer" spacing="5"><Label text="No notifications." style="-fx-text-fill: #999; -fx-font-size: 12px;"/></VBox>
+                    </VBox>
+                    <VBox spacing="8" VBox.vgrow="ALWAYS" style="-fx-background-color: #f8f8f8; -fx-background-radius: 10; -fx-padding: 12 14; -fx-border-color: #ececec; -fx-border-radius: 10; -fx-border-width: 1;">
+                    <Label text="🕐  Recent Activity" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1a1a1a;"/>
+                    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-border-width: 0; -fx-padding: 0;" hbarPolicy="NEVER">
+                    <VBox fx:id="activityContainer" spacing="6"><Label text="No recent activity." style="-fx-text-fill: #999; -fx-font-size: 12px;"/></VBox>
+                    </ScrollPane>
+                    </VBox>
                         <!-- FIXED: Adjusted spacing in Today's Summary -->
                         <VBox spacing="10" style="-fx-background-color: #8B0000; -fx-background-radius: 10; -fx-padding: 14 14 14 14;">
                             <Label text="📅  Today's Summary" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/>

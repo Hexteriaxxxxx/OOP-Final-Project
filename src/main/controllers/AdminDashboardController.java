@@ -344,14 +344,14 @@ public class AdminDashboardController implements Initializable {
 
     private StackPane createLoadingPane() {
         StackPane root = new StackPane();
-        root.setStyle("-fx-background-color: #1a0808;");
+        root.setStyle("-fx-background-color: white;");
         VBox box = new VBox(16);
         box.setAlignment(Pos.CENTER);
         ProgressIndicator spinner = new ProgressIndicator();
         spinner.setPrefSize(60, 60);
         spinner.setStyle("-fx-progress-color: #8B0000;");
         Label lbl = new Label("Loading...");
-        lbl.setStyle("-fx-text-fill: #cccccc; -fx-font-size: 14px; -fx-font-family: 'Segoe UI';");
+        lbl.setStyle("-fx-text-fill: #333333; -fx-font-size: 14px; -fx-font-family: 'Segoe UI';");
         box.getChildren().addAll(spinner, lbl);
         root.getChildren().add(box);
         return root;

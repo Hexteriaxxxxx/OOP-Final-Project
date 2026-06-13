@@ -15,7 +15,7 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception {
         Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/main/resources/fxml/Login.fxml")));
         Scene scene = new Scene(root, 1280, 720);
-        scene.setFill(Color.web("#0f0505"));
+        scene.setFill(Color.web("#800000"));
 
         // Load global CSS to fix button border-radius
         scene.getStylesheets().add(

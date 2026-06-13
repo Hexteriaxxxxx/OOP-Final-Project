@@ -222,7 +222,8 @@ public class RegisterController implements Initializable {
     private void navigateToLogin(ActionEvent e) {
         Stage stage = (Stage) fullNameField.getScene().getWindow();
         boolean wasFullscreen = stage.isFullScreen();
-        boolean wasMaximized  = stage.isMaximized();
+        double  stageW        = stage.getWidth();
+        double  stageH        = stage.getHeight();
         Node currentRoot = fullNameField.getScene().getRoot();
         FadeTransition fadeOut = new FadeTransition(Duration.millis(160), currentRoot);
         fadeOut.setToValue(0);
@@ -235,13 +236,15 @@ public class RegisterController implements Initializable {
                 Parent root = FXMLLoader.load(getClass().getResource("/main/resources/fxml/Login.fxml"));
                 root.setOpacity(0);
                 root.setTranslateX(-40);
-                Scene loginScene = new Scene(root, 1280, 720);
-                loginScene.setFill(Color.web("#0f0505"));
+                Scene loginScene = new Scene(root, stageW, stageH);
+                loginScene.setFill(Color.web("#8B0000"));
                 stage.setScene(loginScene);
                 stage.setTitle("Pass Slip Issuance System");
                 stage.show();
-                if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
-                else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
+                Platform.runLater(() -> Platform.runLater(() -> {
+                    if (wasFullscreen) stage.setFullScreen(true);
+                    else stage.setMaximized(true);
+                }));
                 FadeTransition fadeIn = new FadeTransition(Duration.millis(360), root);
                 fadeIn.setToValue(1);
                 TranslateTransition slideIn = new TranslateTransition(Duration.millis(360), root);

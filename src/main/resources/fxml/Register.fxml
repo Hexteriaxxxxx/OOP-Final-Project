@@ -8,15 +8,14 @@
 
 <StackPane xmlns="http://javafx.com/javafx/21"
            xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="main.controllers.RegisterController"
-           prefWidth="1280" prefHeight="720">
+           fx:controller="main.controllers.RegisterController">
 
     <Pane style="-fx-background-color: linear-gradient(to bottom right, #6B0000, #A00000, #8B0000);"/>
 
     <ScrollPane fitToWidth="true" fitToHeight="false"
                 style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;"
-                hbarPolicy="NEVER" vbarPolicy="AS_NEEDED">
-        <VBox alignment="CENTER" spacing="0" style="-fx-min-height: 720px;">
+                hbarPolicy="NEVER" vbarPolicy="NEVER">
+        <VBox alignment="CENTER" spacing="0" style="-fx-min-height: 620px;">
 
         <VBox alignment="CENTER" spacing="8" style="-fx-padding: 20 0 16 0;">
             <StackPane>
