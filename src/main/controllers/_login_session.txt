@@ -1,0 +1,3 @@
+    private void redirectToDashboard(User user) {
+        // ── SET GLOBAL SESSION — persistent across ALL panels ────
+        main.utils.SessionManager.setCurrentUser(user);

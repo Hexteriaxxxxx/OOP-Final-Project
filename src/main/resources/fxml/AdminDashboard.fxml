@@ -7,11 +7,11 @@
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="main.controllers.AdminDashboardController"
-            prefWidth="1100" prefHeight="720"
+            prefWidth="1100"
             style="-fx-background-color: #f9fafb;">
 
     <left>
-        <VBox prefWidth="160" style="-fx-background-color: #8B0000;">
+        <VBox prefWidth="160" minWidth="160" style="-fx-background-color: #8B0000;">
             <VBox style="-fx-padding: 14 12 14 12; -fx-border-color: rgba(255,255,255,0.15); -fx-border-width: 0 0 1 0;">
                 <HBox alignment="CENTER_LEFT" spacing="8">
                     <Label text="🛡" style="-fx-text-fill: white; -fx-font-size: 18px;"/>
@@ -21,7 +21,7 @@
                     </VBox>
                 </HBox>
             </VBox>
-            <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 6 0 0 0;">
+            <VBox VBox.vgrow="ALWAYS" minHeight="0" style="-fx-padding: 6 0 0 0;">
                 <Button fx:id="btnDashboard" text="  ⊞  Dashboard"          maxWidth="Infinity" onAction="#handleNavDashboard"      style="-fx-background-color: rgba(255,255,255,0.18); -fx-text-fill: white; -fx-font-size: 12.5px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12; -fx-border-width: 0; -fx-cursor: hand;"/>
                 <Button fx:id="btnPassSlip"  text="  📋  Pass Slip Issuance" maxWidth="Infinity" onAction="#handleNavPassSlip"       style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12.5px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12; -fx-border-width: 0; -fx-cursor: hand;"/>
                 <Button fx:id="btnReports"   text="  📊  Reports"            maxWidth="Infinity" onAction="#handleNavReports"        style="-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12.5px; -fx-alignment: CENTER_LEFT; -fx-padding: 10 12; -fx-border-width: 0; -fx-cursor: hand;"/>
@@ -65,7 +65,6 @@
                         <ComboBox fx:id="cmbFilter" prefWidth="110" onAction="#handleFilter"
                                   style="-fx-background-radius: 20; -fx-border-color: #ddd; -fx-background-color: white;"/>
                     </HBox>
-                    <!-- StackPane wrapper for skeleton overlay -->
                     <StackPane fx:id="skeletonContainer" VBox.vgrow="ALWAYS" minHeight="240">
                         <TableView fx:id="tblPassSlips" maxHeight="1.7976931348623157E308"
                                    style="-fx-background-color: white; -fx-border-color: #e8e8e8;">
@@ -98,11 +97,24 @@
                             </VBox>
                         </ScrollPane>
                     </VBox>
-                    <VBox spacing="5" style="-fx-background-color: #8B0000; -fx-background-radius: 10; -fx-padding: 10 12;">
+                    <!-- BUG 2 FIX: right padding pulls values in to align under the "y" in "Summary" -->
+                    <VBox spacing="10" style="-fx-background-color: #8B0000; -fx-background-radius: 10; -fx-padding: 14 16;">
                         <Label text="📅  Today's Summary" style="-fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold;"/>
-                        <HBox alignment="CENTER_LEFT"><Label text="Total Requests" HBox.hgrow="ALWAYS" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 11px;"/><Label fx:id="lblTotalRequests" text="0" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/></HBox>
-                        <HBox alignment="CENTER_LEFT"><Label text="Approval Rate"  HBox.hgrow="ALWAYS" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 11px;"/><Label fx:id="lblApprovalRate"  text="0%" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/></HBox>
-                        <HBox alignment="CENTER_LEFT"><Label text="Active Now"     HBox.hgrow="ALWAYS" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 11px;"/><Label fx:id="lblActiveNow"     text="0"  style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/></HBox>
+                        <HBox alignment="CENTER_LEFT" style="-fx-padding: 0 101 0 0;">
+                            <Label text="Total Requests:" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 11px;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="lblTotalRequests" text="0" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" style="-fx-padding: 0 90 0 0;">
+                            <Label text="Approval Rate:" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 11px;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="lblApprovalRate" text="0%" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" style="-fx-padding: 0 115 0 0;">
+                            <Label text="Active Now:" style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 11px;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="lblActiveNow" text="0" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/>
+                        </HBox>
                     </VBox>
                 </VBox>
             </HBox>

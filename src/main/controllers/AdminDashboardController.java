@@ -1,6 +1,8 @@
 package main.controllers;
 
 import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -72,10 +74,20 @@ public class AdminDashboardController implements Initializable {
         filteredList = new FilteredList<>(masterList, p -> true);
         tblPassSlips.setItems(filteredList);
         setupTableColumns(); setupFilterComboBox();
+        applySession();
         SkeletonLoader.show(skeletonContainer);
         loadDataAsync();
         loadRecentActivity();
         startOverdueChecker();
+    }
+
+    /** Syncs sidebar + welcome label from SessionManager (called on init and on setCurrentUser). */
+    private void applySession() {
+        String username = main.utils.SessionManager.getUsername();
+        String role     = main.utils.SessionManager.getRole();
+        if (lblSidebarUser != null) lblSidebarUser.setText(username);
+        if (lblSidebarRole != null) lblSidebarRole.setText(role);
+        if (lblWelcome     != null) lblWelcome.setText("Welcome back, " + username);
     }
 
     private void loadDataAsync() {
@@ -111,11 +123,8 @@ public class AdminDashboardController implements Initializable {
 
     public void setCurrentUser(User user) {
         this.currentUser = user;
-        if (user != null) {
-            lblSidebarUser.setText(user.getUsername());
-            lblSidebarRole.setText("Administrator");
-            lblWelcome.setText("Welcome back, " + user.getUsername());
-        }
+        main.utils.SessionManager.setCurrentUser(user);
+        applySession();
     }
 
     private void startOverdueChecker() {
@@ -130,7 +139,7 @@ public class AdminDashboardController implements Initializable {
             String expected = slip.getTimeIn() != null ? slip.getTimeIn().format(TIME_FMT) : "—";
             long minsLate = slip.getTimeIn() != null ? java.time.Duration.between(slip.getTimeIn(), LocalDateTime.now()).toMinutes() : 0;
             msg.append("• ").append(slip.getEmpName()).append("  (PS-").append(String.format("%04d", slip.getSlipId())).append(")")
-               .append("\n  Expected: ").append(expected).append("  |  ").append(minsLate).append(" min(s) late\n\n");
+                    .append("\n  Expected: ").append(expected).append("  |  ").append(minsLate).append(" min(s) late\n\n");
         }
         msg.append("Click 'View Overdue' to see them in the dashboard.");
         Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -181,15 +190,15 @@ public class AdminDashboardController implements Initializable {
             final Button btnView=new Button("👁"); final Button btnApprove=new Button("✓"); final Button btnReject=new Button("✗"); final Button btnReturn=new Button("↩");
             final HBox box=new HBox(6, btnView, btnApprove, btnReject, btnReturn);
             { box.setAlignment(Pos.CENTER_LEFT);
-              btnView   .setStyle("-fx-background-color:transparent;-fx-font-size:14px;-fx-cursor:hand;-fx-padding:2 4;");
-              btnApprove.setStyle("-fx-background-color:transparent;-fx-text-fill:#28a745;-fx-font-size:15px;-fx-font-weight:bold;-fx-cursor:hand;-fx-padding:2 4;");
-              btnReject .setStyle("-fx-background-color:transparent;-fx-text-fill:#dc3545;-fx-font-size:15px;-fx-font-weight:bold;-fx-cursor:hand;-fx-padding:2 4;");
-              btnReturn .setStyle("-fx-background-color:#FF6B35;-fx-text-fill:white;-fx-font-size:14px;-fx-padding:3 10;-fx-background-radius:12;-fx-cursor:hand;-fx-border-width:0;-fx-font-weight:bold;");
-              btnView.setTooltip(new Tooltip("View")); btnApprove.setTooltip(new Tooltip("Approve")); btnReject.setTooltip(new Tooltip("Reject")); btnReturn.setTooltip(new Tooltip("Record return"));
-              btnView   .setOnAction(e -> handleViewPassSlip  (getTableView().getItems().get(getIndex())));
-              btnApprove.setOnAction(e -> handleApprovePassSlip(getTableView().getItems().get(getIndex())));
-              btnReject .setOnAction(e -> handleRejectPassSlip (getTableView().getItems().get(getIndex())));
-              btnReturn .setOnAction(e -> handleRecordReturn   (getTableView().getItems().get(getIndex())));
+                btnView   .setStyle("-fx-background-color:transparent;-fx-font-size:14px;-fx-cursor:hand;-fx-padding:2 4;");
+                btnApprove.setStyle("-fx-background-color:transparent;-fx-text-fill:#28a745;-fx-font-size:15px;-fx-font-weight:bold;-fx-cursor:hand;-fx-padding:2 4;");
+                btnReject .setStyle("-fx-background-color:transparent;-fx-text-fill:#dc3545;-fx-font-size:15px;-fx-font-weight:bold;-fx-cursor:hand;-fx-padding:2 4;");
+                btnReturn .setStyle("-fx-background-color:#FF6B35;-fx-text-fill:white;-fx-font-size:14px;-fx-padding:3 10;-fx-background-radius:12;-fx-cursor:hand;-fx-border-width:0;-fx-font-weight:bold;");
+                btnView.setTooltip(new Tooltip("View")); btnApprove.setTooltip(new Tooltip("Approve")); btnReject.setTooltip(new Tooltip("Reject")); btnReturn.setTooltip(new Tooltip("Record return"));
+                btnView   .setOnAction(e -> handleViewPassSlip  (getTableView().getItems().get(getIndex())));
+                btnApprove.setOnAction(e -> handleApprovePassSlip(getTableView().getItems().get(getIndex())));
+                btnReject .setOnAction(e -> handleRejectPassSlip (getTableView().getItems().get(getIndex())));
+                btnReturn .setOnAction(e -> handleRecordReturn   (getTableView().getItems().get(getIndex())));
             }
             @Override protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
@@ -330,39 +339,67 @@ public class AdminDashboardController implements Initializable {
 
     @FXML private void handleLogout() {
         Alert c=new Alert(Alert.AlertType.CONFIRMATION); c.setTitle("Logout"); c.setHeaderText("Are you sure you want to logout?");
-        c.showAndWait().ifPresent(r -> { if(r==ButtonType.OK) { stopOverdueChecker();
-            try { FXMLLoader loader=new FXMLLoader(getClass().getResource("/main/resources/fxml/Login.fxml")); Parent root=loader.load(); Stage stage=(Stage)lblSidebarUser.getScene().getWindow();
-                  root.setOpacity(0); stage.setScene(new Scene(root)); stage.setTitle("Pass Slip Issuance System"); stage.show();
-                  FadeTransition ftLogout = new FadeTransition(Duration.millis(350), root); ftLogout.setFromValue(0); ftLogout.setToValue(1); ftLogout.play();
-            } catch(IOException e){System.out.println("Logout error: "+e.getMessage());}
-        }});
+        c.showAndWait().ifPresent(r -> { if(r==ButtonType.OK) { stopOverdueChecker(); navigateTo("/main/resources/fxml/Login.fxml","Pass Slip Issuance System"); }});
     }
 
-    // ── BUG 3 FIX: fade transition on every panel change ──────────
+    private StackPane createLoadingPane() {
+        StackPane root = new StackPane();
+        root.setStyle("-fx-background-color: white;");
+        VBox box = new VBox(16);
+        box.setAlignment(Pos.CENTER);
+        ProgressIndicator spinner = new ProgressIndicator();
+        spinner.setPrefSize(60, 60);
+        spinner.setStyle("-fx-progress-color: #8B0000;");
+        Label lbl = new Label("Loading...");
+        lbl.setStyle("-fx-text-fill: #333333; -fx-font-size: 14px; -fx-font-family: 'Segoe UI';");
+        box.getChildren().addAll(spinner, lbl);
+        root.getChildren().add(box);
+        return root;
+    }
+
     private void navigateTo(String fxmlPath, String title) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-            Parent root = loader.load();
-
-            // Pass current user info to the loaded controller
-            Object ctrl = loader.getController();
-            String username = currentUser != null ? currentUser.getUsername() : "Admin";
-            String role     = "Administrator";
-            if (ctrl instanceof ReportsController)        ((ReportsController)ctrl).initSession(username, role);
-            else if (ctrl instanceof PassSlipIssuanceController) ((PassSlipIssuanceController)ctrl).initSession(username, role);
-            else if (ctrl instanceof UserManagementController)   ((UserManagementController)ctrl).initSession(username, role);
-
-            Stage stage = (Stage) lblSidebarUser.getScene().getWindow();
+        Stage stage = (Stage) lblSidebarUser.getScene().getWindow();
+        Parent currentRoot = lblSidebarUser.getScene().getRoot();
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(200), currentRoot);
+        fadeOut.setFromValue(1.0);
+        fadeOut.setToValue(0.0);
+        fadeOut.setOnFinished(ev -> {
             double w = stage.getWidth(), h = stage.getHeight();
-
-            root.setOpacity(0);
-            stage.setScene(new Scene(root));
-            stage.setTitle(title);
+            boolean wasFullscreen = stage.isFullScreen();
+            boolean wasMaximized  = stage.isMaximized();
+            Scene loadScene = new Scene(createLoadingPane(), w, h);
+            loadScene.setFill(javafx.scene.paint.Color.web("#0f0505"));
+            stage.setScene(loadScene);
             stage.setWidth(w); stage.setHeight(h);
-
-            FadeTransition ft = new FadeTransition(Duration.millis(250), root);
-            ft.setFromValue(0.0); ft.setToValue(1.0); ft.play();
-        } catch (IOException e) { showAlert(Alert.AlertType.ERROR, "Nav Error", "Cannot open " + title); }
+            if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
+            else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
+            PauseTransition pause = new PauseTransition(Duration.millis(400));
+            pause.setOnFinished(pev -> {
+                try {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+                    Parent root = loader.load();
+                    Object ctrl = loader.getController();
+                    String username = main.utils.SessionManager.getUsername();
+                    String role     = main.utils.SessionManager.getRole();
+                    if (ctrl instanceof ReportsController)             ((ReportsController) ctrl).initSession(username, role);
+                    else if (ctrl instanceof PassSlipIssuanceController) ((PassSlipIssuanceController) ctrl).initSession(username, role);
+                    else if (ctrl instanceof UserManagementController)   ((UserManagementController) ctrl).initSession(username, role);
+                    root.setOpacity(0);
+                    Scene navScene = new Scene(root);
+                    navScene.setFill(javafx.scene.paint.Color.web("#0f0505"));
+                    stage.setScene(navScene);
+                    stage.setTitle(title);
+                    stage.setWidth(w); stage.setHeight(h);
+                    if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
+                    else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
+                    stage.show();
+                    FadeTransition fadeIn = new FadeTransition(Duration.millis(200), root);
+                    fadeIn.setFromValue(0); fadeIn.setToValue(1); fadeIn.play();
+                } catch (IOException e) { showAlert(Alert.AlertType.ERROR, "Nav Error", "Cannot open " + title); }
+            });
+            pause.play();
+        });
+        fadeOut.play();
     }
 
     private void showAlert(Alert.AlertType type, String title, String msg) {

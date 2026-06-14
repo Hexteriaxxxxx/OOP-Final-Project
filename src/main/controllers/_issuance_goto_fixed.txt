@@ -1,0 +1,16 @@
+    private void goTo(String fxml, String title) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
+            Parent root = loader.load();
+            Stage stage = (Stage) tblSlips.getScene().getWindow();
+            double w = stage.getWidth(), h = stage.getHeight();
+            root.setOpacity(0);
+            stage.setTitle(title); stage.setScene(new Scene(root)); stage.setWidth(w); stage.setHeight(h);
+            javafx.animation.FadeTransition ft = new javafx.animation.FadeTransition(javafx.util.Duration.millis(250), root);
+            ft.setFromValue(0.0); ft.setToValue(1.0); ft.play();
+        } catch (IOException e) { showError("Screen not available:\n" + fxml); }
+    }
+
+    private void showInfo(String msg) { Alert a=new Alert(Alert.AlertType.INFORMATION);a.setTitle("Success");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }
+    private void showError(String msg) { Alert a=new Alert(Alert.AlertType.ERROR);a.setTitle("Error");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }
+}

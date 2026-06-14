@@ -1,0 +1,15 @@
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        // ── Auto-apply global session — fixes username disappearing ──
+        main.utils.SessionManager.apply(this::initSession);
+        setupFilter(); setupColumns(); setupActionColumn();
+        SkeletonLoader.show(skeletonContainer);
+        loadDataAsync();
+    }
+
+    public void initSession(String username, String role) {
+        this.sessionUser = username != null ? username : "Admin";
+        this.sessionRole = role     != null ? role     : "Administrator";
+        if (lblAdminName != null) lblAdminName.setText(this.sessionUser);
+        if (lblAdminRole != null) lblAdminRole.setText(this.sessionRole);
+    }

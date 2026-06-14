@@ -1,12 +1,18 @@
 package main.controllers;
 
 import dao.UserDAO;
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.ParallelTransition;
+import javafx.animation.TranslateTransition;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -16,6 +22,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.util.Duration;
 
 import java.io.IOException;
 import java.net.URL;
@@ -110,24 +117,26 @@ public class RegisterController implements Initializable {
     @FXML public void handleShowTerms(ActionEvent e) { showTermsDialog(); }
 
     private void showTermsDialog() {
+        Stage owner = (Stage) fullNameField.getScene().getWindow();
+
         Stage dialog = new Stage();
+        dialog.initOwner(owner);
         dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.initStyle(StageStyle.TRANSPARENT); // ← TRANSPARENT removes OS border entirely
+        dialog.initStyle(StageStyle.TRANSPARENT);
 
         VBox root = new VBox(0);
         root.setStyle("-fx-background-color: white; -fx-background-radius: 12; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 20, 0, 0, 4);");
         root.setPrefWidth(560);
+        root.setOpacity(0);
+        root.setTranslateY(30); // start below for ease-up entrance
 
-        // ── Clip to rounded corners — no white residue bleeding out ──
         Rectangle clip = new Rectangle();
-        clip.setArcWidth(24);
-        clip.setArcHeight(24);
-        clip.widthProperty() .bind(root.widthProperty());
+        clip.setArcWidth(24); clip.setArcHeight(24);
+        clip.widthProperty().bind(root.widthProperty());
         clip.heightProperty().bind(root.heightProperty());
         root.setClip(clip);
 
-        // Header — no background-radius needed since clip handles it
         VBox header = new VBox(4);
         header.setPadding(new Insets(18, 20, 14, 20));
         header.setStyle("-fx-background-color: #8B0000;");
@@ -147,24 +156,54 @@ public class RegisterController implements Initializable {
         footer.setPadding(new Insets(12, 20, 16, 20));
         footer.setStyle("-fx-border-color: #e8e8e8; -fx-border-width: 1 0 0 0;");
 
-        Button btnClose = new Button("Close");
+        Button btnClose = new Button("I Agree");
         btnClose.setStyle("-fx-background-color: #8B0000; -fx-text-fill: white; " +
                 "-fx-font-size: 12px; -fx-padding: 8 24; -fx-background-radius: 20; " +
                 "-fx-border-width: 0; -fx-cursor: hand;");
-        btnClose.setOnAction(ev -> { termsCheckBox.setSelected(true); dialog.close(); });
 
         Button btnDecline = new Button("Decline");
         btnDecline.setStyle("-fx-background-color: white; -fx-text-fill: #555; " +
                 "-fx-font-size: 12px; -fx-padding: 8 24; -fx-background-radius: 20; " +
                 "-fx-border-color: #ccc; -fx-border-radius: 20; -fx-cursor: hand;");
-        btnDecline.setOnAction(ev -> { termsCheckBox.setSelected(false); dialog.close(); });
 
         footer.getChildren().addAll(btnDecline, btnClose);
         root.getChildren().addAll(header, txtContent, footer);
 
+        // ── Ease-down close animation ──
+        TranslateTransition slideDown = new TranslateTransition(Duration.millis(200), root);
+        slideDown.setToY(30);
+        slideDown.setInterpolator(Interpolator.EASE_IN);
+        FadeTransition fadeClose = new FadeTransition(Duration.millis(200), root);
+        fadeClose.setToValue(0);
+        ParallelTransition closeAnim = new ParallelTransition(slideDown, fadeClose);
+
+        btnClose.setOnAction(ev -> {
+            btnClose.setDisable(true); btnDecline.setDisable(true);
+            closeAnim.setOnFinished(e -> { termsCheckBox.setSelected(true);  dialog.close(); });
+            closeAnim.play();
+        });
+        btnDecline.setOnAction(ev -> {
+            btnClose.setDisable(true); btnDecline.setDisable(true);
+            closeAnim.setOnFinished(e -> { termsCheckBox.setSelected(false); dialog.close(); });
+            closeAnim.play();
+        });
+
         Scene scene = new Scene(root);
         scene.setFill(Color.TRANSPARENT);
         dialog.setScene(scene);
+
+        // ── Ease-up open animation + center on owner ──
+        dialog.setOnShown(e -> {
+            dialog.setX(owner.getX() + (owner.getWidth()  - dialog.getWidth())  / 2);
+            dialog.setY(owner.getY() + (owner.getHeight() - dialog.getHeight()) / 2);
+            TranslateTransition slideUp = new TranslateTransition(Duration.millis(280), root);
+            slideUp.setToY(0);
+            slideUp.setInterpolator(Interpolator.EASE_OUT);
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(280), root);
+            fadeIn.setToValue(1);
+            new ParallelTransition(slideUp, fadeIn).play();
+        });
+
         dialog.showAndWait();
     }
 
@@ -213,15 +252,42 @@ public class RegisterController implements Initializable {
     @FXML public void handleBackToLogin(ActionEvent e) { navigateToLogin(e); }
 
     private void navigateToLogin(ActionEvent e) {
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/main/resources/fxml/Login.fxml"));
-            Stage stage = (Stage) fullNameField.getScene().getWindow();
-            stage.setScene(new Scene(root, 1280, 720));
-            stage.setTitle("Pass Slip Issuance System");
-            stage.show();
-        } catch (IOException ex) {
-            showAlert(Alert.AlertType.ERROR,"Navigation Error","Could not load Login page.");
-        }
+        Stage stage = (Stage) fullNameField.getScene().getWindow();
+        boolean wasFullscreen = stage.isFullScreen();
+        double  stageW        = stage.getWidth();
+        double  stageH        = stage.getHeight();
+        Node currentRoot = fullNameField.getScene().getRoot();
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(160), currentRoot);
+        fadeOut.setToValue(0);
+        TranslateTransition slideOut = new TranslateTransition(Duration.millis(160), currentRoot);
+        slideOut.setToX(40);
+        slideOut.setInterpolator(Interpolator.EASE_IN);
+        ParallelTransition out = new ParallelTransition(fadeOut, slideOut);
+        out.setOnFinished(ev -> {
+            try {
+                Parent root = FXMLLoader.load(getClass().getResource("/main/resources/fxml/Login.fxml"));
+                root.setOpacity(0);
+                root.setTranslateX(-40);
+                Scene loginScene = new Scene(root, stageW, stageH);
+                loginScene.setFill(Color.web("#8B0000"));
+                stage.setScene(loginScene);
+                stage.setTitle("Pass Slip Issuance System");
+                stage.show();
+                Platform.runLater(() -> Platform.runLater(() -> {
+                    if (wasFullscreen) stage.setFullScreen(true);
+                    else stage.setMaximized(true);
+                }));
+                FadeTransition fadeIn = new FadeTransition(Duration.millis(360), root);
+                fadeIn.setToValue(1);
+                TranslateTransition slideIn = new TranslateTransition(Duration.millis(360), root);
+                slideIn.setToX(0);
+                slideIn.setInterpolator(Interpolator.EASE_OUT);
+                new ParallelTransition(fadeIn, slideIn).play();
+            } catch (IOException ex) {
+                showAlert(Alert.AlertType.ERROR,"Navigation Error","Could not load Login page.");
+            }
+        });
+        out.play();
     }
 
     private void showAlert(Alert.AlertType type, String title, String msg) {

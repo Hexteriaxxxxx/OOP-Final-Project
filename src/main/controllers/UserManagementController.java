@@ -2,6 +2,10 @@ package main.controllers;
 
 import dao.DepartmentDAO;
 import dao.EmployeeDAO;
+import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
+import javafx.application.Platform;
+import javafx.scene.paint.Color;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -9,15 +13,19 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.util.Duration;
+import main.utils.SessionManager;
 import main.utils.SkeletonLoader;
 import models.Employee;
 
@@ -48,8 +56,8 @@ public class UserManagementController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        SessionManager.apply(this::initSession);
         setupFilterCombo(); setupTableColumns(); setupSearch();
-        // Show skeleton then load employees in background
         SkeletonLoader.show(skeletonContainer);
         loadEmployeesAsync();
     }
@@ -122,15 +130,11 @@ public class UserManagementController implements Initializable {
         long uniqueDepts    = masterList.stream().map(Employee::getDepartment).filter(d->d!=null&&!d.isBlank()).distinct().count();
         long uniquePositions= masterList.stream().map(Employee::getPosition).filter(p->p!=null&&!p.isBlank()).distinct().count();
         long adminCount     = masterList.stream().filter(e->e.getPosition()!=null&&(e.getPosition().toLowerCase().contains("admin")||e.getPosition().toLowerCase().contains("director")||e.getPosition().toLowerCase().contains("officer"))).count();
-        lblTotal   .setText(String.valueOf(total));
-        lblActive  .setText(String.valueOf(uniqueDepts));
-        lblInactive.setText(String.valueOf(uniquePositions));
-        lblAdmins  .setText(String.valueOf(adminCount));
-        // Refresh dept dropdown to reflect any newly added departments
+        lblTotal.setText(String.valueOf(total)); lblActive.setText(String.valueOf(uniqueDepts));
+        lblInactive.setText(String.valueOf(uniquePositions)); lblAdmins.setText(String.valueOf(adminCount));
         String current = cbFilter.getValue();
         List<String> depts = departmentDAO.getAllDepartmentNames();
-        ObservableList<String> items = FXCollections.observableArrayList("All Departments");
-        items.addAll(depts);
+        ObservableList<String> items = FXCollections.observableArrayList("All Departments"); items.addAll(depts);
         cbFilter.setItems(items);
         cbFilter.setValue(current != null && items.contains(current) ? current : "All Departments");
     }
@@ -170,10 +174,63 @@ public class UserManagementController implements Initializable {
     @FXML private void handleNavPassSlip()  { goTo("/main/resources/fxml/PassSlipIssuance.fxml","Pass Slip Issuance"); }
     @FXML private void handleNavReports()   { goTo("/main/resources/fxml/Reports.fxml","Reports"); }
     @FXML private void handleNavUserMgmt()  { /* already here */ }
-    @FXML private void handleLogout()       { Optional<ButtonType> res=new Alert(Alert.AlertType.CONFIRMATION,"Are you sure you want to logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();if(res.isPresent()&&res.get()==ButtonType.OK)goTo("/main/resources/fxml/Login.fxml","Login"); }
+    @FXML private void handleLogout() {
+        Optional<ButtonType> res = new Alert(Alert.AlertType.CONFIRMATION,"Are you sure you want to logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait();
+        if (res.isPresent()&&res.get()==ButtonType.OK) { SessionManager.clear(); goTo("/main/resources/fxml/Login.fxml","Login"); }
+    }
+
+    // ── FIX: FadeTransition is final — no double-brace init ──────
+    private StackPane createLoadingPane() {
+        StackPane root = new StackPane();
+        root.setStyle("-fx-background-color: white;");
+        VBox box = new VBox(16);
+        box.setAlignment(Pos.CENTER);
+        ProgressIndicator spinner = new ProgressIndicator();
+        spinner.setPrefSize(60, 60);
+        spinner.setStyle("-fx-progress-color: #8B0000;");
+        Label lbl = new Label("Loading...");
+        lbl.setStyle("-fx-text-fill: #333333; -fx-font-size: 14px; -fx-font-family: 'Segoe UI';");
+        box.getChildren().addAll(spinner, lbl);
+        root.getChildren().add(box);
+        return root;
+    }
 
     private void goTo(String fxml, String title) {
-        try { FXMLLoader loader=new FXMLLoader(getClass().getResource(fxml));Parent root=loader.load();Stage stage=(Stage)tableEmployees.getScene().getWindow();double w=stage.getWidth(),h=stage.getHeight();stage.setTitle(title);stage.setScene(new Scene(root));stage.setWidth(w);stage.setHeight(h); } catch (IOException e) { showError("Screen not available:\n"+e.getMessage()); }
+        Stage stage = (Stage) tableEmployees.getScene().getWindow();
+        Parent currentRoot = tableEmployees.getScene().getRoot();
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(200), currentRoot);
+        fadeOut.setFromValue(1.0);
+        fadeOut.setToValue(0.0);
+        fadeOut.setOnFinished(ev -> {
+            double w = stage.getWidth(), h = stage.getHeight();
+            boolean wasFullscreen = stage.isFullScreen();
+            boolean wasMaximized  = stage.isMaximized();
+            Scene loadScene = new Scene(createLoadingPane(), w, h);
+            loadScene.setFill(Color.web("#0f0505"));
+            stage.setScene(loadScene);
+            stage.setWidth(w); stage.setHeight(h);
+            if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
+            else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
+            PauseTransition pause = new PauseTransition(Duration.millis(400));
+            pause.setOnFinished(pev -> {
+                try {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
+                    Parent root = loader.load();
+                    root.setOpacity(0);
+                    stage.setTitle(title);
+                    Scene navScene = new Scene(root);
+                    navScene.setFill(Color.web("#0f0505"));
+                    stage.setScene(navScene);
+                    stage.setWidth(w); stage.setHeight(h);
+                    if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
+                    else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
+                    FadeTransition fadeIn = new FadeTransition(Duration.millis(200), root);
+                    fadeIn.setFromValue(0); fadeIn.setToValue(1); fadeIn.play();
+                } catch (IOException e) { showError("Screen not available:\n" + e.getMessage()); }
+            });
+            pause.play();
+        });
+        fadeOut.play();
     }
 
     private void showError(String msg) { Alert a=new Alert(Alert.AlertType.ERROR);a.setTitle("Error");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }

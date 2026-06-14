@@ -1,0 +1,23 @@
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        // ── BUG 1 FIX: read from global SessionManager ───────────
+        main.utils.SessionManager.apply(this::initSession);
+        setupDailyColumns(); setupMonthlyColumns(); setupFilterCombo();
+        filteredDailyData = new FilteredList<>(allData, p -> true);
+        dailyTable.setItems(filteredDailyData);
+        btnDailyLogs.setStyle(TOGGLE_ACTIVE);   btnMonthlyLogs.setStyle(TOGGLE_INACTIVE);
+        btnFilterAll.setStyle(DATE_ACTIVE);      btnFilterToday.setStyle(DATE_INACTIVE);
+        btnFilterWeek.setStyle(DATE_INACTIVE);   btnFilterMonth.setStyle(DATE_INACTIVE);
+        btnFilterDate.setStyle(DATE_INACTIVE);
+
+        SkeletonLoader.show(skeletonContainer);
+        loadAllDataAsync();
+        loadMonthlyData();
+    }
+
+    public void initSession(String username, String role) {
+        this.sessionUser = username != null ? username : "Admin";
+        this.sessionRole = role     != null ? role     : "Administrator";
+        if (lblLoggedInUser != null) lblLoggedInUser.setText(this.sessionUser);
+        if (lblLoggedInRole != null) lblLoggedInRole.setText(this.sessionRole);
+    }

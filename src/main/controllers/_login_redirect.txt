@@ -1,0 +1,32 @@
+    private void redirectToDashboard(User user) {
+        // ── SET GLOBAL SESSION — persistent across ALL panels ──
+        main.utils.SessionManager.setCurrentUser(user);
+        try {
+            String fxmlPath = selectedRole.equals("admin")
+                    ? "/main/resources/fxml/AdminDashboard.fxml"
+                    : "/main/resources/fxml/StaffDashboard.fxml";
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
+
+            if (selectedRole.equals("admin")) {
+                AdminDashboardController ctrl = loader.getController();
+                ctrl.setCurrentUser(user);
+            } else {
+                StaffDashboardController ctrl = loader.getController();
+                ctrl.setCurrentUser(user);
+            }
+
+            Stage stage = (Stage) usernameField.getScene().getWindow();
+            Scene scene = new Scene(root, 1280, 720);
+            stage.setScene(scene);
+            stage.setTitle(selectedRole.equals("admin")
+                    ? "Pass Slip System - Admin Dashboard"
+                    : "Pass Slip System - Staff Dashboard");
+
+            root.setOpacity(0);
+            stage.show();
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(450), root);
+            fadeIn.setFromValue(0.0); fadeIn.setToValue(1.0); fadeIn.play();
+
+        } catch (IOException ex) { ex.printStackTrace(); showAlert(Alert.AlertType.ERROR,"Navigation Error","Could not load Dashboard."); }
+    }

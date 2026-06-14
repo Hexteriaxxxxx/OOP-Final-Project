@@ -1,0 +1,1 @@
+            new javafx.animation.FadeTransition(javafx.util.Duration.millis(250), root){{setFromValue(0);setToValue(1);}}.play();

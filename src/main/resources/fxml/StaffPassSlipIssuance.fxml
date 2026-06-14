@@ -5,7 +5,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="main.controllers.StaffPassSlipController"
-            prefWidth="1100" prefHeight="760" style="-fx-background-color: #f9fafb;">
+            prefWidth="1100" style="-fx-background-color: #f9fafb;">
     <left>
         <VBox prefWidth="160" minWidth="160" style="-fx-background-color: #8B0000;">
             <VBox style="-fx-padding: 14 12 14 12; -fx-border-color: rgba(255,255,255,0.15); -fx-border-width: 0 0 1 0;">

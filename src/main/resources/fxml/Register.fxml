@@ -3,19 +3,19 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.shape.*?>
+<?import javafx.scene.text.*?>
 <?import javafx.geometry.*?>
 
 <StackPane xmlns="http://javafx.com/javafx/21"
            xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="main.controllers.RegisterController"
-           prefWidth="1280" prefHeight="720">
+           fx:controller="main.controllers.RegisterController">
 
     <Pane style="-fx-background-color: linear-gradient(to bottom right, #6B0000, #A00000, #8B0000);"/>
 
     <ScrollPane fitToWidth="true" fitToHeight="false"
                 style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;"
-                hbarPolicy="NEVER" vbarPolicy="AS_NEEDED">
-        <VBox alignment="CENTER" spacing="0" style="-fx-min-height: 720px;">
+                hbarPolicy="NEVER" vbarPolicy="NEVER">
+        <VBox alignment="CENTER" spacing="0" style="-fx-min-height: 620px;">
 
         <VBox alignment="CENTER" spacing="8" style="-fx-padding: 20 0 16 0;">
             <StackPane>
@@ -28,9 +28,9 @@
         </VBox>
 
         <VBox alignment="CENTER" spacing="11"
-              style="-fx-background-color: white; -fx-background-radius: 16; -fx-padding: 24 36 20 36;
+              style="-fx-background-color: white; -fx-background-radius: 16; -fx-padding: 24 28 20 28;
                      -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 24, 0, 0, 6);"
-              maxWidth="360" minWidth="320">
+              maxWidth="420" minWidth="360">
 
             <HBox alignment="CENTER_LEFT">
                 <Hyperlink text="← Back to Login" onAction="#handleBackToLogin"
@@ -98,18 +98,17 @@
             </VBox>
 
             <!-- Terms and Data Privacy -->
-            <VBox spacing="4" style="-fx-background-color: #FFF9F9; -fx-background-radius: 8;
+            <HBox alignment="TOP_LEFT" spacing="6" style="-fx-background-color: #FFF9F9; -fx-background-radius: 8;
                                       -fx-border-color: #E8C0C0; -fx-border-radius: 8; -fx-border-width: 1;
                                       -fx-padding: 10 12;">
-                <HBox alignment="CENTER_LEFT" spacing="6">
-                    <CheckBox fx:id="termsCheckBox"/>
-                    <Label text="I have read and agree to the" style="-fx-font-size: 11px; -fx-text-fill: #555;"/>
+                <CheckBox fx:id="termsCheckBox"/>
+                <TextFlow HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                    <Text text="I have read and agree to the " style="-fx-font-size: 11px; -fx-fill: #555;"/>
                     <Hyperlink fx:id="lnkTerms" text="Terms and Conditions" onAction="#handleShowTerms"
                                style="-fx-font-size: 11px; -fx-text-fill: #800000; -fx-font-weight: bold; -fx-border-color: transparent; -fx-padding: 0;"/>
-                </HBox>
-                <Label text="and Data Privacy Notice (RA 10173)"
-                       style="-fx-font-size: 11px; -fx-text-fill: #555; -fx-padding: 0 0 0 22;"/>
-            </VBox>
+                    <Text text=" and Data Privacy Notice (RA 10173)" style="-fx-font-size: 11px; -fx-fill: #555;"/>
+                </TextFlow>
+            </HBox>
 
             <Button text="Create Account" onAction="#handleRegister" maxWidth="Infinity"
                     style="-fx-background-color: #800000; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;

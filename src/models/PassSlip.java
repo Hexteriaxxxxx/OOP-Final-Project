@@ -10,7 +10,7 @@ public class PassSlip {
     private String empName;
     private String department;
     private String reason;
-    private String category; // "Official Business", "Personal Reason", "Others"
+    private String category;
     private LocalDateTime timeOut;
     private LocalDateTime timeIn;
     private String duration;
@@ -33,49 +33,53 @@ public class PassSlip {
 
     public void calculateDuration() {
         if (timeOut != null && timeIn != null) {
-            Duration dur   = Duration.between(timeOut, timeIn);
-            long hours     = dur.toHours();
-            long minutes   = dur.toMinutesPart();
-            this.duration  = hours + "h " + minutes + "m";
+            Duration dur  = Duration.between(timeOut, timeIn);
+            long hours    = dur.toHours();
+            long minutes  = dur.toMinutesPart();
+            this.duration = hours + "h " + minutes + "m";
         }
     }
 
     // ── Getters & Setters ────────────────────────────────────────
-    public int    getSlipId()     { return slipId;     }
-    public void   setSlipId(int slipId)         { this.slipId     = slipId;     }
+    public int    getSlipId()     { return slipId; }
+    public void   setSlipId(int slipId)           { this.slipId     = slipId;     }
 
-    public int    getEmpId()      { return empId;      }
-    public void   setEmpId(int empId)           { this.empId      = empId;      }
+    public int    getEmpId()      { return empId; }
+    public void   setEmpId(int empId)             { this.empId      = empId;      }
 
-    public String getEmpName()    { return empName;    }
-    public void   setEmpName(String empName)    { this.empName    = empName;    }
+    public String getEmpName()    { return empName; }
+    public void   setEmpName(String empName)      { this.empName    = empName;    }
 
     public String getDepartment() { return department; }
-    public void   setDepartment(String department){ this.department = department; }
+    public void   setDepartment(String dept)      { this.department = dept;       }
 
-    public String getReason()     { return reason;     }
-    public void   setReason(String reason)      { this.reason     = reason;     }
+    public String getReason()     { return reason; }
+    public void   setReason(String reason)        { this.reason     = reason;     }
 
     public String getCategory()   { return category != null ? category : "Official Business"; }
-    public void   setCategory(String category)  { this.category   = category;   }
+    public void   setCategory(String category)    { this.category   = category;   }
 
     public LocalDateTime getTimeOut() { return timeOut; }
     public void setTimeOut(LocalDateTime timeOut) { this.timeOut = timeOut; }
 
-    public LocalDateTime getTimeIn()  { return timeIn;  }
+    public LocalDateTime getTimeIn()  { return timeIn; }
     public void setTimeIn(LocalDateTime timeIn) {
         this.timeIn = timeIn;
-        calculateDuration();
+        // BUG 5 FIX: only calculate duration when the slip is actually returned
+        // Pending/Approved slips shouldn't have a duration yet
+        if ("Returned".equals(this.status) || "Overdue".equals(this.status)) {
+            calculateDuration();
+        }
     }
 
-    public String getDuration()   { return duration;   }
-    public void   setDuration(String duration)  { this.duration   = duration;   }
+    public String getDuration()   { return duration; }
+    public void   setDuration(String duration)    { this.duration   = duration;   }
 
-    public int    getIssuedBy()   { return issuedBy;   }
-    public void   setIssuedBy(int issuedBy)     { this.issuedBy   = issuedBy;   }
+    public int    getIssuedBy()   { return issuedBy; }
+    public void   setIssuedBy(int issuedBy)       { this.issuedBy   = issuedBy;   }
 
-    public String getStatus()     { return status;     }
-    public void   setStatus(String status)      { this.status     = status;     }
+    public String getStatus()     { return status; }
+    public void   setStatus(String status)        { this.status     = status;     }
 
     public String getFormattedTimeOut() {
         return timeOut != null ? timeOut.format(FORMATTER) : "";
