@@ -13,6 +13,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import main.utils.SessionManager;
@@ -63,13 +64,11 @@ public class LoginController implements Initializable {
     // ── Initialise ─────────────────────────────────────────────────────────────
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Sync password fields (both panels)
         staffPasswordField  .textProperty().addListener((o, ov, nv) -> { if (!staffPasswordVisible.getText().equals(nv)) staffPasswordVisible.setText(nv); });
         staffPasswordVisible.textProperty().addListener((o, ov, nv) -> { if (!staffPasswordField  .getText().equals(nv)) staffPasswordField  .setText(nv); });
         adminPasswordField  .textProperty().addListener((o, ov, nv) -> { if (!adminPasswordVisible.getText().equals(nv)) adminPasswordVisible.setText(nv); });
         adminPasswordVisible.textProperty().addListener((o, ov, nv) -> { if (!adminPasswordField  .getText().equals(nv)) adminPasswordField  .setText(nv); });
 
-        // Entrance animation
         if (rootPane != null) {
             rootPane.setOpacity(0);
             rootPane.setTranslateY(22);
@@ -88,33 +87,23 @@ public class LoginController implements Initializable {
     // ── Panel switch: Staff → Admin ────────────────────────────────────────────
     private void switchToAdmin() {
         switching = true;
-
-        // 1. Fade out staff form (160ms)
         FadeTransition fadeOutForm = new FadeTransition(Duration.millis(160), staffFormWrapper);
         fadeOutForm.setToValue(0);
         fadeOutForm.setOnFinished(e -> {
-            // 2. Swap staff panel state
             staffFormWrapper.setVisible(false); staffFormWrapper.setManaged(false);
             staffInactiveMsg.setVisible(true);  staffInactiveMsg.setManaged(true);
             staffInactiveMsg.setOpacity(0);
             staffPanel.setStyle(PANEL_INACTIVE + " -fx-cursor: hand;");
-
-            // 3. Swap admin panel state
             adminPanel.setStyle(PANEL_ACTIVE + " -fx-cursor: default;");
             adminInactiveMsg.setVisible(false); adminInactiveMsg.setManaged(false);
             adminFormWrapper.setVisible(true);  adminFormWrapper.setManaged(true);
             adminFormWrapper.setOpacity(0);
             adminFormWrapper.setTranslateY(22);
-
-            // Brighten admin branding
             FadeTransition brightenBranding = new FadeTransition(Duration.millis(300), adminBranding);
             brightenBranding.setToValue(1.0);
-
-            // 4. Animate in: admin form slides up + staff hint fades in
             FadeTransition     fadeInForm = new FadeTransition(Duration.millis(300), adminFormWrapper);   fadeInForm.setToValue(1);
             TranslateTransition slideUp   = new TranslateTransition(Duration.millis(300), adminFormWrapper); slideUp.setToY(0); slideUp.setInterpolator(Interpolator.EASE_OUT);
             FadeTransition     fadeInMsg  = new FadeTransition(Duration.millis(280), staffInactiveMsg);    fadeInMsg.setToValue(1);
-
             ParallelTransition pt = new ParallelTransition(fadeInForm, slideUp, fadeInMsg, brightenBranding);
             pt.setOnFinished(ev -> { switching = false; isStaffActive = false; adminUsernameField.requestFocus(); });
             pt.play();
@@ -125,33 +114,23 @@ public class LoginController implements Initializable {
     // ── Panel switch: Admin → Staff ────────────────────────────────────────────
     private void switchToStaff() {
         switching = true;
-
-        // 1. Fade out admin form (160ms)
         FadeTransition fadeOutForm = new FadeTransition(Duration.millis(160), adminFormWrapper);
         fadeOutForm.setToValue(0);
         fadeOutForm.setOnFinished(e -> {
-            // 2. Swap admin panel state
             adminFormWrapper.setVisible(false); adminFormWrapper.setManaged(false);
             adminInactiveMsg.setVisible(true);  adminInactiveMsg.setManaged(true);
             adminInactiveMsg.setOpacity(0);
             adminPanel.setStyle(PANEL_INACTIVE + " -fx-cursor: hand;");
-
-            // Dim admin branding
             FadeTransition dimBranding = new FadeTransition(Duration.millis(300), adminBranding);
             dimBranding.setToValue(0.65);
-
-            // 3. Swap staff panel state
             staffPanel.setStyle(PANEL_ACTIVE + " -fx-cursor: default;");
             staffInactiveMsg.setVisible(false); staffInactiveMsg.setManaged(false);
             staffFormWrapper.setVisible(true);  staffFormWrapper.setManaged(true);
             staffFormWrapper.setOpacity(0);
             staffFormWrapper.setTranslateY(22);
-
-            // 4. Animate in: staff form slides up + admin hint fades in
             FadeTransition      fadeInForm = new FadeTransition(Duration.millis(300), staffFormWrapper);    fadeInForm.setToValue(1);
             TranslateTransition slideUp    = new TranslateTransition(Duration.millis(300), staffFormWrapper); slideUp.setToY(0); slideUp.setInterpolator(Interpolator.EASE_OUT);
             FadeTransition      fadeInMsg  = new FadeTransition(Duration.millis(280), adminInactiveMsg);    fadeInMsg.setToValue(1);
-
             ParallelTransition pt = new ParallelTransition(fadeInForm, slideUp, fadeInMsg, dimBranding);
             pt.setOnFinished(ev -> { switching = false; isStaffActive = true; staffUsernameField.requestFocus(); });
             pt.play();
@@ -213,7 +192,6 @@ public class LoginController implements Initializable {
         Stage stage = (Stage) rootPane.getScene().getWindow();
         boolean wasFullscreen = stage.isFullScreen();
         boolean wasMaximized  = stage.isMaximized();
-
         FadeTransition     fadeOut  = new FadeTransition(Duration.millis(200), rootPane); fadeOut.setToValue(0);
         ScaleTransition    scaleOut = new ScaleTransition(Duration.millis(200), rootPane); scaleOut.setToX(0.95); scaleOut.setToY(0.95); scaleOut.setInterpolator(Interpolator.EASE_IN);
         ParallelTransition out      = new ParallelTransition(fadeOut, scaleOut);
@@ -224,7 +202,6 @@ public class LoginController implements Initializable {
             stage.setScene(loadScene); stage.setWidth(w); stage.setHeight(h);
             if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
             else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
-
             PauseTransition pause = new PauseTransition(Duration.millis(400));
             pause.setOnFinished(pev -> {
                 try {
@@ -258,7 +235,6 @@ public class LoginController implements Initializable {
         boolean wasFullscreen = stage.isFullScreen();
         boolean wasMaximized  = stage.isMaximized();
         double  stageW = stage.getWidth(), stageH = stage.getHeight();
-
         FadeTransition     fadeOut  = new FadeTransition(Duration.millis(160), rootPane); fadeOut.setToValue(0);
         TranslateTransition slideOut = new TranslateTransition(Duration.millis(160), rootPane); slideOut.setToX(-32); slideOut.setInterpolator(Interpolator.EASE_IN);
         ParallelTransition  out      = new ParallelTransition(fadeOut, slideOut);
@@ -279,9 +255,115 @@ public class LoginController implements Initializable {
         out.play();
     }
 
-    @FXML public void handleForgotPassword(ActionEvent e) {
-        showAlert(Alert.AlertType.INFORMATION, "Forgot Password",
-                "Please contact your system administrator to reset your password.");
+    // ── Forgot Password ────────────────────────────────────────────────────────
+    @FXML
+    public void handleForgotPassword(ActionEvent e) {
+        try {
+            Stage forgotStage = new Stage();
+            forgotStage.setTitle("Forgot Password");
+            forgotStage.initOwner(rootPane.getScene().getWindow());
+            forgotStage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            forgotStage.setResizable(false);
+
+            javafx.scene.layout.VBox skeleton = buildForgotSkeleton();
+            javafx.scene.Scene skeletonScene = new javafx.scene.Scene(skeleton, 420, 380);
+            forgotStage.setScene(skeletonScene);
+            forgotStage.show();
+
+            javafx.animation.FadeTransition fadeIn =
+                    new javafx.animation.FadeTransition(javafx.util.Duration.millis(200), skeleton);
+            fadeIn.setFromValue(0); fadeIn.setToValue(1); fadeIn.play();
+
+            javafx.animation.PauseTransition pause =
+                    new javafx.animation.PauseTransition(javafx.util.Duration.millis(800));
+            pause.setOnFinished(ev -> {
+                try {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                            "/main/resources/fxml/StaffForgotPassword.fxml"));
+                    Parent root = loader.load();
+                    root.setOpacity(0);
+
+                    javafx.scene.Scene realScene = new javafx.scene.Scene(root, 420, 380);
+                    forgotStage.setScene(realScene);
+
+                    javafx.animation.FadeTransition fadeInReal =
+                            new javafx.animation.FadeTransition(javafx.util.Duration.millis(300), root);
+                    fadeInReal.setFromValue(0); fadeInReal.setToValue(1); fadeInReal.play();
+
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                    forgotStage.close();
+                    showAlert(Alert.AlertType.ERROR, "Error", "Could not load Forgot Password screen.");
+                }
+            });
+            pause.play();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "Could not load Forgot Password screen.");
+        }
+    }
+
+    // ── Skeleton loader for Forgot Password ────────────────────────────────────
+    private javafx.scene.layout.VBox buildForgotSkeleton() {
+        javafx.scene.layout.VBox box = new javafx.scene.layout.VBox(14);
+        box.setAlignment(javafx.geometry.Pos.CENTER);
+        box.setStyle("-fx-background-color: #ffffff; -fx-background-radius: 16; " +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 20, 0, 0, 6);");
+        box.setPrefWidth(420); box.setPrefHeight(380);
+        box.setPadding(new javafx.geometry.Insets(30));
+
+        javafx.scene.layout.StackPane iconPill = new javafx.scene.layout.StackPane();
+        iconPill.setPrefHeight(65); iconPill.setMaxWidth(Double.MAX_VALUE);
+        iconPill.setStyle("-fx-background-color: #f0f0f0; -fx-background-radius: 35;");
+        addLoginSkeletonShimmer(iconPill);
+
+        javafx.scene.layout.StackPane titleBar = new javafx.scene.layout.StackPane();
+        titleBar.setPrefHeight(22); titleBar.setPrefWidth(160); titleBar.setMaxWidth(160);
+        titleBar.setStyle("-fx-background-color: #f0f0f0; -fx-background-radius: 6;");
+        addLoginSkeletonShimmer(titleBar);
+        javafx.scene.layout.HBox titleBox = new javafx.scene.layout.HBox(titleBar);
+        titleBox.setAlignment(javafx.geometry.Pos.CENTER);
+
+        javafx.scene.layout.StackPane subBar = new javafx.scene.layout.StackPane();
+        subBar.setPrefHeight(14); subBar.setMaxWidth(Double.MAX_VALUE);
+        subBar.setStyle("-fx-background-color: #f0f0f0; -fx-background-radius: 6;");
+        addLoginSkeletonShimmer(subBar);
+
+        javafx.scene.layout.StackPane labelBar = new javafx.scene.layout.StackPane();
+        labelBar.setPrefHeight(14); labelBar.setPrefWidth(100); labelBar.setMaxWidth(100);
+        labelBar.setStyle("-fx-background-color: #f0f0f0; -fx-background-radius: 4;");
+        addLoginSkeletonShimmer(labelBar);
+
+        javafx.scene.layout.StackPane inputBar = new javafx.scene.layout.StackPane();
+        inputBar.setPrefHeight(38); inputBar.setMaxWidth(Double.MAX_VALUE);
+        inputBar.setStyle("-fx-background-color: #f0f0f0; -fx-background-radius: 8;");
+        addLoginSkeletonShimmer(inputBar);
+
+        javafx.scene.layout.VBox inputGroup = new javafx.scene.layout.VBox(5, labelBar, inputBar);
+
+        javafx.scene.layout.StackPane btn1 = new javafx.scene.layout.StackPane();
+        btn1.setPrefHeight(38); btn1.setMaxWidth(Double.MAX_VALUE);
+        btn1.setStyle("-fx-background-color: #e8c0c0; -fx-background-radius: 25;");
+        addLoginSkeletonShimmer(btn1);
+
+        javafx.scene.layout.StackPane btn2 = new javafx.scene.layout.StackPane();
+        btn2.setPrefHeight(38); btn2.setMaxWidth(Double.MAX_VALUE);
+        btn2.setStyle("-fx-background-color: #f0f0f0; -fx-background-radius: 25;");
+        addLoginSkeletonShimmer(btn2);
+
+        javafx.scene.layout.VBox btnBox = new javafx.scene.layout.VBox(8, btn1, btn2);
+        box.getChildren().addAll(iconPill, titleBox, subBar, inputGroup, btnBox);
+        return box;
+    }
+
+    private void addLoginSkeletonShimmer(javafx.scene.layout.StackPane pane) {
+        javafx.animation.FadeTransition shimmer =
+                new javafx.animation.FadeTransition(javafx.util.Duration.millis(700), pane);
+        shimmer.setFromValue(1.0); shimmer.setToValue(0.4);
+        shimmer.setAutoReverse(true);
+        shimmer.setCycleCount(javafx.animation.FadeTransition.INDEFINITE);
+        shimmer.play();
     }
 
     // ── Loading pane ───────────────────────────────────────────────────────────
@@ -316,7 +398,6 @@ public class LoginController implements Initializable {
             String pw   = p.getProperty("password", "");
             String role = p.getProperty("role", "staff");
             if (role.equals("admin")) {
-                // Switch directly to admin without animation
                 isStaffActive = false;
                 staffFormWrapper.setVisible(false); staffFormWrapper.setManaged(false);
                 staffInactiveMsg.setVisible(true);  staffInactiveMsg.setManaged(true);
@@ -337,4 +418,5 @@ public class LoginController implements Initializable {
     private void showAlert(Alert.AlertType type, String title, String msg) {
         Alert a = new Alert(type); a.setTitle(title); a.setHeaderText(null); a.setContentText(msg); a.showAndWait();
     }
-}
+
+} // ← DITO LANG NAGTATAPOS ANG CLASS
