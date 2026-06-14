@@ -4,104 +4,223 @@
 <?import javafx.scene.shape.*?>
 <?import javafx.geometry.*?>
 
-<StackPane xmlns="http://javafx.com/javafx/21"
-           xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="main.controllers.LoginController"
-           fx:id="rootPane"
-           prefWidth="1280">
+<HBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="main.controllers.LoginController"
+      fx:id="rootPane">
 
-    <Pane style="-fx-background-color: linear-gradient(to bottom right, #600000, #900000, #800000);"/>
+    <!-- ═══════════════════ STAFF PANEL (LEFT) ═══════════════════ -->
+    <StackPane fx:id="staffPanel" HBox.hgrow="ALWAYS"
+               style="-fx-background-color: linear-gradient(to bottom right, #7a0000, #8B0000, #960000);"
+               onMouseClicked="#handleStaffPanelClick">
 
-    <VBox alignment="CENTER" spacing="0">
+        <!-- Decorative background circles -->
+        <Circle radius="220" fill="white" opacity="0.035" translateX="-170" translateY="-150" StackPane.alignment="CENTER"/>
+        <Circle radius="130" fill="white" opacity="0.04"  translateX="160"  translateY="130"  StackPane.alignment="CENTER"/>
+        <Circle radius="70"  fill="white" opacity="0.055" translateX="-60"  translateY="180"  StackPane.alignment="CENTER"/>
+        <Circle radius="40"  fill="white" opacity="0.07"  translateX="120"  translateY="-120" StackPane.alignment="CENTER"/>
 
-        <VBox alignment="CENTER" spacing="8" style="-fx-padding: 0 0 20 0;">
-            <StackPane>
-                <Circle radius="36" fill="white" opacity="0.15"/>
-                <Circle radius="32" fill="white"/>
-                <Label text="🛡" style="-fx-font-size: 28px;"/>
-            </StackPane>
-            <Label text="Pass Slip Issuance"
-                   style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: white;"/>
-            <Label text="Secure Login Portal"
-                   style="-fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.75);"/>
-        </VBox>
+        <VBox alignment="CENTER" spacing="24" style="-fx-padding: 36 52 28 52;">
 
-        <VBox fx:id="loginCard" alignment="CENTER" spacing="16"
-              style="-fx-background-color: white; -fx-background-radius: 16;
-                     -fx-padding: 32 40 28 40;
-                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 24, 0, 0, 6);"
-              maxWidth="340" minWidth="320">
-
-            <HBox alignment="CENTER" spacing="0"
-                  style="-fx-background-color: #f0f0f0; -fx-background-radius: 8; -fx-padding: 4;">
-                <Button fx:id="staffTab" text="Staff" onAction="#handleStaffTab"
-                        style="-fx-background-color: #8B0000; -fx-text-fill: white; -fx-font-weight: bold;
-                               -fx-font-size: 13px; -fx-background-radius: 6; -fx-padding: 8 36;"
-                        maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
-                <Button fx:id="adminTab" text="Admin" onAction="#handleAdminTab"
-                        style="-fx-background-color: transparent; -fx-text-fill: #888;
-                               -fx-font-size: 13px; -fx-background-radius: 6; -fx-padding: 8 36;"
-                        maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
-            </HBox>
-
-            <VBox spacing="5">
-                <Label text="Username" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #333;"/>
-                <TextField fx:id="usernameField" promptText="Enter your username" onAction="#handleLogin"
-                           style="-fx-background-color: #f9f9f9; -fx-border-color: #ddd;
-                                  -fx-border-radius: 8; -fx-background-radius: 8;
-                                  -fx-padding: 10 12; -fx-font-size: 13px;"/>
+            <!-- Branding -->
+            <VBox alignment="CENTER" spacing="9">
+                <StackPane alignment="CENTER" prefWidth="84" prefHeight="84">
+                    <Circle radius="40" fill="white" opacity="0.15"/>
+                    <Circle radius="34" fill="white"/>
+                    <Label text="🛡" style="-fx-font-size: 26px;"/>
+                </StackPane>
+                <Label text="Pass Slip Issuance"
+                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+                <Label text="Staff Portal  ·  Employee Access"
+                       style="-fx-font-size: 11.5px; -fx-text-fill: rgba(255,255,255,0.65);"/>
             </VBox>
 
-            <VBox spacing="5">
-                <Label text="Password" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #333;"/>
-                <StackPane>
-                    <PasswordField fx:id="passwordField" promptText="Enter your password" onAction="#handleLogin"
-                                   style="-fx-background-color: #f9f9f9; -fx-border-color: #ddd;
-                                          -fx-border-radius: 8; -fx-background-radius: 8;
-                                          -fx-padding: 10 40 10 12; -fx-font-size: 13px;"/>
-                    <TextField fx:id="passwordVisible" promptText="Enter your password" onAction="#handleLogin"
+            <!-- ── Staff login form (shown when active) ── -->
+            <VBox fx:id="staffFormWrapper" spacing="11"
+                  style="-fx-background-color: white; -fx-background-radius: 14;
+                         -fx-padding: 22 26 18 26;
+                         -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.38), 22, 0, 0, 6);"
+                  maxWidth="340" minWidth="300">
+
+                <Label text="Welcome Back!"
+                       style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #1a1a1a;"/>
+                <Label text="Sign in to your staff account"
+                       style="-fx-font-size: 11px; -fx-text-fill: #999; -fx-padding: 0 0 3 0;"/>
+
+                <VBox spacing="4">
+                    <Label text="Username"
+                           style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #333;"/>
+                    <TextField fx:id="staffUsernameField" promptText="Enter your username"
+                               onAction="#handleStaffLogin"
                                style="-fx-background-color: #f9f9f9; -fx-border-color: #ddd;
                                       -fx-border-radius: 8; -fx-background-radius: 8;
-                                      -fx-padding: 10 40 10 12; -fx-font-size: 13px;"
-                               visible="false" managed="false"/>
-                    <Button fx:id="btnTogglePassword" text="👁" onAction="#handleTogglePassword"
-                            style="-fx-background-color: transparent; -fx-border-width: 0;
-                                   -fx-font-size: 15px; -fx-cursor: hand; -fx-padding: 0;"
-                            StackPane.alignment="CENTER_RIGHT">
-                        <StackPane.margin><Insets right="10"/></StackPane.margin>
-                    </Button>
-                </StackPane>
+                                      -fx-padding: 9 12; -fx-font-size: 12px;"/>
+                </VBox>
+
+                <VBox spacing="4">
+                    <Label text="Password"
+                           style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #333;"/>
+                    <StackPane>
+                        <PasswordField fx:id="staffPasswordField" promptText="Enter your password"
+                                       onAction="#handleStaffLogin"
+                                       style="-fx-background-color: #f9f9f9; -fx-border-color: #ddd;
+                                              -fx-border-radius: 8; -fx-background-radius: 8;
+                                              -fx-padding: 9 38 9 12; -fx-font-size: 12px;"/>
+                        <TextField fx:id="staffPasswordVisible" promptText="Enter your password"
+                                   onAction="#handleStaffLogin" visible="false" managed="false"
+                                   style="-fx-background-color: #f9f9f9; -fx-border-color: #ddd;
+                                          -fx-border-radius: 8; -fx-background-radius: 8;
+                                          -fx-padding: 9 38 9 12; -fx-font-size: 12px;"/>
+                        <Button fx:id="staffBtnToggle" text="👁" onAction="#handleStaffTogglePassword"
+                                style="-fx-background-color: transparent; -fx-border-width: 0;
+                                       -fx-cursor: hand; -fx-font-size: 13px; -fx-padding: 0 10 0 0;"
+                                StackPane.alignment="CENTER_RIGHT"/>
+                    </StackPane>
+                </VBox>
+
+                <HBox alignment="CENTER_LEFT">
+                    <CheckBox fx:id="staffRememberMe" text="Remember me"
+                              style="-fx-font-size: 11px; -fx-text-fill: #555;" HBox.hgrow="ALWAYS"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Hyperlink text="Forgot Password?" onAction="#handleForgotPassword"
+                               style="-fx-font-size: 11px; -fx-text-fill: #8B0000;
+                                      -fx-font-weight: bold; -fx-border-color: transparent; -fx-padding: 0;"/>
+                </HBox>
+
+                <Button text="Sign In" onAction="#handleStaffLogin" maxWidth="Infinity"
+                        style="-fx-background-color: #8B0000; -fx-text-fill: white;
+                               -fx-font-size: 13px; -fx-font-weight: bold;
+                               -fx-background-radius: 8; -fx-padding: 11; -fx-cursor: hand;"/>
+
+                <HBox alignment="CENTER" spacing="4">
+                    <Label text="Don't have an account?"
+                           style="-fx-font-size: 11px; -fx-text-fill: #666;"/>
+                    <Hyperlink text="Sign Up" onAction="#handleSignUp"
+                               style="-fx-font-size: 11px; -fx-text-fill: #8B0000;
+                                      -fx-font-weight: bold; -fx-border-color: transparent;"/>
+                </HBox>
             </VBox>
 
-            <HBox alignment="CENTER_LEFT">
-                <CheckBox fx:id="rememberMe" text="Remember me"
-                          style="-fx-font-size: 12px; -fx-text-fill: #555;" HBox.hgrow="ALWAYS"/>
-                <Region HBox.hgrow="ALWAYS"/>
-                <Hyperlink text="Forgot Password?" onAction="#handleForgotPassword"
-                           style="-fx-font-size: 12px; -fx-text-fill: #8B0000; -fx-font-weight: bold; -fx-border-color: transparent; -fx-padding: 0;"
-                           HBox.hgrow="NEVER"/>
-            </HBox>
+            <!-- ── Inactive hint (shown when admin is active) ── -->
+            <VBox fx:id="staffInactiveMsg" alignment="CENTER" spacing="9"
+                  visible="false" managed="false">
+                <Label text="← Staff Portal"
+                       style="-fx-font-size: 16px; -fx-font-weight: bold;
+                              -fx-text-fill: rgba(255,255,255,0.8); -fx-cursor: hand;"/>
+                <Label text="Click to sign in as Staff"
+                       style="-fx-font-size: 11.5px; -fx-text-fill: rgba(255,255,255,0.45);"/>
+            </VBox>
 
-            <Button text="Sign In" onAction="#handleLogin" maxWidth="Infinity"
-                    style="-fx-background-color: #8B0000; -fx-text-fill: white;
-                           -fx-font-size: 14px; -fx-font-weight: bold;
-                           -fx-background-radius: 8; -fx-padding: 12; -fx-cursor: hand;"/>
-
-            <HBox alignment="CENTER" spacing="4">
-                <Label text="Don't have an account?" style="-fx-font-size: 12px; -fx-text-fill: #666;"/>
-                <Hyperlink text="Sign Up" onAction="#handleSignUp"
-                           style="-fx-font-size: 12px; -fx-text-fill: #8B0000;
-                                  -fx-font-weight: bold; -fx-border-color: transparent;"/>
-            </HBox>
-
-            <Label fx:id="lblPortalType" text="Staff Portal"
-                   style="-fx-font-size: 11px; -fx-text-fill: #aaa;"
-                   alignment="CENTER" maxWidth="Infinity"/>
-
+            <Label text="© 2026 PUP Santa Rosa Campus. All rights reserved."
+                   style="-fx-font-size: 10px; -fx-text-fill: rgba(255,255,255,0.38);"/>
         </VBox>
+    </StackPane>
 
-        <Label text="© 2026 Pass Slip Issuance System. All rights reserved."
-               style="-fx-font-size: 11px; -fx-text-fill: rgba(255,255,255,0.6); -fx-padding: 20 0 0 0;"/>
+    <!-- ═══════════════════ ADMIN PANEL (RIGHT) ═══════════════════ -->
+    <StackPane fx:id="adminPanel" HBox.hgrow="ALWAYS"
+               style="-fx-background-color: linear-gradient(to bottom right, #3d0000, #540000, #4a0000); -fx-cursor: hand;"
+               onMouseClicked="#handleAdminPanelClick">
 
-    </VBox>
-</StackPane>
+        <!-- Decorative background circles -->
+        <Circle radius="220" fill="white" opacity="0.035" translateX="170"  translateY="-130" StackPane.alignment="CENTER"/>
+        <Circle radius="130" fill="white" opacity="0.04"  translateX="-150" translateY="140"  StackPane.alignment="CENTER"/>
+        <Circle radius="70"  fill="white" opacity="0.055" translateX="80"   translateY="170"  StackPane.alignment="CENTER"/>
+        <Circle radius="40"  fill="white" opacity="0.07"  translateX="-110" translateY="-120" StackPane.alignment="CENTER"/>
+
+        <VBox alignment="CENTER" spacing="24" style="-fx-padding: 36 52 28 52;">
+
+            <!-- Branding (dimmed when inactive) -->
+            <VBox fx:id="adminBranding" alignment="CENTER" spacing="9" opacity="0.65">
+                <StackPane alignment="CENTER" prefWidth="84" prefHeight="84">
+                    <Circle radius="40" fill="white" opacity="0.12"/>
+                    <Circle radius="34" fill="white" opacity="0.65"/>
+                    <Label text="🛡" style="-fx-font-size: 26px; -fx-opacity: 0.7;"/>
+                </StackPane>
+                <Label text="Pass Slip Issuance"
+                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: rgba(255,255,255,0.85);"/>
+                <Label text="Admin Portal  ·  Administrator Access"
+                       style="-fx-font-size: 11.5px; -fx-text-fill: rgba(255,255,255,0.45);"/>
+            </VBox>
+
+            <!-- ── Inactive hint (shown when staff is active) ── -->
+            <VBox fx:id="adminInactiveMsg" alignment="CENTER" spacing="9">
+                <Label text="Admin Portal →"
+                       style="-fx-font-size: 16px; -fx-font-weight: bold;
+                              -fx-text-fill: rgba(255,255,255,0.65); -fx-cursor: hand;"/>
+                <Label text="Click to sign in as Admin"
+                       style="-fx-font-size: 11.5px; -fx-text-fill: rgba(255,255,255,0.38);"/>
+            </VBox>
+
+            <!-- ── Admin login form (shown when admin is active) ── -->
+            <VBox fx:id="adminFormWrapper" spacing="11"
+                  visible="false" managed="false"
+                  style="-fx-background-color: white; -fx-background-radius: 14;
+                         -fx-padding: 22 26 18 26;
+                         -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.38), 22, 0, 0, 6);"
+                  maxWidth="340" minWidth="300">
+
+                <Label text="Admin Access"
+                       style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #1a1a1a;"/>
+                <Label text="Sign in to Administrator Portal"
+                       style="-fx-font-size: 11px; -fx-text-fill: #999; -fx-padding: 0 0 3 0;"/>
+
+                <VBox spacing="4">
+                    <Label text="Username"
+                           style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #333;"/>
+                    <TextField fx:id="adminUsernameField" promptText="Enter admin username"
+                               onAction="#handleAdminLogin"
+                               style="-fx-background-color: #f9f9f9; -fx-border-color: #ddd;
+                                      -fx-border-radius: 8; -fx-background-radius: 8;
+                                      -fx-padding: 9 12; -fx-font-size: 12px;"/>
+                </VBox>
+
+                <VBox spacing="4">
+                    <Label text="Password"
+                           style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #333;"/>
+                    <StackPane>
+                        <PasswordField fx:id="adminPasswordField" promptText="Enter admin password"
+                                       onAction="#handleAdminLogin"
+                                       style="-fx-background-color: #f9f9f9; -fx-border-color: #ddd;
+                                              -fx-border-radius: 8; -fx-background-radius: 8;
+                                              -fx-padding: 9 38 9 12; -fx-font-size: 12px;"/>
+                        <TextField fx:id="adminPasswordVisible" promptText="Enter admin password"
+                                   onAction="#handleAdminLogin" visible="false" managed="false"
+                                   style="-fx-background-color: #f9f9f9; -fx-border-color: #ddd;
+                                          -fx-border-radius: 8; -fx-background-radius: 8;
+                                          -fx-padding: 9 38 9 12; -fx-font-size: 12px;"/>
+                        <Button fx:id="adminBtnToggle" text="👁" onAction="#handleAdminTogglePassword"
+                                style="-fx-background-color: transparent; -fx-border-width: 0;
+                                       -fx-cursor: hand; -fx-font-size: 13px; -fx-padding: 0 10 0 0;"
+                                StackPane.alignment="CENTER_RIGHT"/>
+                    </StackPane>
+                </VBox>
+
+                <HBox alignment="CENTER_LEFT">
+                    <CheckBox fx:id="adminRememberMe" text="Remember me"
+                              style="-fx-font-size: 11px; -fx-text-fill: #555;" HBox.hgrow="ALWAYS"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Hyperlink text="Forgot Password?" onAction="#handleForgotPassword"
+                               style="-fx-font-size: 11px; -fx-text-fill: #8B0000;
+                                      -fx-font-weight: bold; -fx-border-color: transparent; -fx-padding: 0;"/>
+                </HBox>
+
+                <Button text="Sign In" onAction="#handleAdminLogin" maxWidth="Infinity"
+                        style="-fx-background-color: #8B0000; -fx-text-fill: white;
+                               -fx-font-size: 13px; -fx-font-weight: bold;
+                               -fx-background-radius: 8; -fx-padding: 11; -fx-cursor: hand;"/>
+
+                <HBox alignment="CENTER" spacing="4">
+                    <Label text="Don't have an account?"
+                           style="-fx-font-size: 11px; -fx-text-fill: #666;"/>
+                    <Hyperlink text="Sign Up" onAction="#handleSignUp"
+                               style="-fx-font-size: 11px; -fx-text-fill: #8B0000;
+                                      -fx-font-weight: bold; -fx-border-color: transparent;"/>
+                </HBox>
+            </VBox>
+
+            <Label text="© 2026 PUP Santa Rosa Campus. All rights reserved."
+                   style="-fx-font-size: 10px; -fx-text-fill: rgba(255,255,255,0.38);"/>
+        </VBox>
+    </StackPane>
+
+</HBox>

@@ -117,24 +117,26 @@ public class RegisterController implements Initializable {
     @FXML public void handleShowTerms(ActionEvent e) { showTermsDialog(); }
 
     private void showTermsDialog() {
+        Stage owner = (Stage) fullNameField.getScene().getWindow();
+
         Stage dialog = new Stage();
+        dialog.initOwner(owner);
         dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.initStyle(StageStyle.TRANSPARENT); // ← TRANSPARENT removes OS border entirely
+        dialog.initStyle(StageStyle.TRANSPARENT);
 
         VBox root = new VBox(0);
         root.setStyle("-fx-background-color: white; -fx-background-radius: 12; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 20, 0, 0, 4);");
         root.setPrefWidth(560);
+        root.setOpacity(0);
+        root.setTranslateY(30); // start below for ease-up entrance
 
-        // ── Clip to rounded corners — no white residue bleeding out ──
         Rectangle clip = new Rectangle();
-        clip.setArcWidth(24);
-        clip.setArcHeight(24);
-        clip.widthProperty() .bind(root.widthProperty());
+        clip.setArcWidth(24); clip.setArcHeight(24);
+        clip.widthProperty().bind(root.widthProperty());
         clip.heightProperty().bind(root.heightProperty());
         root.setClip(clip);
 
-        // Header — no background-radius needed since clip handles it
         VBox header = new VBox(4);
         header.setPadding(new Insets(18, 20, 14, 20));
         header.setStyle("-fx-background-color: #8B0000;");
@@ -154,24 +156,54 @@ public class RegisterController implements Initializable {
         footer.setPadding(new Insets(12, 20, 16, 20));
         footer.setStyle("-fx-border-color: #e8e8e8; -fx-border-width: 1 0 0 0;");
 
-        Button btnClose = new Button("Close");
+        Button btnClose = new Button("I Agree");
         btnClose.setStyle("-fx-background-color: #8B0000; -fx-text-fill: white; " +
                 "-fx-font-size: 12px; -fx-padding: 8 24; -fx-background-radius: 20; " +
                 "-fx-border-width: 0; -fx-cursor: hand;");
-        btnClose.setOnAction(ev -> { termsCheckBox.setSelected(true); dialog.close(); });
 
         Button btnDecline = new Button("Decline");
         btnDecline.setStyle("-fx-background-color: white; -fx-text-fill: #555; " +
                 "-fx-font-size: 12px; -fx-padding: 8 24; -fx-background-radius: 20; " +
                 "-fx-border-color: #ccc; -fx-border-radius: 20; -fx-cursor: hand;");
-        btnDecline.setOnAction(ev -> { termsCheckBox.setSelected(false); dialog.close(); });
 
         footer.getChildren().addAll(btnDecline, btnClose);
         root.getChildren().addAll(header, txtContent, footer);
 
+        // ── Ease-down close animation ──
+        TranslateTransition slideDown = new TranslateTransition(Duration.millis(200), root);
+        slideDown.setToY(30);
+        slideDown.setInterpolator(Interpolator.EASE_IN);
+        FadeTransition fadeClose = new FadeTransition(Duration.millis(200), root);
+        fadeClose.setToValue(0);
+        ParallelTransition closeAnim = new ParallelTransition(slideDown, fadeClose);
+
+        btnClose.setOnAction(ev -> {
+            btnClose.setDisable(true); btnDecline.setDisable(true);
+            closeAnim.setOnFinished(e -> { termsCheckBox.setSelected(true);  dialog.close(); });
+            closeAnim.play();
+        });
+        btnDecline.setOnAction(ev -> {
+            btnClose.setDisable(true); btnDecline.setDisable(true);
+            closeAnim.setOnFinished(e -> { termsCheckBox.setSelected(false); dialog.close(); });
+            closeAnim.play();
+        });
+
         Scene scene = new Scene(root);
         scene.setFill(Color.TRANSPARENT);
         dialog.setScene(scene);
+
+        // ── Ease-up open animation + center on owner ──
+        dialog.setOnShown(e -> {
+            dialog.setX(owner.getX() + (owner.getWidth()  - dialog.getWidth())  / 2);
+            dialog.setY(owner.getY() + (owner.getHeight() - dialog.getHeight()) / 2);
+            TranslateTransition slideUp = new TranslateTransition(Duration.millis(280), root);
+            slideUp.setToY(0);
+            slideUp.setInterpolator(Interpolator.EASE_OUT);
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(280), root);
+            fadeIn.setToValue(1);
+            new ParallelTransition(slideUp, fadeIn).play();
+        });
+
         dialog.showAndWait();
     }
 
