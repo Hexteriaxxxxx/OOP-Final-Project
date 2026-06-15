@@ -1,6 +1,7 @@
 package main.controllers;
 
 import dao.UserDAO;
+import models.User;
 import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -13,11 +14,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import main.utils.SessionManager;
-import models.User;
 
 import java.io.*;
 import java.net.URL;

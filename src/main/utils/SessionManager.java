@@ -37,7 +37,6 @@ public class SessionManager {
         if (currentUser == null) return "Administrator";
         String role = currentUser.getRole();
         if (role == null) return "Administrator";
-        // Normalize to display-friendly label
         return switch (role.toLowerCase()) {
             case "admin" -> "Administrator";
             case "staff" -> "Staff";
@@ -50,11 +49,6 @@ public class SessionManager {
         return Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase();
     }
 
-    /**
-     * Convenience: calls callback(username, role) with current session.
-     * Use in controller initialize():
-     *   SessionManager.apply(this::initSession);
-     */
     public static void apply(BiConsumer<String, String> initSession) {
         if (initSession != null) {
             initSession.accept(getUsername(), getRole());

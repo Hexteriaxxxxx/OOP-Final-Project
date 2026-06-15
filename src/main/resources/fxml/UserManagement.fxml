@@ -35,6 +35,8 @@
             </HBox>
             <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-background: white;">
                 <VBox style="-fx-padding: 16; -fx-spacing: 14; -fx-background-color: white;">
+
+                    <!-- Stats Cards -->
                     <HBox spacing="12">
                         <HBox HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #f0f0f0; -fx-border-radius: 12; -fx-border-width: 1.5; -fx-padding: 14 16; -fx-alignment: CENTER_LEFT;">
                             <VBox HBox.hgrow="ALWAYS" spacing="4"><Label text="Total Employees" style="-fx-font-size: 11px; -fx-text-fill: #6b7280;"/><Label fx:id="lblTotal" text="0" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #8B0000;"/></VBox>
@@ -53,6 +55,8 @@
                             <VBox alignment="CENTER" minWidth="38" minHeight="38" style="-fx-background-color: #fef9e7; -fx-background-radius: 20;"><Label text="🛡" style="-fx-font-size: 18px;"/></VBox>
                         </HBox>
                     </HBox>
+
+                    <!-- Employee Records -->
                     <VBox spacing="10" style="-fx-background-color: #f8f8f8; -fx-background-radius: 10; -fx-padding: 14; -fx-border-color: #ececec; -fx-border-radius: 10; -fx-border-width: 1;">
                         <HBox alignment="CENTER_LEFT" spacing="10">
                             <Label text="Employee Records" HBox.hgrow="ALWAYS" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1a1a1a;"/>
@@ -62,7 +66,6 @@
                             <TextField fx:id="tfSearch" promptText="🔍  Search by ID, name, department, or position..." HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-border-color: #ddd; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 7 12; -fx-font-size: 12.5px;"/>
                             <ComboBox fx:id="cbFilter" promptText="All Departments" style="-fx-background-radius: 20; -fx-border-color: #ddd; -fx-background-color: white; -fx-font-size: 12.5px; -fx-pref-width: 160px;"/>
                         </HBox>
-                        <!-- StackPane for skeleton overlay -->
                         <StackPane fx:id="skeletonContainer" VBox.vgrow="ALWAYS" prefHeight="350">
                             <TableView fx:id="tableEmployees" maxHeight="1.7976931348623157E308"
                                        style="-fx-background-color: white; -fx-border-color: #e8e8e8;">
@@ -78,6 +81,29 @@
                             </TableView>
                         </StackPane>
                     </VBox>
+
+                    <!-- Account Approvals -->
+                    <VBox spacing="10" style="-fx-background-color: #f8f8f8; -fx-background-radius: 10; -fx-padding: 14; -fx-border-color: #ececec; -fx-border-radius: 10; -fx-border-width: 1;">
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Label text="Account Approvals" HBox.hgrow="ALWAYS" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1a1a1a;"/>
+                            <Label fx:id="lblPendingCount" text="0 pending" style="-fx-font-size: 11px; -fx-text-fill: #8B0000; -fx-font-weight: bold; -fx-background-color: #fce8e8; -fx-background-radius: 10; -fx-padding: 2 8;"/>
+                        </HBox>
+                        <TableView fx:id="tableApprovals" prefHeight="200"
+                                   style="-fx-background-color: white; -fx-border-color: #e8e8e8;">
+                            <columns>
+                                <TableColumn fx:id="colApprovalId"       text="User ID"   prefWidth="70"/>
+                                <TableColumn fx:id="colApprovalName"     text="Full Name" prefWidth="140"/>
+                                <TableColumn fx:id="colApprovalEmail"    text="Email"     prefWidth="180"/>
+                                <TableColumn fx:id="colApprovalUsername" text="Username"  prefWidth="110"/>
+                                <TableColumn fx:id="colApprovalRole"     text="Role"      prefWidth="90"/>
+                                <TableColumn fx:id="colApprovalStatus"   text="Status"    prefWidth="90"/>
+                                <TableColumn fx:id="colApprovalActions"  text="Actions"   prefWidth="160"/>
+                            </columns>
+                            <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
+                            <placeholder><Label text="No accounts found." style="-fx-text-fill: #aaa;"/></placeholder>
+                        </TableView>
+                    </VBox>
+
                 </VBox>
             </ScrollPane>
         </VBox>

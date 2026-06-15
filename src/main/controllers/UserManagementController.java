@@ -2,6 +2,7 @@ package main.controllers;
 
 import dao.DepartmentDAO;
 import dao.EmployeeDAO;
+import dao.UserDAO;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
@@ -28,6 +29,7 @@ import javafx.util.Duration;
 import main.utils.SessionManager;
 import main.utils.SkeletonLoader;
 import models.Employee;
+import models.User;
 
 import java.io.IOException;
 import java.net.URL;
@@ -37,6 +39,7 @@ import java.util.ResourceBundle;
 
 public class UserManagementController implements Initializable {
 
+    // ── Existing fields ──────────────────────────────────────────
     @FXML private Label lblTotal, lblActive, lblInactive, lblAdmins;
     @FXML private Label lblSidebarUser, lblSidebarRole;
     @FXML private TextField tfSearch;
@@ -48,20 +51,37 @@ public class UserManagementController implements Initializable {
     @FXML private TableColumn<Employee, Void>    colActions;
     @FXML private Button btnNotification;
 
+    // ── Account Approval fields ──────────────────────────────────
+    @FXML private TableView<User>            tableApprovals;
+    @FXML private TableColumn<User, Integer> colApprovalId;
+    @FXML private TableColumn<User, String>  colApprovalName, colApprovalEmail, colApprovalUsername, colApprovalRole, colApprovalStatus;
+    @FXML private TableColumn<User, Void>    colApprovalActions;
+    @FXML private Label lblPendingCount;
+
+    // ── DAOs & Lists ─────────────────────────────────────────────
     private final EmployeeDAO   employeeDAO   = new EmployeeDAO();
     private final DepartmentDAO departmentDAO = new DepartmentDAO();
-    private final ObservableList<Employee> masterList = FXCollections.observableArrayList();
+    private final UserDAO       userDAO       = new UserDAO();
+
+    private final ObservableList<Employee> masterList    = FXCollections.observableArrayList();
+    private final ObservableList<User>     approvalList  = FXCollections.observableArrayList();
     private FilteredList<Employee> filteredList;
     private NotificationHelper notifHelper;
 
+    // ── Initialize ───────────────────────────────────────────────
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         SessionManager.apply(this::initSession);
-        setupFilterCombo(); setupTableColumns(); setupSearch();
+        setupFilterCombo();
+        setupTableColumns();
+        setupSearch();
+        setupApprovalTable();
         SkeletonLoader.show(skeletonContainer);
         loadEmployeesAsync();
+        loadAllUsersAsync();
     }
 
+    // ── Existing: Load Employees ─────────────────────────────────
     private void loadEmployeesAsync() {
         Task<List<Employee>> task = new Task<>() {
             @Override protected List<Employee> call() { return employeeDAO.getAllEmployees(); }
@@ -76,6 +96,126 @@ public class UserManagementController implements Initializable {
         new Thread(task, "UserMgmtLoader").start();
     }
 
+    // ── UPDATED: Load ALL users (PENDING, ACTIVE, REJECTED) ─────
+    private void loadAllUsersAsync() {
+        Task<List<User>> task = new Task<>() {
+            @Override protected List<User> call() { return userDAO.getAllUsersForApproval(); }
+        };
+        task.setOnSucceeded(e -> {
+            approvalList.clear();
+            if (task.getValue() != null) approvalList.addAll(task.getValue());
+            long pendingCount = approvalList.stream()
+                    .filter(u -> "PENDING".equalsIgnoreCase(u.getStatus()))
+                    .count();
+            if (lblPendingCount != null)
+                lblPendingCount.setText(pendingCount + " pending");
+        });
+        new Thread(task, "AllUsersLoader").start();
+    }
+
+    // ── UPDATED: Setup Approval Table with Status column ─────────
+    private void setupApprovalTable() {
+        colApprovalId      .setCellValueFactory(new PropertyValueFactory<>("userId"));
+        colApprovalName    .setCellValueFactory(new PropertyValueFactory<>("fullName"));
+        colApprovalEmail   .setCellValueFactory(new PropertyValueFactory<>("email"));
+        colApprovalUsername.setCellValueFactory(new PropertyValueFactory<>("username"));
+        colApprovalRole    .setCellValueFactory(new PropertyValueFactory<>("role"));
+        colApprovalStatus  .setCellValueFactory(new PropertyValueFactory<>("status"));
+
+        // Color-coded Status column
+        colApprovalStatus.setCellFactory(col -> new TableCell<>() {
+            @Override protected void updateItem(String status, boolean empty) {
+                super.updateItem(status, empty);
+                if (empty || status == null) { setText(null); setStyle(""); return; }
+                setText(status);
+                switch (status.toUpperCase()) {
+                    case "ACTIVE"   -> setStyle("-fx-text-fill:#15803d;-fx-font-weight:bold;");
+                    case "REJECTED" -> setStyle("-fx-text-fill:#b91c1c;-fx-font-weight:bold;");
+                    default         -> setStyle("-fx-text-fill:#b45309;-fx-font-weight:bold;"); // PENDING = orange
+                }
+            }
+        });
+
+        // Actions column — show buttons only for PENDING
+        colApprovalActions.setCellFactory(col -> new TableCell<>() {
+            final Button btnApprove = new Button("✔ Approve");
+            final Button btnReject  = new Button("✘ Reject");
+            final Label  lblDone    = new Label();
+            {
+                btnApprove.setStyle("-fx-background-color:#dcfce7;-fx-text-fill:#15803d;-fx-background-radius:5;-fx-cursor:hand;-fx-font-size:11px;-fx-padding:4 8;");
+                btnReject .setStyle("-fx-background-color:#fee2e2;-fx-text-fill:#b91c1c;-fx-background-radius:5;-fx-cursor:hand;-fx-font-size:11px;-fx-padding:4 8;");
+                btnApprove.setOnAction(e -> handleApprove(getTableView().getItems().get(getIndex())));
+                btnReject .setOnAction(e -> handleReject (getTableView().getItems().get(getIndex())));
+            }
+            @Override protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) { setGraphic(null); return; }
+                User user = getTableView().getItems().get(getIndex());
+                String status = user.getStatus();
+                if ("PENDING".equalsIgnoreCase(status)) {
+                    setGraphic(new HBox(6, btnApprove, btnReject));
+                } else if ("ACTIVE".equalsIgnoreCase(status)) {
+                    lblDone.setText("✔ Approved");
+                    lblDone.setStyle("-fx-text-fill:#15803d;-fx-font-weight:bold;");
+                    setGraphic(lblDone);
+                } else {
+                    lblDone.setText("✘ Rejected");
+                    lblDone.setStyle("-fx-text-fill:#b91c1c;-fx-font-weight:bold;");
+                    setGraphic(lblDone);
+                }
+            }
+        });
+
+        tableApprovals.setItems(approvalList);
+    }
+
+    // ── UPDATED: Approve Handler — refresh row, don't remove ─────
+    private void handleApprove(User user) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Approve Account");
+        confirm.setHeaderText("Approve " + user.getFullName() + "?");
+        confirm.setContentText("This will activate their account.");
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            if (userDAO.approveUser(user.getUserId())) {
+                user.setStatus("ACTIVE");
+                tableApprovals.refresh();
+                updatePendingCount();
+                showSuccess("Account of " + user.getFullName() + " has been approved!");
+            } else {
+                showError("Failed to approve account.");
+            }
+        }
+    }
+
+    // ── UPDATED: Reject Handler — refresh row, don't remove ──────
+    private void handleReject(User user) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Reject Account");
+        confirm.setHeaderText("Reject " + user.getFullName() + "?");
+        confirm.setContentText("Their account status will be set to REJECTED.");
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            if (userDAO.rejectUser(user.getUserId())) {
+                user.setStatus("REJECTED");
+                tableApprovals.refresh();
+                updatePendingCount();
+                showSuccess("Account of " + user.getFullName() + " has been rejected.");
+            } else {
+                showError("Failed to reject account.");
+            }
+        }
+    }
+
+    private void updatePendingCount() {
+        long pendingCount = approvalList.stream()
+                .filter(u -> "PENDING".equalsIgnoreCase(u.getStatus()))
+                .count();
+        if (lblPendingCount != null)
+            lblPendingCount.setText(pendingCount + " pending");
+    }
+
+    // ── Existing methods (unchanged) ─────────────────────────────
     @FXML private void handleNotifications() {
         if (notifHelper == null) notifHelper = new NotificationHelper(btnNotification, NotificationHelper.Role.ADMIN);
         notifHelper.toggle();
@@ -104,9 +244,9 @@ public class UserManagementController implements Initializable {
             final Button btnEdit   = new Button("✏");
             final Button btnDelete = new Button("🗑");
             { btnEdit.setStyle("-fx-background-color:#dbeafe;-fx-text-fill:#1d4ed8;-fx-background-radius:5;-fx-cursor:hand;-fx-min-width:28px;-fx-min-height:28px;");
-              btnDelete.setStyle("-fx-background-color:#fee2e2;-fx-text-fill:#b91c1c;-fx-background-radius:5;-fx-cursor:hand;-fx-min-width:28px;-fx-min-height:28px;");
-              btnEdit.setOnAction(e -> openEditDialog(getTableView().getItems().get(getIndex())));
-              btnDelete.setOnAction(e -> handleDelete(getTableView().getItems().get(getIndex()))); }
+                btnDelete.setStyle("-fx-background-color:#fee2e2;-fx-text-fill:#b91c1c;-fx-background-radius:5;-fx-cursor:hand;-fx-min-width:28px;-fx-min-height:28px;");
+                btnEdit.setOnAction(e -> openEditDialog(getTableView().getItems().get(getIndex())));
+                btnDelete.setOnAction(e -> handleDelete(getTableView().getItems().get(getIndex()))); }
             @Override protected void updateItem(Void item, boolean empty) { super.updateItem(item, empty); if (empty) { setGraphic(null); return; } setGraphic(new HBox(6, btnEdit, btnDelete)); }
         });
         filteredList = new FilteredList<>(masterList, p -> true);
@@ -127,9 +267,9 @@ public class UserManagementController implements Initializable {
 
     private void refreshStats() {
         int total = masterList.size();
-        long uniqueDepts    = masterList.stream().map(Employee::getDepartment).filter(d->d!=null&&!d.isBlank()).distinct().count();
-        long uniquePositions= masterList.stream().map(Employee::getPosition).filter(p->p!=null&&!p.isBlank()).distinct().count();
-        long adminCount     = masterList.stream().filter(e->e.getPosition()!=null&&(e.getPosition().toLowerCase().contains("admin")||e.getPosition().toLowerCase().contains("director")||e.getPosition().toLowerCase().contains("officer"))).count();
+        long uniqueDepts     = masterList.stream().map(Employee::getDepartment).filter(d->d!=null&&!d.isBlank()).distinct().count();
+        long uniquePositions = masterList.stream().map(Employee::getPosition).filter(p->p!=null&&!p.isBlank()).distinct().count();
+        long adminCount      = masterList.stream().filter(e->e.getPosition()!=null&&(e.getPosition().toLowerCase().contains("admin")||e.getPosition().toLowerCase().contains("director")||e.getPosition().toLowerCase().contains("officer"))).count();
         lblTotal.setText(String.valueOf(total)); lblActive.setText(String.valueOf(uniqueDepts));
         lblInactive.setText(String.valueOf(uniquePositions)); lblAdmins.setText(String.valueOf(adminCount));
         String current = cbFilter.getValue();
@@ -179,7 +319,6 @@ public class UserManagementController implements Initializable {
         if (res.isPresent()&&res.get()==ButtonType.OK) { SessionManager.clear(); goTo("/main/resources/fxml/Login.fxml","Login"); }
     }
 
-    // ── FIX: FadeTransition is final — no double-brace init ──────
     private StackPane createLoadingPane() {
         StackPane root = new StackPane();
         root.setStyle("-fx-background-color: white;");
@@ -233,5 +372,6 @@ public class UserManagementController implements Initializable {
         fadeOut.play();
     }
 
-    private void showError(String msg) { Alert a=new Alert(Alert.AlertType.ERROR);a.setTitle("Error");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }
+    private void showError(String msg)   { Alert a=new Alert(Alert.AlertType.ERROR);a.setTitle("Error");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }
+    private void showSuccess(String msg) { Alert a=new Alert(Alert.AlertType.INFORMATION);a.setTitle("Success");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }
 }

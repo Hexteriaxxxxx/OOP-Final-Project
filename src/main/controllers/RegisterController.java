@@ -382,10 +382,20 @@ public class RegisterController implements Initializable {
                     "Username \""+username+"\" is already taken. Please choose another.");
             usernameField.clear(); return;
         }
+        // FIX: Show pending approval message — do NOT navigate to login yet
         if (userDAO.register(fullName, email, username, password, selectedRole)) {
-            showAlert(Alert.AlertType.INFORMATION,"Registration Successful",
-                    "Your account has been created successfully!\nYou may now log in.");
-            navigateToLogin(e);
+            showAlert(Alert.AlertType.INFORMATION, "Registration Submitted",
+                    "Your account has been submitted for admin approval.\n" +
+                            "You will be able to log in once your account has been approved.\n\n" +
+                            "Please wait for the administrator to review your request.");
+            // Clear the form so user knows registration is done
+            fullNameField.clear();
+            emailField.clear();
+            usernameField.clear();
+            passwordField.clear();
+            confirmPasswordField.clear();
+            termsCheckBox.setSelected(false);
+            confirmMatchLabel.setText("");
         } else {
             showAlert(Alert.AlertType.ERROR,"Registration Failed","Something went wrong. Please try again.");
         }

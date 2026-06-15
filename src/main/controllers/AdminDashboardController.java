@@ -81,7 +81,6 @@ public class AdminDashboardController implements Initializable {
         startOverdueChecker();
     }
 
-    /** Syncs sidebar + welcome label from SessionManager (called on init and on setCurrentUser). */
     private void applySession() {
         String username = main.utils.SessionManager.getUsername();
         String role     = main.utils.SessionManager.getRole();
@@ -132,28 +131,31 @@ public class AdminDashboardController implements Initializable {
         overdueChecker.start();
     }
 
+    // ── FIXED: Wrapped in Platform.runLater to avoid animation conflict ──
     private void onOverdueDetected(List<PassSlip> overdueSlips) {
-        loadDashboardData(); loadRecentActivity();
-        StringBuilder msg = new StringBuilder("The following employee(s) have NOT returned on time:\n\n");
-        for (PassSlip slip : overdueSlips) {
-            String expected = slip.getTimeIn() != null ? slip.getTimeIn().format(TIME_FMT) : "—";
-            long minsLate = slip.getTimeIn() != null ? java.time.Duration.between(slip.getTimeIn(), LocalDateTime.now()).toMinutes() : 0;
-            msg.append("• ").append(slip.getEmpName()).append("  (PS-").append(String.format("%04d", slip.getSlipId())).append(")")
-                    .append("\n  Expected: ").append(expected).append("  |  ").append(minsLate).append(" min(s) late\n\n");
-        }
-        msg.append("Click 'View Overdue' to see them in the dashboard.");
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("⚠  Overdue Pass Slips");
-        alert.setHeaderText("⚠  " + overdueSlips.size() + " employee(s) have not returned on time!");
-        alert.setContentText(msg.toString());
-        ButtonType btnViewOverdue = new ButtonType("View Overdue", ButtonBar.ButtonData.OK_DONE);
-        ButtonType btnDismiss     = new ButtonType("Dismiss",      ButtonBar.ButtonData.CANCEL_CLOSE);
-        alert.getButtonTypes().setAll(btnViewOverdue, btnDismiss);
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == btnViewOverdue) {
-            loadDashboardData();
-            if (cmbFilter != null) { cmbFilter.getSelectionModel().select("Overdue"); applyFilter(); }
-        }
+        Platform.runLater(() -> {
+            loadDashboardData(); loadRecentActivity();
+            StringBuilder msg = new StringBuilder("The following employee(s) have NOT returned on time:\n\n");
+            for (PassSlip slip : overdueSlips) {
+                String expected = slip.getTimeIn() != null ? slip.getTimeIn().format(TIME_FMT) : "—";
+                long minsLate = slip.getTimeIn() != null ? java.time.Duration.between(slip.getTimeIn(), LocalDateTime.now()).toMinutes() : 0;
+                msg.append("• ").append(slip.getEmpName()).append("  (PS-").append(String.format("%04d", slip.getSlipId())).append(")")
+                        .append("\n  Expected: ").append(expected).append("  |  ").append(minsLate).append(" min(s) late\n\n");
+            }
+            msg.append("Click 'View Overdue' to see them in the dashboard.");
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("⚠  Overdue Pass Slips");
+            alert.setHeaderText("⚠  " + overdueSlips.size() + " employee(s) have not returned on time!");
+            alert.setContentText(msg.toString());
+            ButtonType btnViewOverdue = new ButtonType("View Overdue", ButtonBar.ButtonData.OK_DONE);
+            ButtonType btnDismiss     = new ButtonType("Dismiss",      ButtonBar.ButtonData.CANCEL_CLOSE);
+            alert.getButtonTypes().setAll(btnViewOverdue, btnDismiss);
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == btnViewOverdue) {
+                loadDashboardData();
+                if (cmbFilter != null) { cmbFilter.getSelectionModel().select("Overdue"); applyFilter(); }
+            }
+        });
     }
 
     @FXML private void handleNotification() {
@@ -263,7 +265,6 @@ public class AdminDashboardController implements Initializable {
 
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
-            // ── BUG 1 FIX: bind to parent window — closes when main window closes ──
             stage.initOwner(lblSidebarUser.getScene().getWindow());
             stage.setTitle("Create Pass Slip");
             stage.setScene(new Scene(root, winW, winH));
@@ -357,6 +358,7 @@ public class AdminDashboardController implements Initializable {
         return root;
     }
 
+    // ── FIXED: navigateTo — showAlert wrapped in Platform.runLater ──
     private void navigateTo(String fxmlPath, String title) {
         Stage stage = (Stage) lblSidebarUser.getScene().getWindow();
         Parent currentRoot = lblSidebarUser.getScene().getRoot();
@@ -381,7 +383,7 @@ public class AdminDashboardController implements Initializable {
                     Object ctrl = loader.getController();
                     String username = main.utils.SessionManager.getUsername();
                     String role     = main.utils.SessionManager.getRole();
-                    if (ctrl instanceof ReportsController)             ((ReportsController) ctrl).initSession(username, role);
+                    if (ctrl instanceof ReportsController)               ((ReportsController) ctrl).initSession(username, role);
                     else if (ctrl instanceof PassSlipIssuanceController) ((PassSlipIssuanceController) ctrl).initSession(username, role);
                     else if (ctrl instanceof UserManagementController)   ((UserManagementController) ctrl).initSession(username, role);
                     root.setOpacity(0);
@@ -395,7 +397,10 @@ public class AdminDashboardController implements Initializable {
                     stage.show();
                     FadeTransition fadeIn = new FadeTransition(Duration.millis(200), root);
                     fadeIn.setFromValue(0); fadeIn.setToValue(1); fadeIn.play();
-                } catch (IOException e) { showAlert(Alert.AlertType.ERROR, "Nav Error", "Cannot open " + title); }
+                } catch (IOException e) {
+                    // ── FIXED: showAlert during animation → use Platform.runLater ──
+                    Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Nav Error", "Cannot open " + title));
+                }
             });
             pause.play();
         });
