@@ -1,5 +1,4 @@
 package main.controllers;
-
 import dao.UserDAO;
 import models.User;
 import javafx.animation.*;

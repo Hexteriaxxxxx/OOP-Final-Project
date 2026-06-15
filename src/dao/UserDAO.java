@@ -63,6 +63,35 @@ public class UserDAO {
         return false;
     }
 
+    // ── NEW: Email Exists (for Forgot Password) ──────────────────
+    public boolean emailExists(String email) {
+        String sql = "SELECT COUNT(*) FROM \"User\" WHERE LOWER(email) = LOWER(?)";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, email.trim());
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) return rs.getInt(1) > 0;
+        } catch (SQLException e) { System.out.println("Email check error: " + e.getMessage()); }
+        return false;
+    }
+
+    // ── NEW: Update Password by Email (for Forgot Password) ──────
+    public boolean updatePasswordByEmail(String email, String newPassword) {
+        String sql = "UPDATE \"User\" SET password = ? WHERE LOWER(email) = LOWER(?)";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            String hashed = PasswordUtils.hashPassword(newPassword);
+            stmt.setString(1, hashed);
+            stmt.setString(2, email.trim());
+            int rows = stmt.executeUpdate();
+            System.out.println("[UserDAO] Updated password for email: " + email + " (" + rows + " rows)");
+            return rows > 0;
+        } catch (Exception e) {
+            System.out.println("Update password error: " + e.getMessage());
+            return false;
+        }
+    }
+
     // ── UPDATED: Get ALL users (PENDING, ACTIVE, REJECTED) for history ──
     public List<User> getAllUsersForApproval() {
         List<User> list = new ArrayList<>();

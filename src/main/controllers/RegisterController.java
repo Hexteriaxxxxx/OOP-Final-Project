@@ -1,5 +1,4 @@
 package main.controllers;
-
 import dao.UserDAO;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;

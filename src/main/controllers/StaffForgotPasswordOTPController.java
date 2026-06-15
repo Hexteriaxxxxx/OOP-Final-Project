@@ -16,13 +16,15 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import main.utils.OTPManager;
+
 import java.io.IOException;
 
 public class StaffForgotPasswordOTPController {
 
     @FXML private TextField otpField;
-    @FXML private Label errorLabel;
-    @FXML private Label subtitleLabel;
+    @FXML private Label     errorLabel;
+    @FXML private Label     subtitleLabel;
 
     private String email;
 
@@ -38,19 +40,35 @@ public class StaffForgotPasswordOTPController {
         String code = otpField.getText().trim();
 
         if (code.isEmpty()) {
-            errorLabel.setText("Please enter the verification code.");
+            showError("Please enter the verification code.");
             return;
         }
-
         if (!code.matches("\\d{6}")) {
-            errorLabel.setText("Code must be exactly 6 digits.");
+            showError("Code must be exactly 6 digits.");
             return;
         }
 
-        errorLabel.setText("");
+        // Check expiry first for a better error message
+        if (OTPManager.isExpired(email)) {
+            showError("Code has expired. Please go back and request a new one.");
+            return;
+        }
 
+        // Verify OTP
+        if (!OTPManager.verifyOTP(email, code)) {
+            showError("Incorrect code. Please check your email and try again.");
+            return;
+        }
+
+        // OTP verified! Navigate to reset password screen
+        errorLabel.setText("");
         Stage stage = (Stage) otpField.getScene().getWindow();
         showSkeletonThenLoad(stage);
+    }
+
+    private void showError(String msg) {
+        errorLabel.setText(msg);
+        errorLabel.setStyle("-fx-text-fill: #cc0000; -fx-font-size: 11px;");
     }
 
     private void showSkeletonThenLoad(Stage stage) {
@@ -61,7 +79,7 @@ public class StaffForgotPasswordOTPController {
         FadeTransition fadeIn = new FadeTransition(Duration.millis(200), skeleton);
         fadeIn.setFromValue(0); fadeIn.setToValue(1); fadeIn.play();
 
-        PauseTransition pause = new PauseTransition(Duration.millis(900));
+        PauseTransition pause = new PauseTransition(Duration.millis(700));
         pause.setOnFinished(ev -> {
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource(
@@ -112,17 +130,10 @@ public class StaffForgotPasswordOTPController {
         subBar.setStyle("-fx-background-color: #f0f0f0; -fx-background-radius: 6;");
         addShimmer(subBar);
 
-        StackPane labelBar = new StackPane();
-        labelBar.setPrefHeight(14); labelBar.setPrefWidth(120); labelBar.setMaxWidth(120);
-        labelBar.setStyle("-fx-background-color: #f0f0f0; -fx-background-radius: 4;");
-        addShimmer(labelBar);
-
         StackPane inputBar = new StackPane();
         inputBar.setPrefHeight(38); inputBar.setMaxWidth(Double.MAX_VALUE);
         inputBar.setStyle("-fx-background-color: #f0f0f0; -fx-background-radius: 8;");
         addShimmer(inputBar);
-
-        VBox inputGroup = new VBox(5, labelBar, inputBar);
 
         StackPane btn1 = new StackPane();
         btn1.setPrefHeight(38); btn1.setMaxWidth(Double.MAX_VALUE);
@@ -135,7 +146,7 @@ public class StaffForgotPasswordOTPController {
         addShimmer(btn2);
 
         VBox btnBox = new VBox(8, btn1, btn2);
-        box.getChildren().addAll(iconPill, titleBox, subBar, inputGroup, btnBox);
+        box.getChildren().addAll(iconPill, titleBox, subBar, inputBar, btnBox);
         return box;
     }
 

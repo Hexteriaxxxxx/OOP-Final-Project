@@ -223,7 +223,12 @@ public class StaffResetPasswordController implements Initializable {
 
         errorLabel.setText("");
 
-        // TODO: UserDAO.updatePassword(email, newPassword);
+        // Save new password to database
+        boolean updated = new dao.UserDAO().updatePasswordByEmail(email, newPassword);
+        if (!updated) {
+            errorLabel.setText("Failed to update password. Please try again.");
+            return;
+        }
 
         Stage stage = (Stage) newPasswordField.getScene().getWindow();
         showSkeletonThenSuccess(stage);
