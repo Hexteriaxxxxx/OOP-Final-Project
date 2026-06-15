@@ -1,7 +1,5 @@
 package main.controllers;
 
-import javafx.animation.FadeTransition;
-import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -23,7 +21,6 @@ import javafx.scene.shape.Circle;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 import dao.ActivityLogDAO;
 import dao.PassSlipDAO;
 import main.utils.OverdueCheckerService;
@@ -343,68 +340,36 @@ public class AdminDashboardController implements Initializable {
         c.showAndWait().ifPresent(r -> { if(r==ButtonType.OK) { stopOverdueChecker(); navigateTo("/main/resources/fxml/Login.fxml","Pass Slip Issuance System"); }});
     }
 
-    private StackPane createLoadingPane() {
-        StackPane root = new StackPane();
-        root.setStyle("-fx-background-color: white;");
-        VBox box = new VBox(16);
-        box.setAlignment(Pos.CENTER);
-        ProgressIndicator spinner = new ProgressIndicator();
-        spinner.setPrefSize(60, 60);
-        spinner.setStyle("-fx-progress-color: #8B0000;");
-        Label lbl = new Label("Loading...");
-        lbl.setStyle("-fx-text-fill: #333333; -fx-font-size: 14px; -fx-font-family: 'Segoe UI';");
-        box.getChildren().addAll(spinner, lbl);
-        root.getChildren().add(box);
-        return root;
-    }
-
-    // ── FIXED: navigateTo — showAlert wrapped in Platform.runLater ──
+    // ── FIXED: navigateTo — no fade/loading screen, direct FXMLLoader swap ──
     private void navigateTo(String fxmlPath, String title) {
-        Stage stage = (Stage) lblSidebarUser.getScene().getWindow();
-        Parent currentRoot = lblSidebarUser.getScene().getRoot();
-        FadeTransition fadeOut = new FadeTransition(Duration.millis(200), currentRoot);
-        fadeOut.setFromValue(1.0);
-        fadeOut.setToValue(0.0);
-        fadeOut.setOnFinished(ev -> {
+        try {
+            Stage stage = (Stage) lblSidebarUser.getScene().getWindow();
             double w = stage.getWidth(), h = stage.getHeight();
             boolean wasFullscreen = stage.isFullScreen();
             boolean wasMaximized  = stage.isMaximized();
-            Scene loadScene = new Scene(createLoadingPane(), w, h);
-            loadScene.setFill(javafx.scene.paint.Color.web("#0f0505"));
-            stage.setScene(loadScene);
-            stage.setWidth(w); stage.setHeight(h);
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
+            Object ctrl = loader.getController();
+
+            String username = main.utils.SessionManager.getUsername();
+            String role     = main.utils.SessionManager.getRole();
+            if (ctrl instanceof ReportsController)               ((ReportsController) ctrl).initSession(username, role);
+            else if (ctrl instanceof PassSlipIssuanceController) ((PassSlipIssuanceController) ctrl).initSession(username, role);
+            else if (ctrl instanceof UserManagementController)   ((UserManagementController) ctrl).initSession(username, role);
+
+            Scene scene = new Scene(root, w, h);
+            scene.setFill(Color.WHITE);
+            stage.setScene(scene);
+            stage.setTitle(title);
+            stage.setWidth(w);
+            stage.setHeight(h);
             if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
             else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
-            PauseTransition pause = new PauseTransition(Duration.millis(400));
-            pause.setOnFinished(pev -> {
-                try {
-                    FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-                    Parent root = loader.load();
-                    Object ctrl = loader.getController();
-                    String username = main.utils.SessionManager.getUsername();
-                    String role     = main.utils.SessionManager.getRole();
-                    if (ctrl instanceof ReportsController)               ((ReportsController) ctrl).initSession(username, role);
-                    else if (ctrl instanceof PassSlipIssuanceController) ((PassSlipIssuanceController) ctrl).initSession(username, role);
-                    else if (ctrl instanceof UserManagementController)   ((UserManagementController) ctrl).initSession(username, role);
-                    root.setOpacity(0);
-                    Scene navScene = new Scene(root);
-                    navScene.setFill(javafx.scene.paint.Color.web("#0f0505"));
-                    stage.setScene(navScene);
-                    stage.setTitle(title);
-                    stage.setWidth(w); stage.setHeight(h);
-                    if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
-                    else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
-                    stage.show();
-                    FadeTransition fadeIn = new FadeTransition(Duration.millis(200), root);
-                    fadeIn.setFromValue(0); fadeIn.setToValue(1); fadeIn.play();
-                } catch (IOException e) {
-                    // ── FIXED: showAlert during animation → use Platform.runLater ──
-                    Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Nav Error", "Cannot open " + title));
-                }
-            });
-            pause.play();
-        });
-        fadeOut.play();
+            stage.show();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Nav Error", "Cannot open " + title);
+        }
     }
 
     private void showAlert(Alert.AlertType type, String title, String msg) {

@@ -1,7 +1,5 @@
 package main.controllers;
 
-import javafx.animation.FadeTransition;
-import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -10,7 +8,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.paint.Color;
 import javafx.scene.Parent;
@@ -23,7 +20,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 import dao.ActivityLogDAO;
 import dao.PassSlipDAO;
 import main.utils.SkeletonLoader;
@@ -83,12 +79,14 @@ public class StaffDashboardController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        setupFilterCombo(); setupTableColumns();
+        setupFilterCombo();
+        setupTableColumns();
         tblPassSlips.setItems(masterList);
         applySession();
         SkeletonLoader.show(skeletonContainer);
         loadDataAsync();
-        loadNotifications(); loadRecentActivity();
+        loadNotifications();
+        loadRecentActivity();
         startAutoRefresh();
     }
 
@@ -239,7 +237,8 @@ public class StaffDashboardController implements Initializable {
     public void refreshDashboard() {
         SkeletonLoader.show(skeletonContainer);
         loadDataAsync();
-        loadNotifications(); loadRecentActivity();
+        loadNotifications();
+        loadRecentActivity();
     }
 
     @FXML public void handleSearch() {
@@ -299,104 +298,55 @@ public class StaffDashboardController implements Initializable {
         a.showAndWait();
     }
 
-    private StackPane createLoadingPane() {
-        StackPane root = new StackPane();
-        root.setStyle("-fx-background-color: white;");
-        VBox box = new VBox(16);
-        box.setAlignment(Pos.CENTER);
-        ProgressIndicator spinner = new ProgressIndicator();
-        spinner.setPrefSize(60, 60);
-        spinner.setStyle("-fx-progress-color: #8B0000;");
-        Label lbl = new Label("Loading...");
-        lbl.setStyle("-fx-text-fill: #333333; -fx-font-size: 14px; -fx-font-family: 'Segoe UI';");
-        box.getChildren().addAll(spinner, lbl);
-        root.getChildren().add(box);
-        return root;
-    }
-
     private void navigateToStaff(String fxmlPath, String title) {
         stopAutoRefresh();
         Stage stage = (Stage) tblPassSlips.getScene().getWindow();
-        Parent currentRoot = tblPassSlips.getScene().getRoot();
-        FadeTransition fadeOut = new FadeTransition(Duration.millis(200), currentRoot);
-        fadeOut.setFromValue(1.0);
-        fadeOut.setToValue(0.0);
-        fadeOut.setOnFinished(ev -> {
-            double w = stage.getWidth(), h = stage.getHeight();
-            boolean wasFullscreen = stage.isFullScreen();
-            boolean wasMaximized  = stage.isMaximized();
-            Scene loadScene = new Scene(createLoadingPane(), w, h);
-            loadScene.setFill(Color.web("#0f0505"));
-            stage.setScene(loadScene);
-            stage.setWidth(w); stage.setHeight(h);
+        double w = stage.getWidth(), h = stage.getHeight();
+        boolean wasFullscreen = stage.isFullScreen();
+        boolean wasMaximized  = stage.isMaximized();
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
+
+            Object ctrl = loader.getController();
+            String username = main.utils.SessionManager.getUsername();
+            String role     = main.utils.SessionManager.getRole();
+            if (ctrl instanceof StaffPassSlipController)
+                ((StaffPassSlipController) ctrl).initSession(username, role);
+            else if (ctrl instanceof StaffReportsController)
+                ((StaffReportsController) ctrl).initSession(username, role);
+
+            Scene navScene = new Scene(root);
+            navScene.setFill(Color.WHITE);
+            stage.setScene(navScene);
+            stage.setTitle(title + " – Pass Slip System");
+            stage.setWidth(w);
+            stage.setHeight(h);
             if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
             else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
-            PauseTransition pause = new PauseTransition(Duration.millis(400));
-            pause.setOnFinished(pev -> {
-                try {
-                    FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-                    Parent root = loader.load();
-                    Object ctrl = loader.getController();
-                    String username = main.utils.SessionManager.getUsername();
-                    String role     = main.utils.SessionManager.getRole();
-                    if (ctrl instanceof StaffPassSlipController) ((StaffPassSlipController) ctrl).initSession(username, role);
-                    else if (ctrl instanceof StaffReportsController) ((StaffReportsController) ctrl).initSession(username, role);
-                    root.setOpacity(0);
-                    Scene navScene = new Scene(root);
-                    navScene.setFill(Color.web("#0f0505"));
-                    stage.setScene(navScene);
-                    stage.setTitle(title + " – Pass Slip System");
-                    stage.setWidth(w); stage.setHeight(h);
-                    if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
-                    else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
-                    stage.show();
-                    FadeTransition fadeIn = new FadeTransition(Duration.millis(200), root);
-                    fadeIn.setFromValue(0); fadeIn.setToValue(1); fadeIn.play();
-                } catch (IOException e) { System.out.println("Nav error: " + e.getMessage()); }
-            });
-            pause.play();
-        });
-        fadeOut.play();
+            stage.show();
+        } catch (IOException e) { System.out.println("Nav error: " + e.getMessage()); }
     }
 
     private void navigateTo(String fxmlPath, String title) {
         stopAutoRefresh();
         Stage stage = (Stage) tblPassSlips.getScene().getWindow();
-        Parent currentRoot = tblPassSlips.getScene().getRoot();
-        FadeTransition fadeOut = new FadeTransition(Duration.millis(200), currentRoot);
-        fadeOut.setFromValue(1.0);
-        fadeOut.setToValue(0.0);
-        fadeOut.setOnFinished(ev -> {
-            double w = stage.getWidth(), h = stage.getHeight();
-            boolean wasFullscreen = stage.isFullScreen();
-            boolean wasMaximized  = stage.isMaximized();
-            Scene loadScene2 = new Scene(createLoadingPane(), w, h);
-            loadScene2.setFill(Color.web("#0f0505"));
-            stage.setScene(loadScene2);
-            stage.setWidth(w); stage.setHeight(h);
+        double w = stage.getWidth(), h = stage.getHeight();
+        boolean wasFullscreen = stage.isFullScreen();
+        boolean wasMaximized  = stage.isMaximized();
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
+            Scene navScene = new Scene(root);
+            navScene.setFill(Color.WHITE);
+            stage.setScene(navScene);
+            stage.setTitle(title + " – Pass Slip System");
+            stage.setWidth(w);
+            stage.setHeight(h);
             if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
             else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
-            PauseTransition pause = new PauseTransition(Duration.millis(400));
-            pause.setOnFinished(pev -> {
-                try {
-                    FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-                    Parent root = loader.load();
-                    root.setOpacity(0);
-                    Scene navScene2 = new Scene(root);
-                    navScene2.setFill(Color.web("#0f0505"));
-                    stage.setScene(navScene2);
-                    stage.setTitle(title + " – Pass Slip System");
-                    stage.setWidth(w); stage.setHeight(h);
-                    if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
-                    else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
-                    stage.show();
-                    FadeTransition fadeIn = new FadeTransition(Duration.millis(200), root);
-                    fadeIn.setFromValue(0); fadeIn.setToValue(1); fadeIn.play();
-                } catch (IOException e) { System.out.println("Nav error: " + e.getMessage()); }
-            });
-            pause.play();
-        });
-        fadeOut.play();
+            stage.show();
+        } catch (IOException e) { System.out.println("Nav error: " + e.getMessage()); }
     }
 
     private void setActiveButton(Button active) {

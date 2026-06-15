@@ -2,11 +2,8 @@ package main.controllers;
 
 import dao.PassSlipDAO;
 import models.PassSlip;
-import javafx.animation.FadeTransition;
-import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.scene.paint.Color;
-import javafx.util.Duration;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -22,7 +19,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import main.utils.SkeletonLoader;
@@ -73,8 +69,11 @@ public class StaffPassSlipController implements Initializable {
             SkeletonLoader.hide(skeletonContainer);
             masterList.clear();
             List<PassSlip> all = task.getValue();
-            if (all != null) all.stream().filter(ps -> "Approved".equalsIgnoreCase(ps.getStatus())).forEach(masterList::add);
-            refreshStats(); applyFilters();
+            if (all != null) all.stream()
+                    .filter(ps -> "Approved".equalsIgnoreCase(ps.getStatus()))
+                    .forEach(masterList::add);
+            refreshStats();
+            applyFilters();
         });
         task.setOnFailed(e -> SkeletonLoader.hide(skeletonContainer));
         new Thread(task, "StaffPassSlipLoader").start();
@@ -193,60 +192,29 @@ public class StaffPassSlipController implements Initializable {
     @FXML private void handleNavReports()   { goTo("/main/resources/fxml/StaffReports.fxml","Reports"); }
     @FXML private void handleLogout() { Optional<ButtonType> res = new Alert(Alert.AlertType.CONFIRMATION,"Logout?",ButtonType.OK,ButtonType.CANCEL).showAndWait(); if (res.isPresent() && res.get() == ButtonType.OK) goTo("/main/resources/fxml/Login.fxml","Login"); }
 
-    private StackPane createLoadingPane() {
-        StackPane root = new StackPane();
-        root.setStyle("-fx-background-color: white;");
-        VBox box = new VBox(16);
-        box.setAlignment(Pos.CENTER);
-        ProgressIndicator spinner = new ProgressIndicator();
-        spinner.setPrefSize(60, 60);
-        spinner.setStyle("-fx-progress-color: #8B0000;");
-        Label lbl = new Label("Loading...");
-        lbl.setStyle("-fx-text-fill: #333333; -fx-font-size: 14px; -fx-font-family: 'Segoe UI';");
-        box.getChildren().addAll(spinner, lbl);
-        root.getChildren().add(box);
-        return root;
-    }
-
     private void goTo(String fxml, String title) {
-        Stage stage = (Stage) tblSlips.getScene().getWindow();
-        Parent currentRoot = tblSlips.getScene().getRoot();
-        FadeTransition fadeOut = new FadeTransition(Duration.millis(200), currentRoot);
-        fadeOut.setFromValue(1.0);
-        fadeOut.setToValue(0.0);
-        fadeOut.setOnFinished(ev -> {
+        try {
+            Stage stage = (Stage) tblSlips.getScene().getWindow();
             double w = stage.getWidth(), h = stage.getHeight();
             boolean wasFullscreen = stage.isFullScreen();
             boolean wasMaximized  = stage.isMaximized();
-            Scene loadScene = new Scene(createLoadingPane(), w, h);
-            loadScene.setFill(Color.web("#0f0505"));
-            stage.setScene(loadScene);
-            stage.setWidth(w); stage.setHeight(h);
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
+            Parent root = loader.load();
+            Object ctrl = loader.getController();
+            if (ctrl instanceof StaffReportsController)    ((StaffReportsController)    ctrl).initSession(sessionUser, sessionRole);
+            else if (ctrl instanceof StaffDashboardController) ((StaffDashboardController) ctrl).initSession(sessionUser, sessionRole);
+
+            Scene navScene = new Scene(root);
+            navScene.setFill(Color.WHITE);
+            stage.setScene(navScene);
+            stage.setTitle(title);
+            stage.setWidth(w);
+            stage.setHeight(h);
             if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
             else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
-            PauseTransition pause = new PauseTransition(Duration.millis(400));
-            pause.setOnFinished(pev -> {
-                try {
-                    FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
-                    Parent root = loader.load();
-                    Object ctrl = loader.getController();
-                    if (ctrl instanceof StaffReportsController) ((StaffReportsController) ctrl).initSession(sessionUser, sessionRole);
-                    else if (ctrl instanceof StaffDashboardController) ((StaffDashboardController) ctrl).initSession(sessionUser, sessionRole);
-                    root.setOpacity(0);
-                    stage.setTitle(title);
-                    Scene navScene = new Scene(root);
-                    navScene.setFill(Color.web("#0f0505"));
-                    stage.setScene(navScene);
-                    stage.setWidth(w); stage.setHeight(h);
-                    if (wasFullscreen) Platform.runLater(() -> stage.setFullScreen(true));
-                    else if (wasMaximized) Platform.runLater(() -> stage.setMaximized(true));
-                    FadeTransition fadeIn = new FadeTransition(Duration.millis(200), root);
-                    fadeIn.setFromValue(0); fadeIn.setToValue(1); fadeIn.play();
-                } catch (IOException e) { showError("Screen not available:\n" + fxml); }
-            });
-            pause.play();
-        });
-        fadeOut.play();
+            stage.show();
+        } catch (IOException e) { showError("Screen not available:\n" + fxml); }
     }
 
     private void showInfo(String msg)  { Alert a=new Alert(Alert.AlertType.INFORMATION);a.setTitle("Success");a.setHeaderText(null);a.setContentText(msg);a.showAndWait(); }

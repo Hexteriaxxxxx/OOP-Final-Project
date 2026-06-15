@@ -56,7 +56,7 @@ public class TransitionHelper {
     public static void fadeIn(Parent root) {
         if (root == null) return;
         root.setOpacity(0);
-        FadeTransition ft = new FadeTransition(Duration.millis(300), root);
+        FadeTransition ft = new FadeTransition(Duration.millis(200), root);
         ft.setFromValue(0.0);
         ft.setToValue(1.0);
         ft.play();
